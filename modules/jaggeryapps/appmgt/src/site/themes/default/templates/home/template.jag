@@ -122,6 +122,23 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 </div>
                 <% } %>
               </div>
+              <div class="form-gourp">
+                  <div class="radio">
+                      <label>
+                          <input type="radio" name="security-radio" id="security-all" class="custom-radio" value="all" checked="checked"/>Public and Private
+                      </label>
+                  </div>
+                  <div class="radio">
+                      <label>
+                          <input type="radio" name="security-radio" id="security-public" class="custom-radio" value="public"/>Public only
+                      </label>
+                  </div>
+                  <div class="radio">
+                      <label>
+                          <input type="radio" name="security-radio" id="security-private" class="custom-radio" value="private"/>Private only
+                      </label>
+                  </div>
+              </div>
           </div>
         </div>
         <div class="row padding-bottom-xlg">
@@ -353,7 +370,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
             action: "redeployApplication",
             applicationName: applicationName,
             applicationRevision: selectedRevision,
-            versionKey: selectedApplicationRevision.hashId
+            versionKey: selectedApplicationRevision.hashId,
+            exposureLevel: $("input:radio[name='security-radio']:checked").val()
         }, function(result) {
         }, function(jqXHR, textStatus, errorThrown) {
             setTimeout(reloadAppHome, 5000);
@@ -426,8 +444,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 applicationRevision: selectedRevision,
                 versionKey: selectedApplicationRevision.hashId,
                 conSpecCpu: conSpecCpu,
-                conSpecMemory: conSpecMemory
-
+                conSpecMemory: conSpecMemory,
+                exposureLevel: $("input:radio[name='security-radio']:checked").val()
             }, function(result) {
             });
         }

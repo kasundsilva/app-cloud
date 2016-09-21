@@ -33,6 +33,7 @@ public class Version {
     private String conSpecCpu;
     private String conSpecMemory;
     private int isWhiteListed;
+    private String exposureLevel;
 
     public String getVersionName() {
         return versionName;
@@ -128,5 +129,13 @@ public class Version {
 
     public void setIsWhiteListed(int isWhiteListed) {
         this.isWhiteListed = isWhiteListed;
+    }
+
+    public String getExposureLevel() {
+        return exposureLevel;
+    }
+
+    public void setExposureLevel(String exposureLevel) {
+        this.exposureLevel = exposureLevel;
     }
 }

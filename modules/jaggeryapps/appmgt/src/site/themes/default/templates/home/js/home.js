@@ -34,6 +34,7 @@ $(document).ready(function() {
     }
 
     loadEndpointView();
+    getExposureLevel();
 });
 
 // wrapping functions
@@ -617,4 +618,17 @@ function redirectAppHome() {
 
 function getVersionCount(){
     return Object.keys(application.versions).length;
+}
+
+function getExposureLevel() {
+    jagg.post("../blocks/application/application.jag", {
+        action:"getExposureLevel",
+        versionName:selectedRevision,
+        applicationName:applicationName
+    },function (result) {
+        $("#security-" + result).prop("checked", true);
+    },function (jqXHR, textStatus, errorThrown) {
+        jagg.message({content: "Error occurred while retrieving the endpoint security level of the selected "
+                    + cloudSpecificApplicationRepresentation.toLowerCase() + " version", type: 'error', id:'view_log'});
+    });
 }

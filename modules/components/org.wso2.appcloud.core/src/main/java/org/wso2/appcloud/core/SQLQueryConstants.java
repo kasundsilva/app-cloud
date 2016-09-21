@@ -61,6 +61,7 @@ public class SQLQueryConstants {
     public static final String MATCHING_ENV_VARIABLE_COUNT = "matching_env_variable_count";
     public static final String MATCHING_TAG_COUNT = "matching_tag_count";
     public static final String MATCHING_VERSION_COUNT = "matching_version_count";
+    public static final String EXPOSURE_LEVEL = "exposure_level";
 
 
     /*==============================
@@ -75,7 +76,7 @@ public class SQLQueryConstants {
             "(?, ?, ?, ?, ?, (SELECT id FROM AC_APP_TYPE WHERE name=?), (SELECT id FROM AC_CLOUD WHERE name=?))";
 
     public static final String ADD_VERSION =
-            "INSERT INTO AC_VERSION (name, hash_id, application_id, runtime_id, tenant_id, con_spec_cpu, con_spec_memory) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO AC_VERSION (name, hash_id, application_id, runtime_id, tenant_id, con_spec_cpu, con_spec_memory, exposure_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     public static final String ADD_TAG =
             "INSERT INTO AC_TAG (name, value, version_id, description, tenant_id) values (?, ?, (SELECT id FROM " +
@@ -307,4 +308,8 @@ public class SQLQueryConstants {
     public static final String RUNNING_APPLICATION_VERSION_COUNT = "SELECT COUNT(id) AS ACTIVE_CONTAINERS_COUNT FROM " +
             "AC_VERSION WHERE application_id IN (SELECT id FROM AC_APPLICATION WHERE tenant_id = ? AND " +
             "cloud_id = (select id from AC_CLOUD WHERE name=?)) AND status='running'";
+
+    public static final String GET_VERSION_EXPOSURE_LEVEL = "SELECT exposure_level FROM AC_VERSION WHERE hash_id=? AND tenant_id=?";
+
+    public static final String UPDATE_VERSION_EXPOSURE_LEVEL = "UPDATE AC_VERSION SET exposure_level=? WHERE hash_id=? AND tenant_id=?";
 }

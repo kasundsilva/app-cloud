@@ -163,6 +163,7 @@ public class ApplicationDAO {
             preparedStatement.setInt(5, tenantId);
             preparedStatement.setString(6, version.getConSpecCpu());
             preparedStatement.setString(7, version.getConSpecMemory());
+            preparedStatement.setString(8, version.getExposureLevel());
 
             preparedStatement.execute();
 
@@ -2320,6 +2321,67 @@ public class ApplicationDAO {
             throw new AppCloudException(msg, e);
         } finally {
             DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+    }
+
+    /**
+     * This method gets the exposure level of the application
+     *
+     * @param dbConnection
+     * @param versionKey
+     * @param tenantId
+     * @return exposure level of the version
+     * @throws AppCloudException
+     */
+    public String getExposureLevel(Connection dbConnection, String versionKey, int tenantId)
+            throws AppCloudException {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        String exposureLevel = null;
+        try {
+            preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_VERSION_EXPOSURE_LEVEL);
+            preparedStatement.setString(1, versionKey);
+            preparedStatement.setInt(2, tenantId);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                exposureLevel = resultSet.getString(SQLQueryConstants.EXPOSURE_LEVEL);
+            }
+            dbConnection.commit();
+        } catch (SQLException e) {
+            String msg = "Error while checking for the exposure level for application version: " + versionKey +
+                    " and tenant id: " + tenantId + ".";
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+        return exposureLevel;
+    }
+
+    /**
+     *
+     * @param dbConnection database connection
+     * @param exposureLevel version exposure level
+     * @param versionKey version hash id
+     * @param tenantId tenant id
+     * @throws AppCloudException
+     */
+    public void updateVersionExposureLevel(Connection dbConnection, String versionKey, int tenantId, String exposureLevel)
+            throws AppCloudException {
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.UPDATE_VERSION_EXPOSURE_LEVEL);
+            preparedStatement.setString(1, exposureLevel);
+            preparedStatement.setString(2, versionKey);
+            preparedStatement.setInt(3, tenantId);
+            preparedStatement.executeUpdate();
+            dbConnection.commit();
+        } catch (SQLException e) {
+            String msg = "Error while updating application exposure level : " + exposureLevel + " for version with the hash id : " +
+                    versionKey + " in tenant : " + tenantId;
+            throw new AppCloudException(msg, e);
+        } finally {
             DBUtil.closePreparedStatement(preparedStatement);
         }
     }

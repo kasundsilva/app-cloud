@@ -187,6 +187,7 @@ public class KubernetesProvisioningUtils {
         selector.put("version", applicationContext.getVersion());
         selector.put("versionHashId", applicationContext.getVersionHashId());
         selector.put("type", applicationContext.getType());
+        selector.put("exposure-level", applicationContext.getExposureLevel());
         return selector;
     }
 
@@ -219,7 +220,7 @@ public class KubernetesProvisioningUtils {
      * @return application context
      */
     public static ApplicationContext getApplicationContext(String appName, String version, String type, int tenantId,
-            String tenantDomain, String versionHashId) {
+            String tenantDomain, String versionHashId, String exposureLevel) {
 
         ApplicationContext applicationContext = new ApplicationContext();
         applicationContext.setId(getKubernetesValidAppName(appName));
@@ -230,6 +231,7 @@ public class KubernetesProvisioningUtils {
         tenantInfo.setTenantDomain(tenantDomain);
         applicationContext.setTenantInfo(tenantInfo);
         applicationContext.setVersionHashId(versionHashId);
+        applicationContext.setExposureLevel(exposureLevel);
         return applicationContext;
     }
 

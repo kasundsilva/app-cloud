@@ -23,6 +23,7 @@ public class ApplicationContext {
     private String type;
     private TenantInfo tenantInfo;
     private String versionHashId;
+    private String exposureLevel;
 
     public String getType() {
         return type;
@@ -62,5 +63,13 @@ public class ApplicationContext {
 
     public void setVersionHashId(String versionHashId) {
         this.versionHashId = versionHashId;
+    }
+
+    public void setExposureLevel(String exposureLevel){
+        this.exposureLevel = exposureLevel;
+    }
+
+    public String getExposureLevel() {
+        return exposureLevel;
     }
 }

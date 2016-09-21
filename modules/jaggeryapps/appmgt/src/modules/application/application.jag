@@ -53,14 +53,14 @@ var Arrays = Packages.java.util.Arrays;
  */
 var addApplication = function (applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
                                runtimePropertiesArray, tagArray, appIcon, uploadedFileName, isNewVersion, conSpecMemory,
-                               conSpecCpu, artifactUrl, appCreationMethod, oldHashId, applicationContext, setDefaultVersion) {
+                               conSpecCpu, artifactUrl, appCreationMethod, oldHashId, applicationContext, setDefaultVersion, exposureLevel) {
 
     log.info("Started creating App => Name:" + applicationName + " Version:" + versionName + " Description:" + applicationDescription +
     " RuntimeId:" + runtimeId + " AppType:" + appTypeName + " Runtime Properties:" + JSON.stringify(runtimePropertiesArray) +
     " Tags:" + JSON.stringify(tagArray) + " Uploaded FileName:" + uploadedFileName + " New Version:" + isNewVersion +
     " Allocated Memory:" + conSpecMemory + " Allocated CPU:" + conSpecCpu + " Artifact Url:" + artifactUrl +
     " App Creation Method:" + appCreationMethod + " Previous HashId:" + oldHashId + " Context:" + applicationContext +
-    " DefaultVersion:" + setDefaultVersion);
+    " DefaultVersion:" + setDefaultVersion + "Exposure Level:" + exposureLevel);
 
     var tenantId = modManager.getTenantId();
     var applicationHashId = Util.getApplicationHashId(applicationName, tenantId);
@@ -69,10 +69,10 @@ var addApplication = function (applicationName, versionName, applicationDescript
         uploadedFileName = versionHashId + "." + uploadedFileName.split(".")[1];
     }
     if(isNewVersion == 'true'){
-        createAppVersionInDataBase(versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu);
+        createAppVersionInDataBase(versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
     }else{
         createAppInDataBase(applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
-                runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu);
+                runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
     }
 
     var applicationRuntime = ApplicationManager.getRuntimeById(runtimeId);
@@ -97,7 +97,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
     var buildDockerImageStatus = buildDockerImage(applicationName, versionName, runtimeId, absFileUploadedPath, applicationRuntime, tagName, versionHashId, dockerClient);
     if (buildDockerImageStatus) {
         pushDockerImage(applicationName, versionName, applicationRuntime, tagName, versionHashId, dockerClient);
-        triggerKubernetesDeployment(runtimeProperties, applicationRuntime, tagName, applicationName, versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu);
+        log.info("############### modules:addApplication:exposureLevel:" + exposureLevel);
+        triggerKubernetesDeployment(runtimeProperties, applicationRuntime, tagName, applicationName, versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
         putSelectedRevisionToSession(applicationHashId, versionName);
     }
 
@@ -112,14 +113,16 @@ var addApplication = function (applicationName, versionName, applicationDescript
     }
 };
 
-var triggerKubernetesDeployment = function(runtimeProperties, applicationRuntime, tagName, applicationName, versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu){
+var triggerKubernetesDeployment = function(runtimeProperties, applicationRuntime, tagName, applicationName, versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu, exposureLevel){
+    log.info("############### modules:triggerKubernetesDeployment_1:exposureLevel:" + exposureLevel);
     var appHostURL = constructAppLaunchURL(applicationName, versionName);
     var containers = getContainers(modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL), applicationRuntime.getImageName(), tagName, versionHashId ,versionHashId, runtimeProperties, runtimeId, appHostURL);
     var deploymentConfig = getDeploymentConfig(containers, versionHashId, replicas);
     if (log.isDebugEnabled()) {
         log.debug("Triggering Kubernetes to deploy version:" + versionHashId);
     }
-    deployApplication(applicationName, versionName, appTypeName, deploymentConfig, false, versionHashId, "new", conSpecMemory, conSpecCpu);
+    log.info("############### modules:triggerKubernetesDeployment_2:exposureLevel:" + exposureLevel);
+    deployApplication(applicationName, versionName, appTypeName, deploymentConfig, false, versionHashId, "new", conSpecMemory, conSpecCpu, exposureLevel);
 }
 
 var pushDockerImage = function (applicationName, versionName, applicationRuntime, tagName, versionHashId, dockerClient){
@@ -218,7 +221,7 @@ var buildDockerImage = function (applicationName, versionName, runtimeId, absFil
 }
 
 var createAppInDataBase = function(applicationName, versionName, applicationDescription, replicas, runtimeId,
-                                   appTypeName, runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu){
+                                   appTypeName, runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel){
 
     //================================= Adding application to Database =========================================
     var application = new Application();
@@ -243,12 +246,14 @@ var createAppInDataBase = function(applicationName, versionName, applicationDesc
             iconBlob = new Packages.javax.sql.rowset.serial.SerialBlob(iconStream);
             application.setIcon(iconBlob);
         }
+        log.info("################# modules:createAppInDataBase:exposureLevel:" + exposureLevel);
         version.setVersionName(versionName);
         version.setRuntimeId(runtimeId);
         version.setStatus(APPLICATION_CREATED);
         version.setHashId(versionHashId);
         version.setConSpecCpu(conSpecCpu);
         version.setConSpecMemory(conSpecMemory);
+        version.setExposureLevel(exposureLevel);
         if(runtimePropertiesArray.length > 0) {
             var runtimePropertyList = generateRuntimePropsList(runtimePropertiesArray);
             version.setRuntimeProperties(runtimePropertyList);
@@ -273,18 +278,20 @@ var createAppInDataBase = function(applicationName, versionName, applicationDesc
     return application;
 }
 
-var createAppVersionInDataBase = function( versionName,   runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu){
+var createAppVersionInDataBase = function( versionName,   runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel){
 	var version = new Version();
     try {
         if (log.isDebugEnabled()) {
             log.debug("Adding version:" + versionHashId + " to database");
         }
+        log.info("################ modules:createAppVersionInDataBase:exposureLevel:" + exposureLevel);
         version.setVersionName(versionName);
         version.setRuntimeId(runtimeId);
         version.setStatus(APPLICATION_CREATED);
         version.setHashId(versionHashId);
         version.setConSpecCpu(conSpecCpu);
         version.setConSpecMemory(conSpecMemory);
+        version.setExposureLevel(exposureLevel);
         if(runtimePropertiesArray.length > 0) {
             var runtimePropertyList = generateRuntimePropsList(runtimePropertiesArray);
             version.setRuntimeProperties(runtimePropertyList);
@@ -367,12 +374,13 @@ var createDockerFile = function (applicationName, versionName, appTypeName, runt
     return absFileUploadedPath;
 }
 
-var deployApplication = function(applicationName, versionName, appTypeName, deploymentConfig, isRedeploy, versionHashId, status, conSpecMemoryLimit, conSpecCpuLimit){
+var deployApplication = function(applicationName, versionName, appTypeName, deploymentConfig, isRedeploy, versionHashId, status, conSpecMemoryLimit, conSpecCpuLimit, exposureLevel){
 
     var conSpecMemory;
     var conSpecCpu;
     //If create application call then pass spec values or else (redeploy) query the database
     if (!(conSpecMemoryLimit && conSpecCpuLimit)) {
+       log.info("############### redeploying...");
        var applicationHashId = Util.getApplicationHashId(applicationName, modManager.getTenantId());
        var application = getApplication(applicationHashId);
        if (application.versions) {
@@ -383,6 +391,7 @@ var deployApplication = function(applicationName, versionName, appTypeName, depl
             }
         }
     } else {
+        log.info("############### creating new...");
         conSpecMemory = conSpecMemoryLimit;
         conSpecCpu = conSpecCpuLimit;
     }
@@ -400,8 +409,10 @@ var deployApplication = function(applicationName, versionName, appTypeName, depl
     var msg = "Application deployment successfully triggered in Kubernetes";
     addEvent(KUBE_DEPLOY, EVENT_PENDING, msg, versionHashId);
     //Creating basic deployment
+    log.info("################# modules:deployApplication:exposureLevel:" + exposureLevel);
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
-            applicationName, versionName, appTypeName , modManager.getTenantId(), modManager.getTenantDomain(), versionHashId);
+            applicationName, versionName, appTypeName , modManager.getTenantId(), modManager.getTenantDomain(), versionHashId, exposureLevel);
+
     var kubService = new KubernetesRuntime(applicationCtx, resourceQuotaLimit);
     if (log.isDebugEnabled()) {
         log.debug("Deploying application: " + applicationName);
@@ -467,8 +478,9 @@ var deployApplication = function(applicationName, versionName, appTypeName, depl
 
 var getRestartCounts = function (applicationName, versionName, applicationType){
     var versionHashId = getVersionHashId(applicationName, versionName);
+    var exposureLevel = getExposureLevel(applicationName, versionName);
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
-            applicationName, versionName, applicationType , modManager.getTenantId(), modManager.getTenantDomain(), versionHashId);
+            applicationName, versionName, applicationType , modManager.getTenantId(), modManager.getTenantDomain(), versionHashId, exposureLevel);
     var kubService = new KubernetesRuntime(applicationCtx);
     var restartCounts = kubService.getPodRestartCounts();
     return restartCounts;
@@ -496,22 +508,28 @@ var updateApplicationStatus = function(versionHashId, status){
     ApplicationManager.updateVersionStatus(versionHashId, status);
 };
 
-var redeployVersion = function(applicationName, versionName, versionHashId, appTypeName){
+var updateVersionExposureLevel = function(exposureLevel, versionHashId){
+    ApplicationManager.updateVersionExposureLevel(exposureLevel, versionHashId);
+};
+
+var redeployVersion = function(applicationName, versionName, versionHashId, appTypeName, exposureLevel){
     var isDeleted = deleteApplicationFromKubernetes(versionHashId);
     deleteEventsOfAppVersions(versionHashId);
     var msg = "Successfully triggered stopping container";
     addEvent(STOP_CONTAINERS, EVENT_PENDING, msg, versionHashId);
     if (isDeleted) {
+        updateVersionExposureLevel(exposureLevel, versionHashId);
         updateApplicationStatus(versionHashId, APPLICATION_STOPPED);
         msg = "Successfully completed stopping container";
         addEvent(STOP_CONTAINERS, EVENT_SUCCEEDED, msg, versionHashId);
-        redeployApplication(applicationName, versionName, versionHashId, appTypeName);
+        redeployApplication(applicationName, versionName, versionHashId, appTypeName, exposureLevel);
+        log.info("################# updateVersionExposureLevel:" + versionHashId + ":" + exposureLevel) ;
         return true;
     } else {
         if (log.isDebugEnabled()) {
             log.debug("Stopping container failed for version:" + versionHashId);
         }
-        msg = "Stopping container failed ";
+        msg = "Stopping container failed";
         addEvent(STOP_CONTAINERS, EVENT_FAILED, msg, versionHashId);
         return false;
     }
@@ -525,12 +543,13 @@ var deleteEventsOfAppVersions = function(versionHashId){
     }
 }
 
-var redeployApplication = function(applicationName, versionName, versionHashId, appTypeName){
+var redeployApplication = function(applicationName, versionName, versionHashId, appTypeName, exposureLevel){
     if (log.isDebugEnabled()) {
         log.debug("Redeployment started for version:" + versionHashId);
     }
     var deploymentConfig = buildDeploymentConfigFromDB(versionHashId, applicationName, versionName);
-    deployApplication(applicationName, versionName, appTypeName, deploymentConfig, true, versionHashId, "redeploy");
+    log.info("############### redeployApplication:exposureLevel:" + exposureLevel);
+    deployApplication(applicationName, versionName, appTypeName, deploymentConfig, true, versionHashId, "redeploy", null, null, exposureLevel);
     if (getDefaultVersion(applicationName) == versionName) {
         redeployMappedDomain(applicationName, versionName);
     }
@@ -1136,8 +1155,18 @@ var deleteSelectedVersionFromSession = function(applicationKey){
 
 var getVersionHashId = function(applicationName, versionName){
     var tenantId = modManager.getTenantId();
-    var versionHashId = Util.getVersionHashId(applicationName, versionName, tenantId)
+    var versionHashId = Util.getVersionHashId(applicationName, versionName, tenantId);
     return versionHashId;
+}
+
+var getExposureLevel = function(applicationName, versionName){
+    var tenantId = modManager.getTenantId();
+    log.info("############### tenantId:" + tenantId);
+    var versionHashId = getVersionHashId(applicationName, versionName);
+    log.info("############### versionHashId:" + versionHashId);
+    var exposureLevel = ApplicationManager.getExposureLevel(versionHashId);
+    log.info("############### exposureLevel:" + exposureLevel);
+    return exposureLevel;
 }
 
 var getApplicationCreationEvents = function(applicationName, versionName) {
@@ -1337,7 +1366,7 @@ var deleteApplicationFromKubernetes = function(versionHashId) {
 
     try{
         var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(null, null, null, modManager.getTenantId(),
-                                                                               modManager.getTenantDomain(true), versionHashId);
+                                                                               modManager.getTenantDomain(true), versionHashId, null);
         var kubernetesRuntimeProvisioningService = new KubernetesRuntime(applicationCtx);
         return kubernetesRuntimeProvisioningService.deleteDeployment();
 
@@ -1494,9 +1523,11 @@ var createServiceWithHostName = function (applicationName, versionName, hostName
     var applicationHashId = Util.getApplicationHashId(applicationName, tenantId);
     var appType = getApplication(applicationHashId).applicationType;
     var versionHashId = getVersionHashId(applicationName, versionName);
+    var exposureLevel = getExposureLevel(applicationName, versionName);
+    log.info("################# createServiceWithHostName:exposureLevel:" + exposureLevel);
 
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
-            applicationName, versionName, appType, modManager.getTenantId(), modManager.getTenantDomain(), versionHashId);
+            applicationName, versionName, appType, modManager.getTenantId(), modManager.getTenantDomain(), versionHashId, exposureLevel);
     var kubernetesRuntimeProvisioningService = new KubernetesRuntime(applicationCtx);
 
     var containerServiceProxies = getContainerServiceProxies(versionHashId);
@@ -1524,8 +1555,9 @@ var deleteService = function (applicationName, versionName) {
     var applicationHashId = Util.getApplicationHashId(applicationName, tenantId);
     var appType = getApplication(applicationHashId).applicationType;
     var versionHashId = getVersionHashId(applicationName, versionName);
+    var exposureLevel = getExposureLevel(applicationName, versionName);
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
-            applicationName, versionName, appType, modManager.getTenantId(), modManager.getTenantDomain(), versionHashId);
+            applicationName, versionName, appType, modManager.getTenantId(), modManager.getTenantDomain(), versionHashId, exposureLevel);
     var kubernetesRuntimeProvisioningService = new KubernetesRuntime(applicationCtx);
     //delete version specific service from K8s
     var k8sKindService = Packages.org.wso2.appcloud.provisioning.runtime.KubernetesPovisioningConstants.KIND_SERVICE;

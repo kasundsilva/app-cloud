@@ -60,6 +60,7 @@ var log = new Log();
         var applicationDescription = request.getParameter("applicationDescription");
         var replicas = 1;
         var runtimeId = request.getParameter("runtime");
+        var exposureLevel = "all";
         if (validateRequiredAndNumber("runtime", runtimeId)) {return;}
 
         var isNewVersion = request.getParameter("isNewVersion");
@@ -247,7 +248,7 @@ var log = new Log();
                                                      replicas, runtimeId, appTypeName, runtimeProperties, tags,
                                                      appIcon, uploadedFileName, isNewVersion, conSpecMemory,
                                                      conSpecCpu, artifactUrl, appCreationMethod, oldHashId,
-                                                     applicationContext, setDefaultVersion);
+                                                     applicationContext, setDefaultVersion, exposureLevel);
                 } else {
                     var gitRepoUrl = request.getParameter("gitRepoUrl");
                     var gitRepoBranch = request.getParameter("gitRepoBranch");
@@ -306,6 +307,8 @@ var log = new Log();
         var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
         var podDeleteTimeOut = modManager.getPropertyValue(POD_DELETE_TIMEOUT);
         var status = applicationModule.getApplicationRevisionStatus(applicationHashId, applicationRevision);
+        var exposureLevel = request.getParameter("exposureLevel");
+        log.info("################# redeploying with exposureLevel:" + exposureLevel);
 
         // redeploy application from kubernetes
         if(applicationName == null){
@@ -319,13 +322,16 @@ var log = new Log();
         if(versionKey == null){
             versionKey = mod.getVersionHashId(applicationName, applicationRevision)
         }
+        log.info("################# redeploying with exposureLevel-if:" + exposureLevel);
         if (status == APPLICATION_STOPPED || status == APPLICATION_INACTIVE) {
-            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType);
+            log.info("################# redeploying with exposureLevel-if-1:" + exposureLevel);
+            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType, exposureLevel);
             response.status = 200;
             response.content = "Application is successfully started.";
         } else {
             try {
-                if (applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, applicationType)) {
+            log.info("################# redeploying with exposureLevel-if-2:" + exposureLevel);
+                if (applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, applicationType, exposureLevel)) {
                     response.status = 200;
                     response.message = "Application is successfully redeployed.";
                 } else {
@@ -352,9 +358,10 @@ var log = new Log();
             var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
             var versions = applicationModule.getVersionListOfApplication(applicationHashId);
             var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
+            var exposureLevel = request.getParameter("exposureLevel");
 
             // redeploy application from kubernetes
-            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType);
+            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType, exposureLevel);
             print(stringify(versions));
         } else {
             logMessage = "Application creation request not accepted because the application count has " +
@@ -663,6 +670,14 @@ var log = new Log();
         var mod = jagg.module("application");
         var endpoints = mod.getAppTypeUtil(appType).getEndpoints(deploymentURL, versionId);
         print(endpoints);
+
+    } else if (action == "getExposureLevel") {
+
+        var applicationName = request.getParameter("applicationName");
+        var versionName = request.getParameter("versionName");
+        var mod = jagg.module("application");
+        var exposureLevel = mod.getExposureLevel(applicationName, versionName);
+        print(exposureLevel);
     } else {
         throw new Error("No action specified for: " + action);
     }

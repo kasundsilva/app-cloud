@@ -276,6 +276,10 @@ jagg.module("application", {
 
     isVersionExist:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").isVersionExist.apply(this, arguments);
+    },
+
+    getExposureLevel:function () {
+        return jagg.require(jagg.getModulesDir() + "application/application.jag").getExposureLevel.apply(this, arguments);
     }
 });
 %>
