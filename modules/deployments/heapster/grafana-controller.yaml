@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: grafana
+  name: grafana
+  namespace: kube-heapster
+spec:
+  replicas: 1
+  selector:
+    name: grafana
+  template:
+    metadata:
+      labels:
+        name: grafana
+    spec:
+      nodeSelector:
+        role: loadbalancer
+      containers:
+      - name: grafana
+        image: registry.local.wso2.com:5000/wso2_appcloud_heapster_grafana:v2.6.0-2-wso2v1
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: INFLUXDB_SERVICE_URL
+            value: http://monitoring-influxdb:80
+            # The following env variables are required to make Grafana accessible via
+            # the kubernetes api-server proxy. On production clusters, we recommend
+            # removing these env variables, setup auth for grafana, and expose the grafana
+            # service using a LoadBalancer or a public IP.
+          - name: GF_AUTH_BASIC_ENABLED
+            value: "true"
+          - name: GF_AUTH_ANONYMOUS_ENABLED
+            value: "false"
+          - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+            value: Admin
+          - name: GF_SERVER_ROOT_URL
+            value: /
+          - name: GF_USERS_ALLOW_ORG_CREATE
+            value: "false"
+          - name: GF_USERS_ALLOW_SIGN_UP
+            value: "false"
+          - name: GRAFANA_PASSWD
+            value: localadmin
+          - name: GF_SECURITY_ADMIN_PASSWORD
+            value: localadmin
+          - name: GF_SERVER_PROTOCOL
+            value: https
+          - name: GF_SERVER_CERT_FILE
+            value: /mnt/grafana/certs/grafana.crt
+          - name: GF_SERVER_CERT_KEY
+            value: /mnt/grafana/certs/grafana.key
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-storage
+      volumes:
+      - name: grafana-storage
+        hostPath:
+          path: /mnt/grafana/data

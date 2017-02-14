@@ -1,0 +1,36 @@
+{
+    "app_cloud" : {
+        "pageTitle": "WSO2 App Cloud",
+        "cloudTitle" : "Application Cloud",
+        "cloudIcon" : "fa fa-cubes",
+        "cloudSpecificApplicationRepresentation" : "Application",
+        "properties" : {
+            "documentationUrl": "AppCloud.Documentation.Url",
+            "supportUrl": "AppCloud.Support.Url"
+        },
+        "billing" : {
+            "isBillingEnabled" : false,
+            "plans" : [
+                {"id" : "free", "maxApplications" : 3, "maxDatabases" : 3, "maxReplicas" : 2},
+                {"id" : "paid", "maxApplications" : 10, "maxDatabases" : 6, "maxReplicas" : 4}
+            ]
+        }
+    },
+    "integration_cloud" : {
+        "pageTitle": "WSO2 Integration Cloud",
+        "cloudTitle" : "Integration Cloud",
+        "cloudIcon" : "fw fw-service",
+        "cloudSpecificApplicationRepresentation" : "Project",
+        "properties" : {
+            "documentationUrl": "IntegrationCloud.Documentation.Url",
+            "supportUrl": "IntegrationCloud.Support.Url"
+        },
+        "billing" : {
+            "isBillingEnabled" : true,
+            "plans" : [
+                {"id" : "free", "maxApplications" : 3, "maxDatabases" : 3, "maxReplicas" : 2},
+                {"id" : "paid", "maxApplications" : 10, "maxDatabases" : 6, "maxReplicas" : 4}
+            ]
+        }
+    }
+}

@@ -22,7 +22,6 @@ public class ContainerServiceProxy {
     private String serviceProtocol;
     private int servicePort;
     private String serviceBackendPort;
-    private String hostURL;
 
     public int getId() {
         return id;
@@ -62,13 +61,5 @@ public class ContainerServiceProxy {
 
     public void setServiceBackendPort(String serviceBackendPort) {
         this.serviceBackendPort = serviceBackendPort;
-    }
-
-    public String getHostURL() {
-        return hostURL;
-    }
-
-    public void setHostURL(String hostURL) {
-        this.hostURL = hostURL;
     }
 }

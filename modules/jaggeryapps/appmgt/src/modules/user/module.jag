@@ -24,6 +24,9 @@ jagg.module("user", {
 	},
 	logout:function () {
 		return jagg.require(jagg.getModulesDir() + "user/login/login.jag").logout.apply(this, arguments);
+	},
+	jwtIsUserAuthenticated: function () {
+		return jagg.require(jagg.getModulesDir() + "user/login/login.jag").jwtIsUserAuthenticated.apply(this, arguments);
 	}
 });
 %>

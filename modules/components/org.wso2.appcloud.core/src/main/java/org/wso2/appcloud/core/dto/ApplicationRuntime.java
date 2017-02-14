@@ -21,7 +21,6 @@ public class ApplicationRuntime {
 
     private int id;
     private String runtimeName;
-    private String repoURL;
     private String imageName;
     private String tag;
     private String description;
@@ -40,14 +39,6 @@ public class ApplicationRuntime {
 
     public void setRuntimeName(String runtimeName) {
         this.runtimeName = runtimeName;
-    }
-
-    public String getRepoURL() {
-        return repoURL;
-    }
-
-    public void setRepoURL(String repoURL) {
-        this.repoURL = repoURL;
     }
 
     public String getImageName() {

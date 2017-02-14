@@ -25,10 +25,6 @@ var log=new Log();
 
     var mod,result;
         action = request.getParameter("action");
-    if (!jagg.getUser()) {
-        print(UNAUTHORIZED_ERROR_RESPONSE);
-        return;
-    }
 	if (action === "logout") {
 		mod = jagg.module("user");
 		try {

@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -21,8 +21,15 @@ include("/jagg/jagg.jag");
 var site = require("/site/conf/site.json");
 
 (function () {
-    var applicationKey = request.getParameter("applicationKey");
 
+    var user = jagg.getUser();
+    if (!user) {
+        jagg.includeBlock("sso/filter", {});
+        return;
+    }
+
+    var applicationKey = request.getParameter("applicationKey");
+    var selectedRevision = request.getParameter("selectedRevision");
     jagg.render({
         "name": "page/master",
         "inputs": {
@@ -41,7 +48,17 @@ var site = require("/site/conf/site.json");
                             {
                                 "name": "urlmapper",
                                 "inputs": {
-                                    "applicationKey": applicationKey
+                                    "applicationKey": applicationKey,
+                                    "selectedRevision" : selectedRevision
+                                }
+                            }
+                        ],
+                        "leftMenu":[
+                            {
+                                "name":"leftMenu",
+                                "inputs":{
+                                    "applicationKey":applicationKey,
+                                    "pageName":"Custom URL"
                                 }
                             }
                         ]

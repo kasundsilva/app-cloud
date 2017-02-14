@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -23,66 +23,114 @@ include("/jagg/constants.jag");
 
 var log= new Log();
 var response = {};
-var DEFAULT_TEMPLATE = 'DEFAULT_ALL_PERMISSIONS';
+var databaseModule = jagg.module("databases");
 
 (function () {
 	var result,
 	action = request.getParameter("action"),
 	mod = jagg.module("databases"),
 	site = require("/site/conf/site.json");
-    if (!jagg.getUser()) {
-        return;
-    }
 	if (action == "createDatabaseAndAttachUser") {
 		var databaseName = request.getParameter("databaseName");
 		var customPassword = request.getParameter("customPassword");
         var userNameFromRequest = request.getParameter("userName");
         var isBasic = request.getParameter("isBasic");
+        var respObj = {};
+
+        var isDatabaseExists;
+        try {
+            isDatabaseExists = mod.isDatabaseExists(databaseName);
+        } catch (e) {
+            var msg = "Error while checking  existence for database : " + databaseName;
+            log.error(msg);
+            log.error(e);
+            isDatabaseExists = false;
+        }
+        if(isDatabaseExists == "true"){
+            response.status = 400;
+            response.content = "Database already exists";
+            return;
+        }
+
+        var isDatabaseUserExists;
+        try {
+            isDatabaseUserExists = mod.isDatabaseUserExists(userNameFromRequest);
+        } catch (e) {
+            var msg = "Error while checking  existance for database user : " + userNameFromRequest;
+            log.error(msg);
+            log.error(e);
+            isDatabaseUserExists = false;
+        }
+        if(isDatabaseUserExists == "true"){
+            response.status = 400;
+            response.content = "Database user already exists";
+            return;
+        }
 
         try{
-            var templateCreated = mod.createTemplateWithAllPermissions(DEFAULT_TEMPLATE);
-            var actualDBName = mod.createDatabase(databaseName);
-            if(actualDBName.indexOf('already exists') > -1){
-                print("database exists");
-            }
+            var databaseCount = databaseModule.getDatabaseCount();
+            var maxDatabases = databaseModule.getMaxDatabaseCount();
 
-            var userName;
-            if(isBasic === 'true'){
-                userName = mod.createDatabaseUser(userNameFromRequest, customPassword);
-                if(userName.indexOf('already exists') == -1) {
-                    isUserCreated = true;
+            if (databaseCount < maxDatabases) {
+                if (mod.isDatabasePrivilegeTemplateExist(DEFAULT_TEMPLATE) == 'false') {
+                    var templateCreated = mod.createTemplateWithAllPermissions(DEFAULT_TEMPLATE);
                 }
-            }
-
-            var dbResult;
-            if(isBasic === 'true'){
-                dbResult = mod.attachNewUser(actualDBName, userName, DEFAULT_TEMPLATE);
+                var actualDBName = mod.createDatabase(databaseName);
+                if (actualDBName.indexOf('already exists') > -1) {
+                    print("database exists");
+                }
+                var userName;
+                if (isBasic === 'true') {
+                    userName = mod.createDatabaseUser(userNameFromRequest, customPassword);
+                    if (userName.indexOf('already exists') == -1) {
+                        isUserCreated = true;
+                    }
+                }
+                var dbResult;
+                if (isBasic === 'true') {
+                    dbResult = mod.attachNewUser(actualDBName, userName, DEFAULT_TEMPLATE);
+                } else {
+                    dbResult = mod.attachNewUser(actualDBName, userNameFromRequest, DEFAULT_TEMPLATE);
+                }
             } else {
-                dbResult = mod.attachNewUser(actualDBName, userNameFromRequest, DEFAULT_TEMPLATE);
+                response.status = 400;
+                response.content = "Maximum number of databases that can be created is " + maxDatabases;
             }
-        }catch(e){
-            log.error(e);
+            respObj.actualDBName = actualDBName;
+            respObj.value = 'success';
+            respObj.userName = userName;
+            print(stringify(respObj));
+        } catch (e) {
+            response.status = 400;
+            response.content = "Error while creating database";
         }
-        var respObj = {};
-        respObj.actualDBName = actualDBName;
-        respObj.value = 'success';
-        respObj.userName = userName;
-        print(stringify(respObj));
 
-	}else if(action == "attachUserWithPermissions"){
+	} else if(action == "attachUserWithPermissions"){
         var dbname = request.getParameter("databaseName");
         var userName = request.getParameter("userName");
         try {
             result = mod.attachNewUser(dbname, userName, DEFAULT_TEMPLATE);
             print(result);
         } catch (e) {
-            var msg = "Error while attching user " + userName + " to the db : " + dbname;
+            var msg = "Error while attaching user " + userName + " to the db : " + dbname;
             log.error(msg);
             log.error(e);
             throw e;
         }
 
-    }else if(action == "detachUser"){
+	} else if(action == "isDatabaseExists"){
+        var dbname = request.getParameter("databaseName");
+        try {
+            result = mod.isDatabaseExists(dbname);
+            print(result);
+        } catch (e) {
+            var msg = "Error while checking  existance for database : " + dbname;
+            log.error(msg);
+            log.error(e);
+            print("false");
+        }
+
+    } else if(action == "detachUser"){
 		var dbname = request.getParameter("databaseName");
 		var username = request.getParameter("username");
 		try {

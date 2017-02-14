@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -118,6 +118,11 @@ var getTenantId = function (fromCarbonContext) {
     return tenantManager.getTenantId(tenantDomain);
 };
 
+var getTenantIdForGivenTenantDomain = function (tenantDomain) {
+    var tenantManager = multitenancy.getTenantManager();
+    return tenantManager.getTenantId(tenantDomain);
+};
+
 var getTenantDomainById = function (tenantId) {
     var carbon = require('carbon');
     var tenantManager = multitenancy.getTenantManager();
@@ -151,4 +156,47 @@ var getUserEmailAddress = function () {
     return session.get("logged.user.email");
 };
 
+var checkAuthorizationForUser = function (userName , permission) {
+    var carbon = require('carbon');
+    var server = carbon.server;
+    var isUserAuthorized = false;
+    var tenantDomain = null;
+    if(userName){
+        if (userName.indexOf("@") != -1) {
+            tenantDomain = userName.substring(userName.lastIndexOf('@') + 1);
+            userName = userName.substring(0, userName.lastIndexOf('@'));
+        } else {	// else assume super tenant
+            tenantDomain = SUPER_TENANT_DOMAIN_NAME;
+        }
+    } else {
+        throw "username not specified";
+    }
+    var carbon = require('carbon');
+    var server = carbon.server;
+    var multitenancy = carbon.multitenancy;
+    var tenantManager = multitenancy.getTenantManager();
+    var tenantId = tenantManager.getTenantId(tenantDomain);
+    var realmService = server.osgiService('org.wso2.carbon.user.core.service.RealmService').getTenantUserRealm(tenantId);
+    isUserAuthorized = realmService.getAuthorizationManager().isUserAuthorized(userName, permission, PERMISSION_EXECUTE);
+    return isUserAuthorized;
+};
+
+var getCloudTypeProperties = function () {
+    var cloudTypeProperty = jagg.getCloudTypePropertyConfFilePath();
+    return cloudTypeProperty[jagg.getSelectedCloud()];
+};
+
+var getDashboardTypeProperties = function() {
+    var fileNameUtils = Packages.org.apache.commons.io.FilenameUtils;
+    var dashboardTypePropertyConfPath = fileNameUtils.normalize(DASHBOARD_TYPES_PROPERTIES_CONFIG);
+    var stringfiedObject = stringify(dashboardTypePropertyConfPath);
+    var dashboardTypesProperties = parse(stringfiedObject);
+    return require(dashboardTypesProperties);
+}
+
+function hasCustomURLSettingsAccess() {
+    var username = jagg.getUser();
+    var permission = getPropertyValue(CUSTOM_URL_PERMISSION);
+    return checkAuthorizationForUser(username, permission);
+}
 %>

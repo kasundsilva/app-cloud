@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -18,13 +18,18 @@
  */
 
 include("/jagg/jagg.jag");
+include("/jagg/constants.jag");
 
 jagg.template("envs", function(inputs, outputs, jagg) {
     var versionKey = request.getParameter("versionKey");
     var applicationKey = request.getParameter("applicationKey");
+    var selectedRevision = outputs.selectedRevision;
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
+    var allDBInfo = outputs.allDBInfo;
+    var noOfDbs = outputs.noOfDbs;
+%>
 
-    %>
-     <!-- Bootstrap -->
+      <!-- Bootstrap -->
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/bootstrap-3.2.0/bootstrap.min.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-wso2-1.0.0/css/font-wso2.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-awesome-4.2.0/font-awesome.min.css'))%>">
@@ -32,14 +37,15 @@ jagg.template("envs", function(inputs, outputs, jagg) {
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/select2-4.0.0/select2.min.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/styles.css'))%>">
 
+
+ <!-- right pane wrapper -->
+ <div class="right-pane visible">
+    <!-- BOF App factory menu actionbar -->
     <div class="action-bar">
-        <a href="/appmgt/site/pages/home.jag?applicationKey=<%=applicationKey%>" class="btn-action" data-toggle="tooltip" data-placement="top" title="Tooltip on top">
-                <span class="fw-stack fw-lg btn-action-ico">
-                    <i class="fw fw-circle-outline fw-stack-2x"></i>
-                    <i class="fw fw-left-arrow fw-stack-1x"></i>
-                </span> <span class="hidden-xs">Back to Application</span>
-        </a>
-        <a class="btn-action add-env" data-toggle="tooltip" data-placement="top" title="Tooltip on top">
+        <div class="side-pane-trigger">
+            <i class="fw fw-left"></i>
+        </div>
+        <a class="btn-action add-env" data-toggle="tooltip" data-placement="top" title="Add Environment Variable">
                 <span class="fw-stack fw-lg btn-action-ico">
                     <i class="fw fw-circle-outline fw-stack-2x"></i>
                     <i class="fw fw-add fw-stack-1x"></i>
@@ -52,16 +58,21 @@ jagg.template("envs", function(inputs, outputs, jagg) {
 
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 msg-issues">
-                This allows you to set environment variables which is used in your application.
+                This allows you to set environment variables that are used in your <%=cloudSpecificApplicationRepresentation.toLowerCase()%>. To add database-specific environment variables, type <b>database:</b> in the Value textbox.
             </div>
         </div>
         <div class="env-list">
 
         </div>
  </div>
+ </div>
 
+</div>
 <script >
-$(document).ready(function () {
+var allDBInfo = jQuery.parseJSON('<%=allDBInfo%>');
+var noOfDbs = <%=noOfDbs%>;
+$(document).ready(function() {
+    var cloudSpecificApplicationRepresentation = '<%=cloudSpecificApplicationRepresentation%>';
     var prevKey, prevValue;
     jagg.post("../blocks/application/application.jag", {
         action: "getEnvVariablesOfVersion",
@@ -69,44 +80,66 @@ $(document).ready(function () {
 
     }, function (result) {
         var parsedResult = JSON.parse(result);
-        for (var i = 0; i < parsedResult.length; i++) {
+        if(parsedResult.length == 0){
             $(".env-list").prepend(
-                '<div class="form-inline  property-seperator custom-env-class-for-demo">' +
-                '<div class="form-group">' +
-                '<label class="sr-only" for="key">Key</label>' +
-                '<input type="text" class="form-control env-key" id="key" placeholder="Key" readonly value="' + parsedResult[i].key + '">' +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label class="sr-only" for="value">Value</label>' +
-                '<input type="text" class="form-control env-value" id="value" placeholder="Value" readonly value="' + parsedResult[i].value + '">' +
-                '</div>' +
-                '<div class="form-group edit-key-values">' +
-                '<span class="fw-stack fw-lg">' +
-                '<i class="fw fw-circle-outline fw-stack-2x fw-inverse"></i>' +
-                '<i id="editIcon" class="fw  fw-edit fw-stack-1x fw-inverse"></i>' +
-                '<i id="saveIcon" class="fw  fw-save fw-stack-1x fw-inverse" style="display: none"></i>' +
-                '</span>' +
-                '<span class="fw-stack fw-lg">' +
-                '<i class="fw fw-circle-outline fw-stack-2x fw-inverse"></i>' +
-                '<i class="fw fw-cancel fw-stack-1x fw-inverse"></i>' +
-                '</span>' +
-                '</div>' +
-                '</div>');
+                '<div class="row"><div id="push"></div><div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">No environment variables are created yet. </div></div>');
+        } else {
+            for (var i = 0; i < parsedResult.length; i++) {
+                var valueControl;
+                if(noOfDbs == 0){
+                    valueControl = '<input type="text" class="form-control element-value-holder" id="value" value="' + parsedResult[i].value  + '">';
+                } else {
+                    valueControl = '<select name="value" class="form-control select2 element-value-holder" disabled><option>' + parsedResult[i].value + '</option></select>';
+                }
+                $(".env-list").prepend(
+                    '<div class="form-inline custom-env-class-for-demo">' +
+                    '<div class="form-group">' +
+                    '<label class="sr-only" for="key">Key</label>' +
+                    '<input type="text" class="form-control env-key element-key-holder" placeholder="Key" readonly value="' + parsedResult[i].key + '">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="sr-only" for="value">Value</label>' +
+                    '<select name="value" class="form-control select2 element-value-holder" disabled><option>' + parsedResult[i].value + '</option></select>' +
+                    '</div>' +
+                    '<div class="form-group edit-key-values">' +
+                    '<span class="fw-stack fw-lg edit-env">' +
+                    '<i class="fw fw-circle-outline fw-stack-2x fw-inverse"></i>' +
+                    '<i id="editIcon" class="fw  fw-edit fw-stack-1x fw-inverse"></i>' +
+                    '<i id="saveIcon" class="fw  fw-save fw-stack-1x fw-inverse" style="display: none"></i>' +
+                    '</span>' +
+                    '<span class="fw-stack fw-lg">' +
+                    '<i class="fw fw-circle-outline fw-stack-2x fw-inverse"></i>' +
+                    '<i class="fw fw-delete fw-stack-1x fw-inverse"></i>' +
+                    '</span>' +
+                    '</div>' +
+                    '</div>');
+            }
         }
 
-        $(".add-env").click(function () {
+        $(".add-env").click(function() {
+            //Disable "Add Environment Variable" button
+            $(this).css('pointer-events', 'none');
+            $(this).attr("title", "Save Environment Variable to Enable");
+
+            var valueControl;
+            if(noOfDbs == 0){
+                valueControl = '<input type="text" class="form-control element-value-holder" id="value" placeholder="Value">';
+            } else {
+                valueControl = '<select name="value" class="form-control select2 element-value-holder"></select>';
+            }
+
             $(".env-list").prepend(
                 '<div class="form-inline  property-seperator custom-env-class-for-demo">' +
                 '<div class="form-group">' +
                 '<label class="sr-only" for="key">Key</label>' +
-                '<input type="text" class="form-control" id="key" placeholder="Key">' +
+                '<input type="text" class="form-control element-key-holder" placeholder="Key">' +
                 '</div>' +
                 '<div class="form-group">' +
                 '<label class="sr-only" for="value">Value</label>' +
-                '<select id="value" name="value" class="form-control select2"></select>' +
+                valueControl +
                 '</div>' +
                 '<div class="form-group edit-key-values">' +
-                '<span class="fw-stack fw-lg">' +
+                '<span class="fw-stack fw-lg edit-env">' +
                 '<i class="fw fw-circle-outline fw-stack-2x fw-inverse"></i>' +
                 '<i id="editIcon" class="fw  fw-edit fw-stack-1x fw-inverse" style="display: none"></i>' +
                 '<i id="saveIcon" class="fw  fw-save fw-stack-1x save-new-entry fw-inverse"></i>' +
@@ -117,83 +150,248 @@ $(document).ready(function () {
                 '</span>' +
                 '</div>' +
                 '</div>');
-                
-            initSelect2(null);
+
+            //Initialize select2 container on newly added env variable
+            var valueElem = $(this).parent().parent().parent().find('.element-value-holder')[0];
+            if(noOfDbs != 0){
+                initSelect2(null, valueElem, "", allDBInfo);
+            }
+
+            //Disable Other environment variables "Edit" button
+            $(".fw-edit").each( function(i) {
+                if (i!=0) {
+                    $(this).addClass("edit-disable");
+                }
+            });
+
         });
 
-        $(document).on('click', '.fw-edit', function () {
-            $(this).parent().parent().parent().find('#key')[0].readOnly = false;
-            $(this).parent().parent().parent().find('#value')[0].readOnly = false;
-            $(this).hide();
-            $(this).parent().find('#saveIcon').show();
-            prevKey = $(this).parent().parent().parent().find('#key')[0].value;
-            prevValue = $(this).parent().parent().parent().find('#value')[0].value;
+        $(document).on('click', '.fw-edit', function() {
+            if(noOfDbs == 0){
+                $(this).parent().parent().find('.fw-delete').removeClass('fw-delete').addClass('fw-cancel');
+                $(this).parent().parent().parent().find('.element-key-holder')[0].readOnly = false;
+                var valueElem = $(this).parent().parent().parent().find('.element-value-holder')[0];
+                $(valueElem).children('option').remove();
+                $(valueElem).prop('disabled', false);
+                var select2 = initSelect2(data, valueElem, "", "");
+                $(this).hide();
+                $(this).parent().find('#saveIcon').show();
+                prevKey = $(this).parent().parent().parent().find('.element-key-holder')[0].value;
+                prevValue = $(this).parent().parent().parent().find('.element-value-holder')[0].value;
+            } else {
+                //Disable "Add Environment Variable" Button
+                $(".add-env").css('pointer-events', 'none');
+                $(".add-env").attr("title", "Save Environment Variable to Enable");
+                $(this).parent().parent().find('.fw-delete').removeClass('fw-delete').addClass('fw-cancel');
+
+                //Disable Other environment variables "Edit" button
+                var parentElement = $(this).parent().filter('.edit-env')[0];
+                $('.edit-env').each(function() {
+                    var currentElement = $(this).get(0);
+                    if(currentElement !== parentElement) {
+                        if( $(this).hasClass('edit-enable')){
+                            $(this).removeClass('edit-enable');
+                        }
+                        $(this).addClass('edit-disable');
+                    }
+                });
+
+                var keyElem = $(this).parent().parent().parent().find('.element-key-holder')[0];
+                var valueElem = $(this).parent().parent().parent().find('.element-value-holder')[0];
+                keyElem.readOnly = false;
+                prevKey = keyElem.value;
+                prevValue = valueElem.value;
+
+                var data = [];
+                var prevData = {};
+                prevData.id = prevValue;
+                prevData.text = prevValue;
+                data.push(prevData);
+
+                //Hide edit icon and display save icon
+                $(this).hide();
+                $(this).parent().find('#saveIcon').show();
+
+                //Remove displayed value and reinitialize select2 container
+                $(valueElem).children('option').remove();
+                $(valueElem).prop('disabled', false);
+                var select2 = initSelect2(data, valueElem, "", allDBInfo);
+                select2.val(prevValue).trigger("change");
+            }
         });
 
-        $(document).on('click', '.fw-cancel', function () {
+        $(document).on('click', '.fw-cancel', function() {
             var isNewRow = $(this).hasClass('cancel-new-entry');
             if (isNewRow) {
+                //Enable "Add Environment Variable" button
+                $(".add-env").css('pointer-events', 'auto');
+                $(".add-env").attr("title", "Add Environment Variable");
+
+                //Enable other environment variables "Edit" Button
+                var siblingElement = $(this).parent().parent().find('.edit-env')[0];
+                $('.edit-env').each(function() {
+                    var currentElement = $(this).get(0);
+                    if(currentElement !== siblingElement) {
+                        $(this).addClass('edit-enable');
+                    }
+                });
+
                 $(this).parent().parent().parent().remove();
                 return;
-            }
-            var tr = $(this).parent().parent().parent();
-            var key = $(this).parent().parent().parent().find('#key')[0].value;
-            var value = $(this).parent().parent().parent().find('#value')[0].value;
+            } else {
+                //Enable "Add Environment Variable" button
+                $(".add-env").css('pointer-events', 'auto');
+                $(".add-env").attr("title", "Add Environment Variable");
 
-            jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete Environment Variables',content:'Are you sure you want to delete this Env ' + key + ' ?',
-                okCallback:function(){
-                   deleteRuntimeAttribute(key, value, tr);
-                }, cancelCallback:function(){}
+                //Enable other environment variables "Edit" Button
+                var siblingElement = $(this).parent().parent().find('.edit-env')[0];
+                $('.edit-env').each(function() {
+                    var currentElement = $(this).get(0);
+                    if(currentElement !== siblingElement) {
+                        $(this).addClass('edit-enable');
+                    }
+                });
+
+                 var keyElem = $(this).parent().parent().parent().find('.element-key-holder')[0];
+                 var valueElem = $(this).parent().parent().parent().find('.element-value-holder')[0];
+                 keyElem.readOnly = true;
+                 $(valueElem).prop('disabled', true);
+                 $(valueElem).removeAttr('multiple');
+                 $(valueElem).removeClass('select2-hidden-accessible');
+                 $(valueElem).next().remove();
+
+                //Hide save icon and display edit icon
+                $(this).parent().parent().find('#saveIcon').hide();
+                $(this).parent().parent().find('#editIcon').show();
+
+                $(this).parent().parent().find('.fw-cancel').removeClass('fw-cancel').addClass('fw-delete');
+            }
+        });
+
+        $(document).on('click', '.fw-delete', function() {
+            var tr = $(this).parent().parent().parent();
+            var key = $(this).parent().parent().parent().find('.element-key-holder')[0].value;
+            var value = $(this).parent().parent().parent().find('.element-value-holder')[0].value;
+
+            jagg.popMessage({
+                type: 'confirm',
+                modalStatus: true,
+                title: 'Delete Environment Variables',
+                content: 'Are you sure you want to delete this environment variable: ' + key + ' ?',
+                yesCallback: function() {
+                    deleteRuntimeAttribute(key, value, tr);
+                },
+                noCallback: function() {}
             });
         });
 
-        $(document).on('click', '.fw-save', function () {
-            var updatedKey = $(this).parent().parent().parent().find('#key')[0].value;
-            var updatedValue = $(this).parent().parent().parent().find('#value')[0].value;
-
-            if(!updatedKey || !updatedValue){
+        $(document).on('focusout', '.element-key-holder', function() {
+        var updatedKey = $(this).parent().parent().parent().find('.element-key-holder')[0].value;
+        var keyValidation = validateEnvKey(updatedKey);
+            if (!keyValidation.status) { //Validates the Env key is in the K8s accepted format
+                jagg.message({
+                    content: keyValidation.msg,
+                    type: 'error'
+                });
                 return;
             }
+        });
 
-            var isNewAddition = $(this).hasClass('save-new-entry');
-            if (isNewAddition) {
-                addRuntimeAttribute(updatedKey, updatedValue);
-                $(this).removeClass('save-new-entry');
-                $(this).parent().parent().find('.cancel-new-entry').removeClass('cancel-new-entry');
-            } else {
-                updateRuntimeAttribute(prevKey, updatedKey, updatedValue);
+        $(document).on('click', '.fw-save', function() {
+            var updatedKey = $(this).parent().parent().parent().find('.element-key-holder')[0].value;
+            var updatedValue = $(this).parent().parent().parent().find('.element-value-holder')[0].value;
+            var keyValidation = validateEnvKey(updatedKey);
+            var element = $(this);
+            if (!updatedKey || !updatedValue) { //Validation when user submits empty keys and values
+                jagg.message({
+                    content: "Please fill the necessary details before saving.",
+                    type: 'info'
+                });
+                return;
+            } else if (!keyValidation.status) { //Validates the Env key is in the K8s accepted format
+                jagg.message({
+                    content: keyValidation.msg,
+                    type: 'error'
+                });
+                return;
             }
-            $(this).parent().find('#saveIcon').hide();
-            $(this).parent().find('#editIcon').show();
-            $(this).parent().parent().parent().find('#key')[0].readOnly = true;
-            $(this).parent().parent().parent().find('#value')[0].readOnly = true;
-
-            displayAppRedeployNotification();
+            jagg.post("../blocks/application/application.jag", {
+                action: "isEnvironmentVariableExist",
+                versionKey: '<%=versionKey%>',
+                key: updatedKey,
+            }, function (result) {
+                var isNewAddition = element.hasClass('save-new-entry');
+                if ((isNewAddition || (prevKey && prevKey != updatedKey)) && JSON.parse(result)) {
+                    jagg.message({
+                        content: "Environment variable with key : " + updatedKey + " already exists.",
+                        type: 'error'
+                    });
+                    return;
+                }
+                if (isNewAddition) {
+                    addRuntimeAttribute(updatedKey, updatedValue, element);
+                } else {
+                    updateRuntimeAttribute(prevKey, updatedKey, updatedValue, element);
+                }
+            });
         });
     });
 
-    function updateRuntimeAttribute(prevKey, newKey, newValue) {
+    function postEnvAddUpdate(element){
+        element.parent().parent().find('.fw-cancel').removeClass('fw-cancel').addClass('fw-delete');
+        element.parent().find('#saveIcon').hide();
+        element.parent().find('#editIcon').show();
+        element.parent().parent().parent().find('.element-key-holder')[0].readOnly = true;
+        element.parent().parent().parent().find('.element-value-holder')[0].readOnly = true;
+
+        displayAppRedeployNotification();
+
+        //Enable "Add Environment Variable" button
+        $(".add-env").css('pointer-events', 'auto');
+        $(".add-env").attr("title", "Add Environment Variable");
+
+        //Enable Other environment variables "Edit" button
+        var parentElement = element.parent().filter('.edit-env')[0];
+        $('.edit-env').each(function() {
+            var currentElement = element.get(0);
+            if(currentElement !== parentElement){
+                element.removeClass("edit-disable");
+            }
+        });
+
+        //Disable current env variables Value text-box
+        var valueSelectionBox = element.parent().parent().parent().find('.select2-container')[0];
+        $(valueSelectionBox).addClass('select2-disable');
+        var selectionRenderedBox = element.parent().parent().parent().find('.select2-selection__rendered')[0];
+        $(selectionRenderedBox).css('height', "100%");
+        var inlineBox = element.parent().parent().parent().find('.select2-search--inline')[0];
+        $(inlineBox).hide();
+        var rootParent = element.parent().parent().parent()[0];
+        $(rootParent).removeClass('property-seperator');
+    }
+
+    function updateRuntimeAttribute(prevKey, newKey, newValue, element) {
         jagg.post("../blocks/application/application.jag", {
             action: "updateRuntimeProperty",
             versionKey: '<%=versionKey%>',
             prevKey: prevKey,
             newKey: newKey,
             newValue: newValue
-
         }, function (result) {
-
+            postEnvAddUpdate(element);
         });
     }
 
-    function addRuntimeAttribute(newKey, newValue) {
+    function addRuntimeAttribute(newKey, newValue, element) {
         jagg.post("../blocks/application/application.jag", {
             action: "addRuntimeProperty",
             versionKey: '<%=versionKey%>',
             key: newKey,
             value: newValue
-
         }, function (result) {
-
+            element.removeClass('save-new-entry');
+            element.parent().parent().find('.cancel-new-entry').removeClass('cancel-new-entry');
+            postEnvAddUpdate(element);
         });
     }
 
@@ -209,6 +407,12 @@ $(document).ready(function () {
         });
     }
 
+    function displayAppRedeployNotification() {
+        jagg.message({
+            content: "Please redeploy the " + cloudSpecificApplicationRepresentation.toLowerCase() + " for the updated runtime variables to take effect.",
+            type: 'info'
+        });
+    }
 
 });
 
@@ -220,14 +424,6 @@ $(document).on('click', '.panel-heading a', function (e) {
         $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
     }
 });
-
-function displayAppRedeployNotification() {
-    jagg.message({
-        content: "Please redeploy the application to take effect updated runtime variables",
-        type: 'info'
-    });
-}
-
 
 </script >
 

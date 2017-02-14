@@ -1,8 +1,28 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------
+#
+# Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+#   WSO2 Inc. licenses this file to you under the Apache License,
+#   Version 2.0 (the "License"); you may not use this file except
+#   in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing,
+#   software distributed under the License is distributed on an
+#   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#   KIND, either express or implied.  See the License for the
+#   specific language governing permissions and limitations
+#   under the License.
+#
+# ------------------------------------------------------------------------
+TOMCAT_HOME_DIR="/home/wso2user/wso2as-6.0.0-m1"
 
 if [ -z ${ADMIN_PASSWORD+x} ]; then 
     echo "ADMIN_PASSWORD is not set.";
-    echo "Genarating admin password.";
+    echo "Generating admin password.";
     ADMIN_PASSWORD=${ADMIN_PASS:-$(pwgen -s 12 1)}
     echo "========================================================================="
     echo "Credentials for the instance:"
@@ -14,7 +34,7 @@ else
     echo "ADMIN_PASSWORD set by user.";
 fi
 
-cat >/opt/wso2as-${WSO2_AS_VERSION}-m1/conf/tomcat-users.xml <<EOL
+cat >$TOMCAT_HOME_DIR/conf/tomcat-users.xml <<EOL
 <?xml version="1.0" encoding="utf-8"?>
 <tomcat-users>
   <role rolename="admin-gui"/>
@@ -27,30 +47,45 @@ cat >/opt/wso2as-${WSO2_AS_VERSION}-m1/conf/tomcat-users.xml <<EOL
 </tomcat-users>
 EOL
 
-# If the webapps directory is empty (the user has specified a volume), copy the
-# contents from the folder in tmp (which is created when the image was built).
-WEBAPPS_HOME="/opt/tomcat/webapps"
-WEBAPPS_TMP="/tmp/webapps"
-
-if [ ! "$(ls -A $WEBAPPS_HOME)" ]; then
-    cp -r $WEBAPPS_TMP/* $WEBAPPS_HOME
-fi
-
 CERT_PASSWORD="wso2carbon"
 
 # Uncomment SSL section in server.xml
 # and insert SSL certificate information
-sed -i '$!N;s/<!--\s*\n\s*<Connector port="8443"/<Connector port="8443" keyAlias="wso2carbon" \
+sed -i '$!N;s/<!--\s*\n\s*<Connector port="8443"/<Connector port="8443" connectionTimeout="300000" keyAlias="wso2carbon" \
                keystoreFile="\/wso2carbon.jks" keystorePass="'$CERT_PASSWORD'"/g;P;D' \
-               /opt/wso2as-${WSO2_AS_VERSION}-m1/conf/server.xml
+               $TOMCAT_HOME_DIR/conf/server.xml
 
 sed -i '$!N;s/clientAuth="false" sslProtocol="TLS" \/>\n\s*-->/clientAuth="false" sslProtocol="TLS" \/>/g;P;D' \
-/opt/wso2as-${WSO2_AS_VERSION}-m1/conf/server.xml
+$TOMCAT_HOME_DIR/conf/server.xml
 
-sed -i "s/unpackWARs=\"true\"/unpackWARs=\"false\"/g" /opt/wso2as-${WSO2_AS_VERSION}-m1/conf/server.xml
+sed -i "s/unpackWARs=\"true\"/unpackWARs=\"false\"/g" $TOMCAT_HOME_DIR/conf/server.xml
 
-sed -i "/\/Host/i  \\\t<Context path=\"""\" docBase=\"$APP_WAR\" debug=\"0\" reloadable=\"true\"></Context>" /opt/wso2as-${WSO2_AS_VERSION}-m1/conf/server.xml
+sed -i "/\/Host/i  \\\<Context path=\"""\" docBase=\"$APP_WAR\" debug=\"0\" reloadable=\"true\"></Context>" $TOMCAT_HOME_DIR/conf/server.xml
 
-sed -i '/<Context>/a <JarScanner scanClassPath="false" />' /opt/wso2as-${WSO2_AS_VERSION}-m1/conf/context.xml
+sed -i '/<Context>/a <JarScanner scanClassPath="false" />' $TOMCAT_HOME_DIR/conf/context.xml
 
-/opt/tomcat/bin/catalina.sh run
+#Check whether JAVA_OPTS env variable is defined and not empty
+if [[ $JAVA_OPTS && ${JAVA_OPTS-_} ]]; then
+	export JAVA_OPTS=$JAVA_OPTS
+else
+    #Calculate max heap size and the perm size for Java Opts
+    #Check whether TOTAL_MEMORY env variable defined or and not empty
+	if [[ $TOTAL_MEMORY && ${TOTAL_MEMORY-_} ]]; then
+	    let MAX_HEAP_SIZE=$TOTAL_MEMORY/256*128
+	    let MAX_META_SPACE_SIZE=$TOTAL_MEMORY/256*128
+	    JAVA_OPTS="-Xms128m -Xmx"$MAX_HEAP_SIZE"m -XX:MaxMetaspaceSize="$MAX_META_SPACE_SIZE"m"
+	    export JAVA_OPTS=$JAVA_OPTS
+	fi
+fi
+
+if [[ $TAIL_LOG && ${TAIL_LOG-_} && $TAIL_LOG == "true" ]]; then
+    $TOMCAT_HOME_DIR/bin/catalina.sh start
+    #tail process will run in foreground
+    tail -F $TOMCAT_HOME_DIR/logs/catalina.out
+else
+    $TOMCAT_HOME_DIR/bin/catalina.sh run
+fi
+
+
+
+

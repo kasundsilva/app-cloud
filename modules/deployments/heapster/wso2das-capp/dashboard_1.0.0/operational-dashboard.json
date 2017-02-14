@@ -1,0 +1,279 @@
+{"id": "operational-dashboard", "title": "Operational Dashboard", "description": "", "permissions": {
+    "viewers": ["Internal/operational-dashboard-viewer"],
+    "editors": ["Internal/operational-dashboard-editor"],
+    "owners": ["Internal/operational-dashboard-owner"]
+}, "pages": [
+    {
+        "id": "landing",
+        "title": "Home",
+        "layout": {
+            "content": {
+                "loggedIn": {
+                    "blocks": [
+                        {
+                            "id": "a",
+                            "x": 0,
+                            "y": 0,
+                            "width": 4,
+                            "height": 1,
+                            "banner": false
+                        },
+                        {
+                            "id": "b",
+                            "x": 0,
+                            "y": 1,
+                            "width": 12,
+                            "height": 4,
+                            "banner": false
+                        },
+                        {
+                            "id": "c",
+                            "x": 0,
+                            "y": 5,
+                            "width": 12,
+                            "height": 4,
+                            "banner": false
+                        },
+                        {
+                            "id": "485b1430257282f0f6e933ad1070324e",
+                            "x": 4,
+                            "y": 0,
+                            "width": 8,
+                            "height": 1,
+                            "banner": false
+                        }
+                    ]
+                }
+            },
+            "fluidLayout": false
+        },
+        "isanon": false,
+        "content": {
+            "default": {
+                "b": [
+                    {
+                        "id": "appcloud-gadget-line_chart-0",
+                        "content": {
+                            "id": "appcloud-gadget-line_chart",
+                            "title": "App Cloud Line Chart",
+                            "type": "gadget",
+                            "thumbnail": "fs://gadget/usa-business-revenue/index.png",
+                            "data": {
+                                "url": "fs://gadget/appcloud-gadget-line_chart/index.xml"
+                            },
+                            "listen": {
+                                "subscriber": {
+                                    "type": "date-range",
+                                    "description": "This notifies message generated in publisher",
+                                    "on": [
+                                        {
+                                            "from": "appcloud-gadget-date_range_picker-0",
+                                            "event": "range-selected"
+                                        }
+                                    ]
+                                }
+                            },
+                            "notify": {
+                                "chart-zoomed": {
+                                    "type": "date-range",
+                                    "description": "This notifies message generated in publisher"
+                                }
+                            },
+                            "toolbarButtons": {
+                                "default": {
+                                    "maximize": false,
+                                    "configurations": false
+                                },
+                                "custom": [],
+                                "isDropdownView": false
+                            },
+                            "styles": {
+                                "no_heading": false,
+                                "hide_gadget": false,
+                                "titlePosition": "left",
+                                "title": "CPU"
+                            },
+                            "options": {
+                                "role": {
+                                    "type": "STRING",
+                                    "title": "Gadet Role",
+                                    "value": "cpu",
+                                    "options": [],
+                                    "required": true
+                                }
+                            },
+                            "locale_titles": {
+                                "en-US": "CPU"
+                            },
+                            "settings": {
+                                "priority": "5",
+                                "timeoutInterval": "60000"
+                            }
+                        }
+                    }
+                ],
+                "c": [
+                    {
+                        "id": "appcloud-gadget-line_chart-1",
+                        "content": {
+                            "id": "appcloud-gadget-line_chart",
+                            "title": "App Cloud Line Chart",
+                            "type": "gadget",
+                            "thumbnail": "fs://gadget/usa-business-revenue/index.png",
+                            "data": {
+                                "url": "fs://gadget/appcloud-gadget-line_chart/index.xml"
+                            },
+                            "listen": {
+                                "subscriber": {
+                                    "type": "date-range",
+                                    "description": "This notifies message generated in publisher",
+                                    "on": [
+                                        {
+                                            "from": "appcloud-gadget-date_range_picker-0",
+                                            "event": "range-selected"
+                                        }
+                                    ]
+                                }
+                            },
+                            "notify": {
+                                "chart-zoomed": {
+                                    "type": "date-range",
+                                    "description": "This notifies message generated in publisher"
+                                }
+                            },
+                            "toolbarButtons": {
+                                "default": {
+                                    "maximize": false,
+                                    "configurations": false
+                                },
+                                "custom": [],
+                                "isDropdownView": false
+                            },
+                            "styles": {
+                                "no_heading": false,
+                                "hide_gadget": false,
+                                "titlePosition": "left",
+                                "title": "Memory"
+                            },
+                            "options": {
+                                "role": {
+                                    "type": "STRING",
+                                    "title": "Gadet Role",
+                                    "value": "memory",
+                                    "options": [],
+                                    "required": true
+                                }
+                            },
+                            "locale_titles": {
+                                "en-US": "Memory"
+                            },
+                            "settings": {
+                                "priority": "5",
+                                "timeoutInterval": "60000"
+                            }
+                        }
+                    }
+                ],
+                "a": [
+                    {
+                        "id": "appcloud-gadget-search_box-0",
+                        "content": {
+                            "id": "appcloud-gadget-search_box",
+                            "title": "App Cloud Search Box",
+                            "type": "widget",
+                            "category": "Widgets",
+                            "thumbnail": "fs://gadget/usa-business-revenue/index.png",
+                            "data": {
+                                "url": "fs://gadget/appcloud-gadget-search_box/index.xml"
+                            },
+                            "styles": {
+                                "no_heading": true,
+                                "hide_gadget": false,
+                                "titlePosition": "left",
+                                "title": "App Cloud Search Box"
+                            },
+                            "toolbarButtons": {
+                                "default": {
+                                    "maximize": false,
+                                    "configurations": false
+                                },
+                                "custom": [],
+                                "isDropdownView": false
+                            },
+                            "options": {},
+                            "locale_titles": {
+                                "en-US": "App Cloud Search Box"
+                            },
+                            "settings": {
+                                "priority": "5",
+                                "timeoutInterval": "60000"
+                            }
+                        }
+                    }
+                ],
+                "485b1430257282f0f6e933ad1070324e": [
+                    {
+                        "id": "appcloud-gadget-date_range_picker-0",
+                        "content": {
+                            "id": "appcloud-gadget-date_range_picker",
+                            "title": "App Cloud Date Range Picker",
+                            "type": "widget",
+                            "category": "Widgets",
+                            "thumbnail": "fs://gadget/appcloud-gadget-date_range_picker/index.png",
+                            "data": {
+                                "url": "fs://gadget/appcloud-gadget-date_range_picker/index.xml"
+                            },
+                            "styles": {
+                                "no_heading": true,
+                                "hide_gadget": false,
+                                "titlePosition": "left",
+                                "title": "App Cloud Date Range Picker"
+                            },
+                            "notify": {
+                                "range-selected": {
+                                    "type": "date-range",
+                                    "description": "This notifies selected state"
+                                }
+                            },
+                            "listen": {
+                                "chart-zoomed": {
+                                    "type": "date-range",
+                                    "description": "This notifies message generated in publisher",
+                                    "on": []
+                                }
+                            },
+                            "toolbarButtons": {
+                                "default": {
+                                    "maximize": false,
+                                    "configurations": false
+                                },
+                                "custom": [],
+                                "isDropdownView": false
+                            },
+                            "options": {},
+                            "locale_titles": {
+                                "en-US": "App Cloud Date Range Picker"
+                            },
+                            "settings": {
+                                "priority": "5",
+                                "timeoutInterval": "60000"
+                            }
+                        }
+                    }
+                ]
+            },
+            "anon": {}
+        }
+    }
+], "menu": [
+    {
+        "id": "landing",
+        "isanon": false,
+        "ishidden": false,
+        "title": "Home",
+        "subordinates": []
+    }
+], "hideAllMenuItems": false, "identityServerUrl": "", "accessTokenUrl": "", "apiKey": "", "apiSecret": "", "theme": "Default Theme", "shareDashboard": true, "isUserCustom": false, "isEditorEnable": false, "banner": {
+    "globalBannerExists": false,
+    "customBannerExists": false
+}, "landing": "landing", "isanon": false, "defaultPriority": "5"}

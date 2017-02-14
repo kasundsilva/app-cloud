@@ -1,0 +1,52 @@
+# ------------------------------------------------------------------------
+#
+# Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+#   WSO2 Inc. licenses this file to you under the Apache License,
+#   Version 2.0 (the "License"); you may not use this file except
+#   in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing,
+#   software distributed under the License is distributed on an
+#   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#   KIND, either express or implied.  See the License for the
+#   specific language governing permissions and limitations
+#   under the License.
+#
+# ------------------------------------------------------------------------
+
+FROM anapsix/alpine-java:8_server-jre_unlimited
+
+ENV WSO2CARBON_ZIP wso2dss-3.5.0.zip
+ENV INSTALL_PATH /home/wso2user/
+ENV CARBON_HOME_PATH $INSTALL_PATH/wso2dss-3.5.0
+ENV ADMIN_PASS ""
+ENV WSO2_DSS_VERSION 3.5.0
+ENV AXIS2_SERVICE org.wso2.appcloud.dss.integration-3.0.0-SNAPSHOT.aar
+
+RUN apk update && \
+    apk add pwgen git wget && \
+    addgroup wso2 && adduser -g '' -s /bin/bash -D -G wso2 wso2user
+
+USER wso2user
+
+# Add the startup script
+ADD init.sh /init.sh
+
+# Copy carbon pack and required other resources
+COPY $WSO2CARBON_ZIP $INSTALL_PATH/
+RUN unzip $INSTALL_PATH/$WSO2CARBON_ZIP -d $INSTALL_PATH/
+
+COPY patches/ $CARBON_HOME_PATH/repository/components/patches/
+COPY modules/ $CARBON_HOME_PATH/modules/
+COPY lib/ $CARBON_HOME_PATH/repository/components/lib/
+COPY removed-bundles.txt /
+COPY $AXIS2_SERVICE $INSTALL_PATH/
+
+EXPOSE 9443 9763
+CMD ["bash", "-c", "source /init.sh"]
+
+

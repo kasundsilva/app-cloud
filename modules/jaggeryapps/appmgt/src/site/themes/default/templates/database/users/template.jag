@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -28,7 +28,7 @@ var dbName = request.getParameter("dbName");
     <!-- BOF App factory menu actionbar -->
     <div class="action-bar">
         <a href="<%=jagg.getAbsoluteUrl("/site/pages/databases.jag")%>"
-         class="btn-action"  title="Back to Database">
+         class="btn-action"  title="Back to Databases">
                 <span class="fw-stack fw-lg btn-action-ico">
                     <i class="fw fw-circle-outline fw-stack-2x"></i>
                     <i class="fw fw-left-arrow fw-stack-1x"></i>
@@ -46,7 +46,7 @@ var dbName = request.getParameter("dbName");
  <div class="container-fluid app-content-section">
         <div class="row">
           <div class="col-md-12 msg-issues">
-           Given here are the users of the database. You can connect to the database as these users.
+           Given here are the users of the database using which you can connect to the database.
           </div>
         </div>
         <div class="row">

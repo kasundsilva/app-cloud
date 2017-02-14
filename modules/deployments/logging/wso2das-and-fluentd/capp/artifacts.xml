@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifacts>
+    <artifact name="ContainerLogAnalyzerCApp" version="1.0.0" type="carbon/application">
+        <dependency artifact="LogEventStore" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="LogEventReceiver" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="LogEventStream" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+    </artifact>
+</artifacts>

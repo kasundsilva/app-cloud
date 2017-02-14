@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+* Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ public class ApplicationContext {
     private String type;
     private TenantInfo tenantInfo;
     private String versionHashId;
+    private String exposureLevel;
 
     public String getType() {
         return type;
@@ -62,5 +63,13 @@ public class ApplicationContext {
 
     public void setVersionHashId(String versionHashId) {
         this.versionHashId = versionHashId;
+    }
+
+    public void setExposureLevel(String exposureLevel){
+        this.exposureLevel = exposureLevel;
+    }
+
+    public String getExposureLevel() {
+        return exposureLevel;
     }
 }

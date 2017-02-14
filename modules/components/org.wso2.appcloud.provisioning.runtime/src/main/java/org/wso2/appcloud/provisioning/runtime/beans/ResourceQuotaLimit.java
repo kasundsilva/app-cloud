@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+* Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ public class ResourceQuotaLimit {
 
 	private String cpuLimit;
 	private String memoryLimit;
+	private String cpuRequest;
+	private String memoryRequest;
 
 	public void setCpuLimit(String cpuLimit) {
 		this.cpuLimit = cpuLimit;
@@ -35,5 +37,21 @@ public class ResourceQuotaLimit {
 
 	public String getMemoryLimit() {
 		return memoryLimit;
+	}
+
+	public String getCpuRequest() {
+		return cpuRequest;
+	}
+
+	public void setCpuRequest(String cpuRequest) {
+		this.cpuRequest = cpuRequest;
+	}
+
+	public String getMemoryRequest() {
+		return memoryRequest;
+	}
+
+	public void setMemoryRequest(String memoryRequest) {
+		this.memoryRequest = memoryRequest;
 	}
 }

@@ -1,0 +1,161 @@
+<%
+(function () {
+    var TYPE = "type";
+    var CONTENT_TYPE_JSON = "application/json";
+    var AUTHORIZATION_HEADER = "Authorization";
+    var USER_TOKEN = "user";
+    var USERNAME = "username";
+    var DOMAIN = "domain";
+    var HTTP_USER_NOT_AUTHENTICATED = 403;
+    var HTTP_INTERNAL_ERROR = 500;
+    var log = new Log();
+    var carbon = require('carbon');
+    var configs = require('/configs/designer.json');
+    var utils = require('/modules/utils.js');
+    var loggedInUser = null;
+    var TYPE_GET_RUNNING_APP_VERSIONS = 10;
+    var TYPE_GET_CPU_DATA = 20;
+    var TYPE_GET_MEMORY_DATA = 30;
+
+    response.contentType = CONTENT_TYPE_JSON;
+
+    var authParam = request.getHeader(AUTHORIZATION_HEADER);
+    if (authParam != null) {
+        credentials = JSUtils.authenticate(authParam);
+        loggedInUser = credentials[0];
+    } else {
+        var token = session.get(USER_TOKEN);
+        if (token != null) {
+            loggedInUser = token[USERNAME] + "@" + token[DOMAIN] ;
+        } else {
+            log.error("user is not authenticated!");
+            response.status = HTTP_USER_NOT_AUTHENTICATED;
+            print('{ "status": "Failed", "message": "User is not authenticated." }');
+            return;
+        }
+    }
+
+
+    // check type parammeter
+    var type = 0;
+    var typeParam = request.getParameter(TYPE);
+    if (typeParam != null) {
+        type = parseInt(typeParam);
+    }
+
+    if (type == 0) {
+        log.error("operation type is not specified!");
+        response.status = HTTP_INTERNAL_ERROR;
+        print('{ "status": "Failed", "message": "Operation type is not specified" }');
+        return;
+    }
+
+    if (loggedInUser != null) {
+        var result = null;
+        var query = null;
+        var resp = null;
+        var timeFrom = request.getParameter("timeFrom");
+        var timeTo = request.getParameter("timeTo");
+        var id = request.getParameter("id");
+        var user = carbon.server.tenantUser(loggedInUser);
+        var tenantDomain = user.domain.replace(".", "-").toLowerCase();
+        var influxdb_url = configs.operational_dashboard.influxdb_url + "/query";
+        var influxdb_db = configs.operational_dashboard.influxdb_db;
+
+        switch (type) {
+             case TYPE_GET_RUNNING_APP_VERSIONS:
+                query = "SHOW TAG VALUES FROM \"uptime\" WITH KEY = \"labels\" WHERE \"namespace_name\" =~ /" + tenantDomain + "$/";
+                try {
+                    resp = get(influxdb_url, {pretty : "true", db : influxdb_db, q : query}, 'json');
+                    var data = resp.data.results[0].series[0].values;
+                    result = [];
+                    var hashIds = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var labels = data[i][0].split(",");
+                        var appname = "";
+                        var version = "";
+                        var hashId = "";
+                        for (var j=0; j < labels.length; j++) {
+                            var label = labels[j].split(":");
+
+                            if (label[0] == "app") {
+                                appname = label[1];
+                            }
+                            if (label[0] == "version") {
+                                version = label[1];
+                            }
+                            if (label[0] == "versionHashId") {
+                                hashId = label[1];
+                            }
+                        }
+                        if (hashIds.indexOf(hashId) < 0) {
+                            hashIds.push(hashId);
+                            // result.push(appname + "_" + version + "_" + hashId);
+                        }
+                    }
+                } catch(e) {
+                    log.error("Error while executing InfluxDB query to get running app versions");
+                }
+
+                break;
+            case TYPE_GET_CPU_DATA:
+                timeFrom = timeFrom.substring(0, 10);
+                timeTo = timeTo.substring(0, 10);
+                var podName = id.split("_")[2];
+                query =
+                        "SELECT sum(\"value\") FROM \"cpu/usage_rate\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) " +
+                        "SELECT sum(\"value\") FROM \"cpu/limit\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) " +
+                        "SELECT sum(\"value\") FROM \"cpu/request\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) ";
+
+                try {
+                    resp = get(influxdb_url, {pretty : "true", db : influxdb_db, q : query}, 'json');
+                    result = resp.data.results;
+                } catch(e) {
+                    log.error("Error while executing InfluxDB query to get cpu data");
+                }
+                break;
+            case TYPE_GET_MEMORY_DATA:
+                timeFrom = timeFrom.substring(0,10);
+                timeTo = timeTo.substring(0,10);
+                var podName = id.split("_")[2];
+                query =
+                        "SELECT sum(\"value\")/1048576 FROM \"memory/usage\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) " +
+                        "SELECT sum(\"value\")/1048576 FROM \"memory/limit\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) " +
+                        "SELECT sum(\"value\")/1048576 FROM \"memory/request\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null) " +
+                        "SELECT sum(\"value\")/1048576 FROM \"memory/working_set\" WHERE \"type\" = 'pod_container' AND \"namespace_name\" =~ /" + tenantDomain + "$/ AND \"pod_name\" =~ /" + podName + "$/ AND time > " + timeFrom + "s and time < " + timeTo + "s GROUP BY time(1m), \"container_name\" fill(null)";
+
+                try {
+                    resp = get(influxdb_url, {pretty: "true", db: influxdb_db, q: query}, 'json');
+                    result = resp.data.results;
+                } catch(e) {
+                    log.error("Error while executing InfluxDB query to get memory data");
+                }
+                break;
+            default:
+            {
+                result = '{"status" : "Failed", "message" : "Unidentified operation"}';
+                break;
+            }
+        }
+
+        if (result != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("value of result: " + result);
+            }
+
+            var finalResult = {
+                status: "success",
+                message: result
+            };
+
+            print(finalResult);
+        } else {
+            print('{ "status": "Failed", "statusCode": "500", "message": "InfluxDB is unavailable" }');
+        }
+
+    } else {
+        print('{ "status": "Failed", "statusCode": "500", "message": "InfluxDB is unavailable" }');
+    }
+
+}());
+%>

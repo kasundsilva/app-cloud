@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact name="LogEventStream" version="1.0.0" type="event/stream" serverRole="DataAnalyticsServer">
+<file>org.wso2.appcloud.container.log.stream.json</file>
+</artifact>

@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -18,35 +18,50 @@
  */
 
 jagg.module("manager", {
-    setAuthHeaders:function () {
+    setAuthHeaders: function () {
         return jagg.require(jagg.getModulesDir() + "manager/manager.jag").setAuthHeaders.apply(this, arguments);
     },
-    getPropertyValue:function () {
+    getPropertyValue: function () {
         return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getPropertyValue.apply(this, arguments);
     },
-	getTenantDomain:function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantDomain.apply(this, arguments);
-	},
-	getTenantAwareUsername:function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantAwareUsername.apply(this, arguments);
-	},
-	getDomainlessUserName:function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getDomainlessUserName.apply(this, arguments);
-	},
-	getTenantId:function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantId.apply(this, arguments);
-	},
-    getTenantDomainById:function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantDomainById.apply(this, arguments);
-	},
-	getEmailAddressForUser: function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getEmailAddressForUser.apply(this, arguments);
-	},
-	setUserEmailAddress: function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").setUserEmailAddress.apply(this, arguments);
-	},
-	getUserEmailAddress: function () {
-		return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getUserEmailAddress.apply(this, arguments);
-	}
+    getTenantDomain: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantDomain.apply(this, arguments);
+    },
+    getTenantAwareUsername: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantAwareUsername.apply(this, arguments);
+    },
+    getDomainlessUserName: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getDomainlessUserName.apply(this, arguments);
+    },
+    getTenantId: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantId.apply(this, arguments);
+    },
+    getTenantDomainById: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantDomainById.apply(this, arguments);
+    },
+    getEmailAddressForUser: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getEmailAddressForUser.apply(this, arguments);
+    },
+    setUserEmailAddress: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").setUserEmailAddress.apply(this, arguments);
+    },
+    getUserEmailAddress: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getUserEmailAddress.apply(this, arguments);
+    },
+    getTenantIdForGivenTenantDomain: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getTenantIdForGivenTenantDomain.apply(this, arguments);
+    },
+    checkAuthorizationForUser: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").checkAuthorizationForUser.apply(this, arguments);
+    },
+    getCloudTypeProperties: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getCloudTypeProperties.apply(this, arguments);
+    },
+    getDashboardTypeProperties: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getDashboardTypeProperties.apply(this, arguments);
+    },
+    hasCustomURLSettingsAccess:function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").hasCustomURLSettingsAccess.apply(this, arguments);
+    }
 });
 %>

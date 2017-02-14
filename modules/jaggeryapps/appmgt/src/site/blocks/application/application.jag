@@ -19,29 +19,46 @@
 
 include("/jagg/jagg.jag");
 include('/jagg/constants.jag');
-
+var validator = require('/site/themes/default/js/custom/validator.js');
 var action = request.getParameter("action");
 var applicationModule = jagg.module("application");
 var gitHubAppModule = jagg.module("application/git");
+var modManager = jagg.module("manager");
 var log = new Log();
 (function(){
-    if (!jagg.getUser()) {
-        print(UNAUTHORIZED_ERROR_RESPONSE);
-        return;
-    }
     if(action == "uploadExistingArchive"){
         var uploadedArtifact = request.getFile("fileupload");
         var applicationName = request.getParameter("applicationName");
         var appTypeName = request.getParameter("appTypeName");
         var applicationRevision = request.getParameter("applicationRevision");
-        applicationModule.uploadExistingArchive(uploadedArtifact, appTypeName, applicationName, applicationRevision);
-        response.status = 200;
-        response.message = "Artifact is successfully uploaded!";
+
+        try {
+            var fileSuccessfullyUploaded = applicationModule.
+                                        uploadExistingArchive(uploadedArtifact, appTypeName, applicationName, applicationRevision);
+            if (fileSuccessfullyUploaded) {
+                response.status = 200;
+                response.content = "Artifact is successfully uploaded!";
+            } else {
+                var msg = "Error while uploading file: " + uploadedArtifact.getName();
+                log.error(msg);
+                response.status = 400;
+                response.content = msg + ". Please retry uploading";
+            }
+        } catch (e) {
+            var msg = "Uploaded artifact does not exist for application:" + applicationName + " version:" + applicationRevision;
+            log.error(msg);
+            response.status = 504;
+            response.content = msg + ". Please retry uploading";
+        }
 
     } else if (action == "createApplication") {
+        var logMessage = '';
         var applicationDescription = request.getParameter("applicationDescription");
         var replicas = 1;
         var runtimeId = request.getParameter("runtime");
+        var exposureLevel = "public";
+        if (validateRequiredAndNumber("runtime", runtimeId)) {return;}
+
         var isNewVersion = request.getParameter("isNewVersion");
         if (!isNewVersion || isNewVersion == "false") {
             isNewVersion = false;
@@ -50,31 +67,151 @@ var log = new Log();
         var unparsedRuntimeProps = request.getParameter("runtimeProperties");
         var runtimeProperties = [];
         if(unparsedRuntimeProps){
-            runtimeProperties = parse(unparsedRuntimeProps);
+            try {
+                runtimeProperties = parse(unparsedRuntimeProps);
+            } catch (e) {
+                response.status = 400;
+                response.content = "Invalid Json for runtimeProperties. Please validate the json.";
+                return;
+            }
+            for (var i = 0; i < runtimeProperties.length; i++) {
+                var keyValidation = validator.validateEnvKey(runtimeProperties[i].key);
+                if (!keyValidation.status) {
+                    response.status = 400;
+                    response.content = keyValidation.msg;
+                    return;
+                }
+            }
         }
 
         var unparsedTags = request.getParameter("tags");
         var tags = [];
         if(unparsedTags){
-            tags = parse(unparsedTags);
+            try {
+                tags = parse(unparsedTags);
+            } catch (e) {
+                response.status = 400;
+                response.content = "Invalid Json for tags. Please validate the json.";
+                return;
+            }
         }
 
         var applicationName = request.getParameter("applicationName");
+        if (validateApplicationName("applicationName", applicationName)) {return;}
+
         var applicationRevision = request.getParameter("applicationRevision");
+        if (!validationApplicationRevision("applicationRevision", applicationRevision)) {return;}
+
         var appTypeName = request.getParameter("appTypeName");
+        if (validateRequired("appTypeName", appTypeName)) {return;}
+
+        // validate allowed runtimes
+        var runtimes = applicationModule.getAllRuntimes(appTypeName);
+        var isValid = false;
+        var validRuntimes = '';
+        for (var i = 0; i < runtimes.length; i++) {
+            validRuntimes += runtimes[i].id + ", ";
+            if (runtimes[i].id == runtimeId) {
+                isValid = true;
+                break;
+            }
+        }
+
+        if (!isValid) {
+            response.status = 400;
+            response.content = "Bad request : Valid runtimes for the apptype " + appTypeName + " are " + validRuntimes;
+            return;
+        }
+
         var uploadedFileName = request.getParameter("uploadedFileName");
+
         var appIcon = request.getFile("appIcon");
         var uploadedArtifact = request.getFile("fileupload");
-        var isFileAttached = request.getParameter("isFileAttached");
-        var conSpecMemory = request.getParameter("conSpecMemory");
-        var conSpecCpu = request.getParameter("conSpecCpu");
-        var artifactUrl = request.getParameter("artifactUrl");
 
+        var isFileAttached = request.getParameter("isFileAttached");
+        if (isFileAttached == 'true') {
+            if (uploadedArtifact == null) {
+                response.status = 400;
+                response.content = "Bad request : fileupload is required!";
+                return;
+            }
+        }
+
+        var conSpecId = request.getParameter("conSpec");
+        if (validateRequiredAndNumber("conSpec", conSpecId)) {return;}
+
+        // validate allowed spec
+        var allowedSpecsJSON = applicationModule.getAllowedContainerSpecificationsForRuntime(runtimeId);
+
+        var validConSpecs = '';
+        var isValidSpec = false;
+        var conSpecMemory = '';
+        var conSpecCpu = '';
+        for (var j = 0; j < allowedSpecsJSON.data.length; j++) {
+            var allowedSpecId = JSON.parse(allowedSpecsJSON.data[j].id);
+            validConSpecs += allowedSpecId + ",";
+            if (conSpecId == allowedSpecId) {
+                conSpecMemory = stringify(JSON.parse(allowedSpecsJSON.data[j].memory));
+                conSpecCpu = JSON.parse(allowedSpecsJSON.data[j].cpu);
+                isValidSpec = true;
+                break;
+            }
+        }
+
+        if (!isValidSpec) {
+            response.status = 400;
+            response.content = "Bad request : Valid conSpecs for the runtime " + runtimeId + " are " + validConSpecs;
+            return;
+        }
+
+        var artifactUrl = request.getParameter("artifactUrl");
+        var appCreationMethod = request.getParameter("appCreationMethod");
+        if (validateRequired("appCreationMethod", appCreationMethod)) {return;}
+
+        var oldHashId = request.getParameter("oldHashId");
+        var applicationContext = request.getParameter("applicationContext");
+        if (applicationContext == "/"){
+            applicationContext = null;
+        }
+
+        var remoteImageUrl = request.getParameter("remoteImageUrl");
+        // validating docker image url pattern, this will not be required when we validate this from the front end.
+        // At the moment custom docker image app creation happens only by using rest API, hence this validation is required.
+        if(remoteImageUrl) {
+            var remoteImageUrlSegments = remoteImageUrl.split(":");
+            if(remoteImageUrlSegments.length < 2) {
+                logMessage = "Bad request : Image url is invalid, it should be image_name:tag";
+                log.warn(logMessage);
+                response.status = 400;
+                response.content = logMessage;
+                return;
+            }
+        }
+
+        // this is temporary code, will be removed when custom docker images feature is fully completed
+        // this is to enforce use only the local registry images to create apps via custom docker images
+        var localRegistry = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL);
+        var localRegistry_infra = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL_INFRA);
+        if (remoteImageUrl && remoteImageUrl.indexOf(localRegistry) == -1 && remoteImageUrl.indexOf(localRegistry_infra) == -1) {
+            logMessage = "Bad request : Allowed Docker images only from local registry : " + localRegistry;
+            log.warn(logMessage);
+            response.status = 400;
+            response.content = logMessage;
+            return;
+        }
+
+        //var userName = request.getParameter("userName");
+        //var password = request.getParameter("password");
+
+        var setDefaultVersion = request.getParameter("setDefaultVersion");
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
         if (applicationModule.isAplicationVersionExist(versionHashId)) {
-            response.status = 400; // bad request
-            response.message = "Application with same name and version already exists!";
+            logMessage = "Bad request : Application with same name and version already exists!";
+            log.warn(logMessage);
+            response.status = 400;
+            response.content = logMessage;
+            return;
         } else {
             var isAppCountLowerThanMax = false;
 
@@ -83,167 +220,278 @@ var log = new Log();
             //before creating the new application version
             if (isNewVersion) {
                 //Check if valid argument given for isNewVersion
-                if (isNewVersion == "true") {
-                    if (applicationModule.getApplicationHashIdByName(applicationName) != null) {
+                if (isNewVersion == 'true') {
+                    if (applicationModule.getApplicationHashIdByName(applicationName) != null &&
+                            applicationModule.getApplication(applicationHashId) != null) {
                         isAppCountLowerThanMax = true;
                     } else {
-                        log.warn("Application creation request not accepted because no application with application name " +
-                                applicationName + " exists.");
+                        logMessage = "Application creation request not accepted because no application with application name " +
+                                applicationName + " exists.";
+                        log.warn(logMessage);
+                        response.status = 200;
+                        response.content = logMessage;
+                        return;
                     }
                 } else {
-                    log.warn("Application creation request not accepted because invalid argument for isNewVersion");
+                    logMessage = "Application creation request not accepted because invalid argument for isNewVersion";
+                    log.warn(logMessage);
+                    response.status = 200;
+                    response.content = logMessage;
+                    return;
                 }
             } else {
                 //Since the user is trying to create a new application we check if the existing application count is
                 //less than the maximum amount of applications that can be created
-                var applicationCount = applicationModule.getApplicationCount();
-                var maxAppCount = applicationModule.getMaxInstanceCount();
-                if (applicationCount < maxAppCount) {
+                var RunningApplicationCount = applicationModule.getRunningApplicationVersionCount();
+                var maxRunningAppCount = applicationModule.getMaxInstanceCount();
+                if (RunningApplicationCount < maxRunningAppCount) {
                     isAppCountLowerThanMax = true;
                 } else {
-                    log.warn("Application creation request not accepted because the application count has " +
-                            "reached maximum limit of " + maxAppCount);
+                    logMessage = "Application creation request not accepted because the application count has " +
+                            "reached maximum limit of " + maxRunningAppCount;
+                    log.warn(logMessage);
+                    response.status = 200;
+                    response.content = logMessage;
+                    return;
                 }
             }
-
             if (isAppCountLowerThanMax) {
-                //Check for the memory and cpu values of the application creation request
-                if ((conSpecMemory <= 512) && (conSpecCpu <= 300)) {
-                    if (isFileAttached) {
-                        applicationModule.uploadExistingArchive(uploadedArtifact, appTypeName, applicationName,
-                                applicationRevision);
+                if (isFileAttached == 'true') {
+                    var fileSuccessfullyUploaded = applicationModule.
+                        uploadExistingArchive(uploadedArtifact, appTypeName, applicationName, applicationRevision);
+                    if (!fileSuccessfullyUploaded) {
+                        logMessage = "Error while uploading file: " + uploadedArtifact.getName();
+                        log.error(logMessage);
+                        response.status = 400;
+                        response.content = logMessage + ". Please retry uploading";
+                        return ;
                     }
-                    if (uploadedFileName) {
-                        applicationModule.addApplication(applicationName, applicationRevision, applicationDescription, replicas,
-                                runtimeId, appTypeName, runtimeProperties, tags, appIcon,
-                                uploadedFileName, isNewVersion, conSpecMemory, conSpecCpu, artifactUrl);
-                    } else {
-                        var gitRepoUrl = request.getParameter("gitRepoUrl");
-                        var gitRepoBranch = request.getParameter("gitRepoBranch");
-                        var projectRoot = request.getParameter("projectRoot");
-                        var token = request.getParameter("token");
-                        gitHubAppModule.addApplicationViaGitHub(applicationName, applicationRevision, applicationDescription,
-                                replicas, runtimeId, appTypeName, runtimeProperties, tags,
-                                appIcon, gitRepoUrl, gitRepoBranch, projectRoot, token,
-                                isNewVersion, conSpecMemory, conSpecCpu);
-                    }
-                    response.status = 200;
-                    response.message = "Application creation is successfully submitted";
-                } else {
-                    if (conSpecMemory > 512) {
-                        log.warn("Application creation request not accepted because the maximum memory limit of " +
-                                "container specification is 512.");
-                    }
-                    if (conSpecCpu > 300) {
-                        log.warn("Application creation request not accepted because the maximum cpu limit of container "
-                                + "specification is 300.");
-                    }
-                    response.status = 400; //bad request
-                    response.message = "Maximum limit of conSpecMemory is 512 and conSpecCpu 300";
                 }
+
+                if (uploadedFileName || (remoteImageUrl)) {
+                    applicationModule
+                            .addApplication(applicationName, applicationRevision, applicationDescription, replicas,
+                                            runtimeId, appTypeName, runtimeProperties, tags, appIcon, uploadedFileName,
+                                            isNewVersion, conSpecMemory, conSpecCpu, artifactUrl, appCreationMethod,
+                                            oldHashId, applicationContext, setDefaultVersion, remoteImageUrl, exposureLevel);
+                } else {
+                    var gitRepoUrl = request.getParameter("gitRepoUrl");
+                    var gitRepoBranch = request.getParameter("gitRepoBranch");
+                    var projectRoot = request.getParameter("projectRoot");
+                    var token = request.getParameter("token");
+                    gitHubAppModule.addApplicationViaGitHub(applicationName, applicationRevision, applicationDescription,
+                            replicas, runtimeId, appTypeName, runtimeProperties, tags,
+                            appIcon, gitRepoUrl, gitRepoBranch, projectRoot, token,
+                            isNewVersion, conSpecMemory, conSpecCpu, appCreationMethod, applicationContext, setDefaultVersion, exposureLevel);
+                }
+                response.status = 200;
+                response.content = logMessage;
+                return;
             } else {
-                response.status = 400; //bad request
-                response.message = "Maximum number of applications that you can create is " + maxAppCount;
+                logMessage = "Maximum number of applications that you can create is " + maxRunningAppCount;
+                log.warn(logMessage)
+                response.status = 200;
+                response.content = logMessage;
+                return;
             }
         }
-    }else if(action == "stopApplication"){
+    } else if(action == "stopApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
-        var versionKey = request.getParameter("versionKey");
+        var versionKey = applicationModule.getVersionHashId(applicationName, applicationRevision);
+        var podDeleteTimeOut = modManager.getPropertyValue(POD_DELETE_TIMEOUT);
+        var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
+        var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
 
-        // delete application from kubernetes
-        applicationModule.deleteApplicationFromKubernetes(versionKey);
-        // update application status to stopped
-        applicationModule.updateApplicationStatus(versionKey, APPLICATION_STOPPED);
-        applicationModule.deleteEventsOfAppVersions(versionKey);
-
-        response.status = 200;
-        response.message = "Application is successfully stopped.";
-
+        try {
+            // delete application from kubernetes
+            var isDeleted = applicationModule.deleteApplicationFromKubernetes(versionKey);
+            if (isDeleted) {
+                // update application status to stopped
+                applicationModule.updateApplicationStatus(versionKey, APPLICATION_STOPPED);
+                applicationModule.deleteEventsOfAppVersions(versionKey);
+                response.status = 200;
+                response.message = "Application is successfully stopped.";
+            } else {
+                response.status = 400;
+                response.content = "Unable to stop application. Please submit request again.";
+            }
+        } catch (e) {
+            var msg = "Error while waiting for the pod to get deleted for application: " + applicationName +
+                    " and version: " + applicationRevision;
+            log.error(msg);
+            log.error(e);
+            response.status = 500;
+            response.content = msg;
+        }
     } else if(action == "redeployApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
         var versionKey = request.getParameter("versionKey");
-        var conSpecMemory = request.getParameter("conSpecMemory");
-        var conSpecCpu = request.getParameter("conSpecCpu");
-
-        // redeploy application from kubernetes
-        applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, conSpecMemory, conSpecCpu);
-
-        response.status = 200;
-        response.message = "Application is successfully redeployed.";
-
-    }else if(action == "startApplication"){
-        var applicationName = request.getParameter("applicationName");
-        var applicationRevision = request.getParameter("applicationRevision");
-        var versionKey = request.getParameter("versionKey");
-        var conSpecMemory = request.getParameter("conSpecMemory");
-        var conSpecCpu = request.getParameter("conSpecCpu");
         var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
-        var versions = applicationModule.getVersionListOfApplication(applicationHashId);
+        var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
+        var podDeleteTimeOut = modManager.getPropertyValue(POD_DELETE_TIMEOUT);
+        var status = applicationModule.getApplicationRevisionStatus(applicationHashId, applicationRevision);
+        var exposureLevel = applicationModule.getExposureLevel(applicationName, applicationRevision);
 
         // redeploy application from kubernetes
-        applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, conSpecMemory, conSpecCpu);
-        // stop other versions of the application
-        if (versions.length > 1) {
-            applicationModule.stopOtherVersions(applicationHashId, applicationRevision);
+        if(applicationName == null){
+            response.status = 400;
+            response.content = "applicationName cannot be null. Please retry the request with the correct application name";
+        }
+        if(applicationRevision == null){
+            response.status = 400;
+            response.content = "applicationRevision cannot be null. Please retry the request with the correct application version";
+        }
+        if(versionKey == null){
+            versionKey = mod.getVersionHashId(applicationName, applicationRevision)
+        }
+        if (status == APPLICATION_STOPPED || status == APPLICATION_INACTIVE) {
+            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType, exposureLevel);
+            response.status = 200;
+            response.content = "Application is successfully started.";
+        } else {
+            try {
+                if (applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, applicationType, exposureLevel)) {
+                    response.status = 200;
+                    response.message = "Application is successfully redeployed.";
+                } else {
+                    response.status = 504;
+                    response.content = "Unable to stop application within a time period of " + (podDeleteTimeOut / 1000) +
+                            "s. Please submit request again.";
+                }
+            } catch (e) {
+                var msg = "Error while waiting for the pod to get deleted for application: " + applicationName +
+                        " and version: " + applicationRevision;
+                log.error(msg);
+                log.error(e);
+                response.status = 500;
+                response.content = msg;
+            }
+        }
+    } else if(action == "startApplication"){
+        var RunningApplicationCount = applicationModule.getRunningApplicationVersionCount();
+        var maxRunningAppCount = applicationModule.getMaxInstanceCount();
+        if (RunningApplicationCount < maxRunningAppCount) {
+            var applicationName = request.getParameter("applicationName");
+            var applicationRevision = request.getParameter("applicationRevision");
+            var versionKey = request.getParameter("versionKey");
+            var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
+            var versions = applicationModule.getVersionListOfApplication(applicationHashId);
+            var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
+            var exposureLevel = applicationModule.getExposureLevel(applicationName, applicationRevision);
+
+            // redeploy application from kubernetes
+            applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType, exposureLevel);
+            print(stringify(versions));
+        } else {
+            logMessage = "Application creation request not accepted because the application count has " +
+                    "reached maximum limit of " + maxRunningAppCount;
+            log.warn(logMessage);
+            response.status = 406;
+            response.content = logMessage;
+            return;
         }
 
-        response.status = 200;
-        response.message = "Application starting requested is completed successfully.";
-        print(stringify(versions));
     } else if (action == "getApplicationCreationEvents") {
-        var applicationName = request.getParameter("applicationName");
-        var applicationRevision = request.getParameter("applicationRevision");
+        try {
+            var applicationName = request.getParameter("applicationName");
+            var applicationRevision = request.getParameter("applicationRevision");
+            var mod = jagg.module("application");
+            var events = mod.getApplicationCreationEvents(applicationName, applicationRevision);
+            print(events);
+        } catch (e) {
+            var msg = "Error while getting application creation events for app: " + applicationName +
+                    " and version: " + applicationRevision;
+            log.error(msg);
+            log.error(e);
+            response.status = 500;
+            response.content = msg;
+        }
 
-        var mod = jagg.module("application");
-
-        var events = mod.getApplicationCreationEvents(applicationName, applicationRevision);
-        print(events);
-    }else if (action == "getApplication"){
+    } else if (action == "getApplication"){
         var applicationName = request.getParameter("applicationName");
         var mod = jagg.module("application");
         var applicationHashId = mod.getApplicationHashIdByName(applicationName);
         var application = mod.getApplication(applicationHashId);
         print(application);
-    }else if (action == "getEnvVariablesOfVersion"){
 
+    } else if (action == "getEnvVariablesOfVersion"){
         var versionKey = request.getParameter("versionKey");
         var mod = jagg.module("application");
-
         var events = mod.getEnvVariablesOfVersion(versionKey);
         print(events);
-    }else if (action == "updateRuntimeProperty"){
+
+    } else if (action == "isEnvironmentVariableExist"){
+        var versionKey = request.getParameter("versionKey");
+        var key = request.getParameter("key");
+        print(applicationModule.isEnvironmentVariableExist(versionKey, key));
+
+    } else if (action == "isTagExist"){
+        var versionKey = request.getParameter("versionKey");
+        var key = request.getParameter("key");
+        print(applicationModule.isTagExist(versionKey, key));
+
+    } else if (action == "updateRuntimeProperty"){
         var versionKey = request.getParameter("versionKey");
         var prevKey = request.getParameter("prevKey");
         var newKey = request.getParameter("newKey");
         var newValue = request.getParameter("newValue");
 
-        var mod = jagg.module("application");
-        mod.updateRuntimeProperty(versionKey,prevKey,newKey,newValue);
-        response.status = 200;
-        response.content = "Runtime property successfully updated.";
-
-    }else if (action == "deleteRuntimeProperty"){
+        if (newKey != prevKey && applicationModule.isEnvironmentVariableExist(versionKey, newKey)) {
+            response.status = 400;
+            response.content = "Environmental variable with key : " + newKey + " already exists.";
+            return;
+        }
+        if (applicationModule.isEnvironmentVariableExist(versionKey, prevKey)) {
+            var keyValidation = validator.validateEnvKey(newKey);
+            if (!keyValidation.status) {
+                response.status = 400;
+                response.content = keyValidation.msg;
+                return;
+            } else {
+                applicationModule.updateRuntimeProperty(versionKey, prevKey, newKey, newValue);
+                response.status = 200;
+                response.content = keyValidation.msg;
+            }
+        } else {
+            response.status = 400;
+            response.content = "No environment variable with key: " + prevKey + ". Please enter valid key.";
+        }
+    } else if (action == "deleteRuntimeProperty"){
         var versionKey = request.getParameter("versionKey");
         var key = request.getParameter("key");
 
-        var mod = jagg.module("application");
-        mod.deleteRuntimeProperty(versionKey,key);
-        response.status = 200;
-        response.content = "Runtime property successfully deleted.";
-
-    }else if (action == "addRuntimeProperty"){
+        if (applicationModule.isEnvironmentVariableExist(versionKey, key)) {
+            applicationModule.deleteRuntimeProperty(versionKey, key);
+            response.status = 200;
+            response.content = "Runtime property successfully deleted.";
+        } else {
+            response.status = 400;
+            response.content = "No environment variable with key: " + key + ". Please enter valid key.";
+        }
+    } else if (action == "addRuntimeProperty"){
         var versionKey = request.getParameter("versionKey");
         var key = request.getParameter("key");
         var value = request.getParameter("value");
+        if (applicationModule.isEnvironmentVariableExist(versionKey, key)) {
+            response.status = 400;
+            response.content = "Environmental variable with key : " + key + " already exists.";
+            return;
+        }
+        var keyValidation = validator.validateEnvKey(key);
+        if (!keyValidation.status) {
+            response.status = 400;
+            response.content = keyValidation.msg;
+            return;
+        } else {
+            var mod = jagg.module("application");
+            mod.addRuntimeProperty(versionKey,key,value);
+            response.status = 200;
+            response.content = keyValidation.msg;
+        }
 
-        var mod = jagg.module("application");
-        mod.addRuntimeProperty(versionKey,key,value);
-        response.status = 200;
-        response.content = "Runtime property successfully added.";
-
-    }else if (action == "downloadFromUrl"){
+    } else if (action == "downloadFromUrl"){
         try {
             log.info("blocks downloadFromUrl");
             var artfactUrl = request.getParameter("artfactUrl");
@@ -259,41 +507,56 @@ var log = new Log();
             response.status = 500;
             response.content = msg;
         }
-    }else if (action == "addTag"){
+    } else if (action == "addTag"){
         var versionKey = request.getParameter("versionKey");
         var key = request.getParameter("key");
         var value = request.getParameter("value");
+
+        if (applicationModule.isTagExist(versionKey, key)) {
+            response.status = 400;
+            response.content = "Tag with key : " + key + " already exists.";
+            return;
+        }
 
         var mod = jagg.module("application");
         mod.addTag(versionKey,key,value);
         response.status = 200;
         response.content = "Tag successfully added.";
 
-    }else if (action == "deleteTag"){
+    } else if (action == "deleteTag"){
         var versionKey = request.getParameter("versionKey");
         var key = request.getParameter("key");
 
-        var mod = jagg.module("application");
-        mod.deleteTag(versionKey,key);
-        response.status = 200;
-        response.content = "Tag successfully deleted.";
-
-    }else if (action == "updateTag"){
+        if (applicationModule.isTagExist(versionKey, key)) {
+            applicationModule.deleteTag(versionKey, key);
+            response.status = 200;
+            response.content = "Tag successfully deleted.";
+        } else {
+            response.status = 400;
+            response.content = "No tag with key: " + key + ". Please enter valid key.";
+        }
+    } else if (action == "updateTag"){
         var versionKey = request.getParameter("versionKey");
         var prevKey = request.getParameter("prevKey");
         var newKey = request.getParameter("newKey");
         var newValue = request.getParameter("newValue");
 
-        var mod = jagg.module("application");
-        mod.updateTag(versionKey,prevKey,newKey,newValue);
-        response.status = 200;
-        response.content = "Runtime property successfully updated.";
-
-    }else if (action == "getTags"){
-
+        if (newKey != prevKey && applicationModule.isTagExist(versionKey, newKey)) {
+            response.status = 400;
+            response.content = "Tag with key : " + newKey + " already exists.";
+            return;
+        }
+        if (applicationModule.isTagExist(versionKey, prevKey)) {
+            applicationModule.updateTag(versionKey, prevKey, newKey, newValue);
+            response.status = 200;
+            response.content = "Tag successfully updated.";
+        } else {
+            response.status = 400;
+            response.content = "No tag with key: " + prevKey + ". Please enter valid key.";
+        }
+    } else if (action == "getTags"){
         var versionKey = request.getParameter("versionKey");
         var mod = jagg.module("application");
-
         var tags = mod.getTags(versionKey);
         print(tags);
 
@@ -327,13 +590,31 @@ var log = new Log();
         var mod = jagg.module("application");
         var applicationHashId = mod.getApplicationHashIdByName(applicationName);
         print(applicationHashId);
+
+    } else if (action == "getApplicationHashIdOfMatchingAppName") {
+        var applicationName = request.getParameter("applicationName");
+        var mod = jagg.module("application");
+        var applicationHashId = mod.getApplicationHashIdOfMatchingAppName(applicationName);
+        print(applicationHashId);
+
     } else if (action == "deleteVersion"){
         var versionKey = request.getParameter("versionKey");
+        var applicationName = request.getParameter("applicationName");
         var mod = jagg.module("application");
-
         try {
-            mod.deleteVersion(versionKey, false, true);
-            print(true);
+            var defaultVersion = mod.getDefaultVersion(applicationName);
+            var defaultVersionHashId = mod.getVersionHashId(applicationName, defaultVersion);
+            var applicationHashId = mod.getApplicationHashIdByName(applicationName);
+            var versions = mod.getVersionListOfApplication(applicationHashId);
+            if (versions.length > 1 && (defaultVersionHashId == versionKey)) {
+                var msg = "You are trying to delete the default version, if you want to delete this particular version, " +
+                          "please select some other version as the default version and try again";
+                response.status = 400;
+                response.content = msg;
+            } else {
+                mod.deleteVersion(versionKey, false, true);
+                print(true);
+            }
         } catch (e) {
             var msg = "Error while deleting application version with the hash id : " + versionKey;
             log.error(msg);
@@ -355,6 +636,23 @@ var log = new Log();
             response.status = 500;
             response.content = msg;
         }
+
+    } else if (action == "deleteAppCreationEvents"){
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+        var mod = jagg.module("application");
+        var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
+        try {
+            mod.deleteEventsOfAppVersions(versionHashId);
+            print(true);
+        } catch (e) {
+            var msg = "Error while deleting application creation events for application hash id : " + applicationKey;
+            log.error(msg);
+            log.error(e);
+            response.status = 500;
+            response.content = msg;
+        }
+
     } else if (action == "getSampleArtifactUrl") {
         var appType = request.getParameter("appType");
         var managerModule = jagg.module("manager");
@@ -368,9 +666,128 @@ var log = new Log();
             response.status = 500;
             response.content = msg;
         }
+
+    } else if (action == "isUploadUrlValid") {
+        var appTypeName = request.getParameter("appTypeName");
+        var appTypeExtension = request.getParameter("appTypeExtension");
+        var managerModule = jagg.module("manager");
+        var url = request.getParameter("url");
+        var currentExtension = url.split(/[. ]+/).pop();
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        xhr.send();
+        if (appTypeName == 'jaggery') { //Remove this check after removing AS 5.3.0 jaggery runtime
+            if ((appTypeExtension.equals(currentExtension) || currentExtension.equals("zip")) && xhr.status == 200) {
+                print(true);
+            } else {
+                print(false);
+            }
+        } else {
+            if (appTypeExtension.equals(currentExtension) && xhr.status == 200) {
+                print(true);
+            } else {
+                print(false);
+            }
+        }
+
+    } else if (action == "loadEndpoints") {
+        var deploymentURL = request.getParameter("deploymentURL");
+        var appType = request.getParameter("appType");
+        var versionId = request.getParameter("versionId");
+        var mod = jagg.module("application");
+        var endpoints = mod.getAppTypeUtil(appType).getEndpoints(deploymentURL, versionId);
+        print(endpoints);
+
+    } else if (action == "getReplicaInfo") {
+        var mod = jagg.module("application");
+        var applicationName = request.getParameter("applicationName");
+        var versionName = request.getParameter("versionName");
+        var appType = request.getParameter("appType");
+        var replicaInfo = mod.getReplicaInfo(applicationName, versionName, appType);
+        print(""+replicaInfo);
+
+    } else if (action == "getExposureLevel") {
+
+        var applicationName = request.getParameter("applicationName");
+        var versionName = request.getParameter("versionName");
+        var mod = jagg.module("application");
+        var exposureLevel = mod.getExposureLevel(applicationName, versionName);
+        print(exposureLevel);
+
+    } else if (action == "updateVersionExposureLevel") {
+
+        var exposureLevel = request.getParameter("exposureLevel");
+        var versionName = request.getParameter("versionName");
+        var applicationName = request.getParameter("applicationName");
+        var versionHashId = applicationModule.getVersionHashId(applicationName, versionName);
+        var mod = jagg.module("application");
+        mod.updateVersionExposureLevel(exposureLevel, versionHashId, applicationName, versionName);
+    } else if (action == "getCustomDomainDetailsForTenant") {
+        try {
+            var customDomainDetailList = applicationModule.getCustomDomainDetailsForTenant();
+            print(customDomainDetailList);
+        } catch (e) {
+            var msg = "Error while getting custom domain details for tenant domain: " + modManager.getTenantDomain();
+            log.error(msg);
+            log.error(e);
+            response.status = 500;
+            response.content = msg;
+        }
+
     } else {
         throw new Error("No action specified for: " + action);
     }
 }());
 
+function validateRequired(field, value) {
+    if (value == null || value.trim().length == 0) {
+        response.status = 400;
+        response.content = "Bad request : " + field + " is required!";
+        return true;
+    }
+    return false;
+}
+
+function validateApplicationName(field, value) {
+    if (validateRequired(field, value)) {
+        return true;
+    }
+    if (!isNaN(value)) {
+        response.status = 400;
+        response.content = "Bad request : Non-alphanumeric characters are not allowed for " + field;
+        return true;
+    }
+    var patternNonAlphaNumExceptHyphen = /[^a-zA-Z\d\-\_ ]/g;
+    if (patternNonAlphaNumExceptHyphen.test(value)) {
+        response.status = 400;
+        response.content = "Bad request : Application Name has invalid characters. Valid characters are [a-z, A-Z, 0-9, _, -]";
+        return true;
+    }
+    return false;
+}
+
+function validationApplicationRevision(field, value) {
+    if (validateRequired(field, value)) {
+        return false;
+    }
+    var versionValidation = validator.validateApplicationVersion(value);
+    if (!versionValidation.status) {
+        response.status = 400;
+        response.content = versionValidation.msg;
+        return false;
+    }
+    return true;
+}
+
+function validateRequiredAndNumber(field, value) {
+    if (validateRequired(field, value)) {
+        return true;
+    }
+    if (isNaN(value) || value <= 0) {
+        response.status = 400;
+        response.content = "Bad request : " + field + " should be a number more than 0";
+        return true;
+    }
+    return false;
+}
 %>

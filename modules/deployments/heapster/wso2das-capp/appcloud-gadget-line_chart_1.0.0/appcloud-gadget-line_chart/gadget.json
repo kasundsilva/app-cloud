@@ -1,0 +1,27 @@
+{
+    "id": "appcloud-gadget-line_chart",
+    "title": "App Cloud Line Chart",
+    "type": "gadget",
+    "thumbnail": "store://gadget/usa-business-revenue/index.png",
+    "data": {
+        "url": "store://gadget/appcloud-gadget-line_chart/index.xml"
+    },
+    "listen": {
+        "subscriber": {
+            "type": "date-range",
+            "description": "This notifies message generated in publisher"
+        }
+    },
+    "notify": {
+        "chart-zoomed": {
+            "type": "date-range",
+            "description": "This notifies message generated in publisher"
+        }
+    },
+    "toolbarButtons":{
+        "default":{
+            "maximize": false,
+            "configurations": false
+        }
+    }
+}

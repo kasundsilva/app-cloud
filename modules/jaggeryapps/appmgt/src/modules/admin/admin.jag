@@ -24,8 +24,193 @@ var log = new Log("module/admin/admin.jag");
 var carbon = require('carbon');
 var context = carbon.multitenancy.getPrivilegedCarbonContext();
 var ApplicationManager = Packages.org.wso2.appcloud.core.ApplicationManager;
+var Util = Packages.org.wso2.appcloud.core.Util;
 var applicationModule = jagg.module("application");
 var managerModule = jagg.module("manager");
+var databaseModule = jagg.module("databases");
+var realmService = carbon.server.osgiService('org.wso2.carbon.user.core.service.RealmService');
+var tenantManager = realmService.getTenantManager();
+
+var getApplicationVersionsOfTenants = function (state, fromTenantId, toTenantId) {
+    var tenantApps = {};
+    var allTenantRunningApplicationMap = ApplicationManager.getRunningApplicationsOfAllTenants();
+    log.info('Number of tenants having running applications in cloud:' + allTenantRunningApplicationMap.size());
+    if (allTenantRunningApplicationMap && allTenantRunningApplicationMap.entrySet()) {
+        var iterator = allTenantRunningApplicationMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            var tenantId = entry.getKey();
+            var tenantDomain = managerModule.getTenantDomainById(tenantId);
+            if (tenantDomain != null) {
+                var appList = [];
+                var applicationList = entry.getValue();
+                for (var i = 0; i < applicationList.size(); i++) {
+                    if (applicationList != null) {
+                        var app = applicationList.get(i);
+                        if (app != null) {
+                            var obj = {};
+                            obj.appName = app.getApplicationName();
+                            obj.versionHashId = app.getHashId();
+                            obj.appType = app.getApplicationType();
+                            obj.version = app.getDefaultVersion();
+                            obj.tenantDomain = tenantDomain;
+                            appList.push(obj);
+                        } else {
+                            log.warn("One of the applications of tenant:" + tenantId + " has a null app.");
+                        }
+                    } else {
+                        log.warn("Application list of tenant:" + tenantId + " is null.");
+                    }
+                }
+                tenantApps[tenantDomain] = appList;
+            }
+        }
+        return tenantApps;
+    }
+} ;
+
+var redeployApplicationVersion = function (tenantDomain, name, hashId, version, type) {
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        var tenantAdminUser = tenantManager.getTenant(context.getThreadLocalCarbonContext().getTenantId()).getAdminName() + '@' + tenantDomain;
+        jagg.setUser(tenantAdminUser);
+
+        log.info('Start deploying application on tenant:' + tenantDomain + ' with name:' + name + ', version:' +
+                version + ', hashId:' + hashId + ', apptype:' + type);
+        var redeployed = applicationModule.redeployVersion(name, version, hashId, type);
+        log.info('Deployment successfully completed for application on tenant:' + tenantDomain + ' with name:' +
+                name + ', version:' + version + ', hashId:' + hashId + ', apptype:' + type);
+        return redeployed;
+    } catch (e) {
+        log.error('error occurred when redeploying application on tenant:' + tenantDomain + ' with name:' + name +
+                ', version:' + version + ', hashId:' + hashId + ', apptype:' + type);
+        log.error(e);
+    } finally {
+        context.endTenantFlow();
+    }
+};
+
+var deleteTenant = function (tenantDomain) {
+    deleteAllApplicationsOfTenant(tenantDomain);
+    deleteAllDatabasesOfTenant(tenantDomain);
+};
+
+var deleteAllApplicationsOfTenant = function (tenantDomain) {
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        var applications = applicationModule.getAllApplications();
+        var deletedApplicationCount = 0;
+        for (var i = 0; i < applications.length; i++) {
+            try {
+                applicationModule.deleteApplication(applications[i].hashId);
+                deletedApplicationCount++;
+            } catch (e) {
+                log.error('failed to delete application with hash id:' + applications[i].hashId +
+                        ' but continuing to delete other applications of tenant:' + tenantDomain);
+                log.error(e);
+                // do not throw error here, we are ignoring because we need to clean other applications.
+            }
+        }
+        if (deletedApplicationCount > 0 && deletedApplicationCount == applications.length) {
+            log.info('All(' + deletedApplicationCount + ') applications were deleted successfully in tenant:' + tenantDomain);
+        } else if (deletedApplicationCount > 0) {
+            var warnMsg = 'Only ' + deletedApplicationCount + ' applications were deleted successfully out of ' +
+                    applications.length + ' in tenant:' + tenantDomain;
+            log.warn(warnMsg);
+            throw warnMsg;
+        } else {
+            log.info('No applications found to delete in tenant:' + tenantDomain);
+        }
+    } finally {
+        context.endTenantFlow();
+    }
+};
+
+var deleteAllDatabasesOfTenant = function (tenantDomain) {
+    var initialUser = jagg.getUser();
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        // to perform tenant specific operations on storage server, user has to login as tenant user instead of super tenant user.
+        // we set the tenant user first and reset it after completing the database delete operations using initialUser.
+        var tenantAdminUser = tenantManager.getTenant(context.getThreadLocalCarbonContext().getTenantId()).getAdminName() + '@' + tenantDomain;
+        jagg.setUser(tenantAdminUser);
+
+        // delete databases
+        var databasesInfo = databaseModule.getDatabases();
+        var droppedDatabaseCount = 0;
+        for (var i = 0; i < databasesInfo.length; i++) {
+            try {
+                databaseModule.dropDatabase(databasesInfo[i].dbName);
+                droppedDatabaseCount++;
+            } catch (e) {
+                log.error('failed to delete database:' + databasesInfo[i].dbName +
+                        ' but continuing to delete other databases of tenant:' + tenantDomain);
+                log.error(e);
+                // do not throw error here, we are ignoring because we need to clean other databases.
+            }
+        }
+
+        var warnMsgForDatabase;
+        if (droppedDatabaseCount > 0 && droppedDatabaseCount == databasesInfo.length) {
+            log.info('All(' + databasesInfo.length + ') databases were deleted successfully in tenant:' + tenantDomain);
+        } else if (droppedDatabaseCount > 0) {
+            warnMsgForDatabase = 'Only ' + droppedDatabaseCount + ' databases were deleted successfully out of ' +
+                    databasesInfo.length + ' in tenant:' + tenantDomain;
+            log.warn(warnMsgForDatabase);
+        } else {
+            log.info('No databases were found to delete in tenant:' + tenantDomain);
+        }
+
+        // delete database users
+        var databaseUsers = databaseModule.getDatabaseUsers();
+        var deletedDatabaseUserCount = 0;
+        for (var i = 0; i < databaseUsers.length; i++) {
+            try {
+                databaseModule.deleteUser(databaseUsers[i].name);
+                deletedDatabaseUserCount++;
+            } catch (e) {
+                log.error('failed to delete database user:' + databaseUsers[i].name +
+                        ' but continuing to delete other database users of tenant:' + tenantDomain);
+                log.error(e);
+                // do not throw error here, we are ignoring because we need to clean other database users.
+            }
+
+        }
+
+        var warnMsgForDatabaseUsers;
+        if (deletedDatabaseUserCount > 0 && deletedDatabaseUserCount == databaseUsers.length) {
+            log.info('All(' + deletedDatabaseUserCount + ') database users were deleted successfully in tenant:' + tenantDomain);
+        } else if (deletedDatabaseUserCount > 0) {
+            warnMsgForDatabaseUsers = 'Only ' + deletedDatabaseUserCount + ' database users were deleted successfully out of ' +
+                    databaseUsers.length + ' in tenant:' + tenantDomain;
+            log.warn(warnMsgForDatabaseUsers);
+        } else {
+            log.info('No database users were found to delete in tenant:' + tenantDomain);
+        }
+
+        // delete default template
+        var warnMsgForDatabaseTemplates;
+        try {
+            databaseModule.dropTemplate(DEFAULT_TEMPLATE);
+        } catch (e) {
+            warnMsgForDatabaseTemplates = 'failed to delete default database permission template :' + DEFAULT_TEMPLATE + ' of tenant:' + tenantDomain;
+            log.error(e);
+            log.warn(warnMsgForDatabaseTemplates);
+        }
+
+        if (warnMsgForDatabase || warnMsgForDatabaseUsers || warnMsgForDatabaseTemplates) {
+            throw 'Failed to delete databases, users or templates completely in tenant:' + tenantDomain;
+        } else {
+            log.info('Databases, users and templates were deleted successfully in tenant:' + tenantDomain);
+        }
+    } finally {
+        jagg.setUser(initialUser);
+        context.endTenantFlow();
+    }
+};
 
 var stopIdleApplicationsByRunningTimePeriod = function (numberOfHours) {
     var idleApplications = ApplicationManager.getApplicationVersionsByRunningTimePeriod(numberOfHours);
@@ -60,5 +245,131 @@ var stopIdleApplicationByRunningTimePeriod = function (versionHashId, tenantId) 
     }
 };
 
+
+var whiteListApplicationVersion = function (applicationName, applicationRevision, tenantDomain) {
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        var versionHashId = getVersionHashId(applicationName, applicationRevision, tenantDomain);
+        ApplicationManager.whiteListApplicationVersion(versionHashId);
+    } catch (e) {
+        log.error("Error while white listing application : " + applicationName + " version : " + applicationRevision +
+                " for tenant : " + tenantDomain);
+        log.error(e);
+    } finally {
+        context.endTenantFlow();
+    }
+};
+
+var whiteListTenant = function (tenantDomain, maxAppCount, maxDatabaseCount, cloudType, replicaCount) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    ApplicationManager.whiteListTenant(tenantId, maxAppCount, maxDatabaseCount, cloudType, replicaCount);
+};
+
+var getVersionHashId = function(applicationName, versionName, tenantDomain){
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    var versionHashId = Util.getVersionHashId(applicationName, versionName, tenantId)
+    return versionHashId;
+};
+
+var getApplicationVersions = function (tenantDomain, applicationName) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    var applicationHashId = Util.getApplicationHashId(applicationName, tenantId);
+    var applicationVersions = [];
+
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        var versions = ApplicationManager.getAllVersionsOfApplication(applicationHashId);
+        for (var i = 0; i < versions.size(); i++) {
+            var versionObj = {};
+            versionObj.versionName = versions.get(i).versionName;
+            versionObj.status = versions.get(i).status;
+            versionObj.conSpecCpu = versions.get(i).conSpecCpu;
+            versionObj.conSpecMemory = versions.get(i).conSpecMemory;
+            versionObj.isWhiteListed = versions.get(i).isWhiteListed;
+
+            applicationVersions.push(versionObj);
+        }
+    } catch (e) {
+        log.error("Error while getting version list of the application : " + applicationName + " for tenant : " +
+                tenantDomain);
+        log.error(e);
+        throw e;
+    } finally {
+        context.endTenantFlow();
+    }
+
+    return applicationVersions;
+};
+
+var getTenantAppMaxCount = function (tenantDomain, cloudType) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    var appCountObj = {};
+    try {
+        appCountObj.maxAppCount = ApplicationManager.getMaxAppCountForWhiteListedTenants(tenantId, cloudType);
+    } catch (e) {
+        log.error("Error while getting maximum application count for tenant : " + tenantDomain);
+        log.error(e);
+        throw e;
+    }
+    return appCountObj;
+};
+
+var getTenantReplicaCount = function (tenantDomain, cloudType) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    var appCountObj = {};
+    try {
+        appCountObj.maxReplicaCount = ApplicationManager.getMaxReplicaCountForWhiteListedTenants(tenantId, cloudType);
+    } catch (e) {
+        log.error("Error while getting maximum replication count for tenant : " + tenantDomain);
+        log.error(e);
+        throw e;
+    }
+    return appCountObj;
+};
+
+var updateContainerSpecification = function (tenantDomain, applicationName, applicationRevision, memory, cpu) {
+    try {
+        context.startTenantFlow();
+        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+        var versionHashId = getVersionHashId(applicationName, applicationRevision, tenantDomain);
+        ApplicationManager.updateContainerSpecification(versionHashId, parseInt(memory), parseInt(cpu));
+    } catch (e) {
+        log.error("Error while updating application container specification of the application : " + applicationName +
+                " for tenant : " + tenantDomain);
+        log.error(e);
+        throw e;
+    } finally {
+        context.endTenantFlow();
+    }
+};
+
+var whiteListMaxDatabaseCount = function (tenantDomain, maxDatabaseCount, cloudType) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    ApplicationManager.whiteListMaxDatabaseCount(tenantId, maxDatabaseCount, cloudType);
+};
+
+var whiteListMaxApplicationCount = function (tenantDomain, maxAppCount, cloudType) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    ApplicationManager.whiteListMaxAppCount(tenantId, maxAppCount, cloudType);
+};
+
+var whiteListMaxReplicaCount = function (tenantDomain, cloudType, replicaCount) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    ApplicationManager.whiteListMaxReplicaCount(tenantId, cloudType, replicaCount);
+};
+
+var getTenantMaxDatabaseCount = function (tenantDomain, cloudType) {
+    var tenantId = modManager.getTenantIdForGivenTenantDomain(tenantDomain);
+    var databaseCountObj = {};
+    try {
+        databaseCountObj.maxDatabaseCount = ApplicationManager.getMaxDatabaseCountForWhiteListedTenants(tenantId, cloudType);
+    } catch (e) {
+        log.error("Error while getting maximum database count for tenant : " + tenantDomain);
+        throw e;
+    }
+    return databaseCountObj;
+};
 
 %>

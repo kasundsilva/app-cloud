@@ -31,6 +31,7 @@ jagg.block("application", {
     getOutputs:function (inputs) {
 
         var applicationModule = jagg.module("application");
+        var databaseModule = jagg.module("databases");
         var modManager = jagg.module("manager");
         var runtimes = applicationModule.getAllRuntimes(inputs.appTypeName);
         var appTypePropertyConfPath = jagg.getAppTypePropertyConfFilePath();
@@ -38,19 +39,44 @@ jagg.block("application", {
         var appTypesProperties = require(parsedObject);
         var appType = appTypesProperties[inputs.appTypeName];
         var applicationName = inputs.applicationName;
-        var applicationCount = applicationModule.getApplicationCount();
+        var runninngApplicationCount = applicationModule.getRunningApplicationVersionCount();
         var subscriptionPlanBaseURL = modManager.getPropertyValue("SubscriptionPlanBaseURL");
         var notAllowedEnvVariables = applicationModule.getNotAllowedEnvVariables();
         var maxAppCount = applicationModule.getMaxInstanceCount();
+        var allowedContainerSpecs = applicationModule.
+            getAllowedContainerSpecificationsForRuntime(runtimes[0].id);
+        var defaultVersion = applicationModule.getDefaultVersion(inputs.applicationName);
+        var appTypeCount = applicationModule.getAllAppTypes().length;
+        var cloudSpecificApplicationRepresentation = modManager.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
+        var applications = applicationModule.getAllApplications();
+
+        var requestNewAppTypeSubjectMessage = 'Requesting a new runtime for ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' type: ' + inputs.appTypeName;
+        var requestNewAppTypeURL = modManager.getPropertyValue(modManager.getCloudTypeProperties().properties.supportUrl) +
+                '&subject=' + requestNewAppTypeSubjectMessage;
+
+        var requestMoreAppsSubjectMessage = 'Requesting to run more than ' + maxAppCount + ' ' + cloudSpecificApplicationRepresentation.toLowerCase() + 's';
+        var requestMoreAppseURL = modManager.getPropertyValue(modManager.getCloudTypeProperties().properties.supportUrl) +
+                '&subject=' + requestMoreAppsSubjectMessage;
+        var allDBInfo = databaseModule.getAllDatabasesInfo();
+        var noOfDbs = allDBInfo.length;
 
         return {
             "runtimes" : runtimes,
             "appType" : appType,
             "applicationName" : applicationName,
-            "applicationCount" : applicationCount,
+            "runninngApplicationCount" : runninngApplicationCount,
             "subscriptionPlanBaseURL" : subscriptionPlanBaseURL,
             "notAllowedEnvVariables" : notAllowedEnvVariables,
-            "maxAppCount" : maxAppCount
+            "maxAppCount" : maxAppCount,
+            "allowedContainerSpecs" : allowedContainerSpecs,
+            "defaultVersion" : defaultVersion,
+            "appTypeCount" : appTypeCount,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation,
+            "applications" : applications,
+            "requestNewAppTypeURL" : requestNewAppTypeURL,
+            "requestMoreAppseURL" : requestMoreAppseURL,
+            "allDBInfo": allDBInfo,
+            "noOfDbs": noOfDbs
         };
     }
 });

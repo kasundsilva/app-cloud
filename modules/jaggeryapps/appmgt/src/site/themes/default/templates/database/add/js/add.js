@@ -1,6 +1,6 @@
 /*
  *
- *   Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -18,7 +18,16 @@
  * /
  */
 var isNewUser = true;
+var dbNameValidationErrorMsg = "";
 $(document).ready(function () {
+    if (databaseCount >= maxDatabases) {
+        $('#outerContainer').empty();
+        $('#outerContainer').html('<div class="container-fluid"><div class="row row-centered">' +
+            '<div class="col-centered col-xs-10 col-sm-7  col-md-7 col-lg-6"><div class="cloud-new-content">' +
+            '<h3>You cannot create more than ' + maxDatabases + ' databases on a free subscription. ' +
+            'Please delete an existing database to continue...</h3></div></div></div></div>');
+        return;
+    }
 //select 2
     //$('select').select2(); //select2 init for stages dropdown
     var $select = $('#user-name-select.select2')
@@ -237,12 +246,21 @@ $(document).ready(function () {
                             'numbers': true,
                             'specialChars': true,
                             'onPasswordGenerated': function (generatedPassword) {
-                                generatedPassword = 'Your password has been generated : ' + generatedPassword;
-                                $(".password-generator").attr('data-original-title', generatedPassword)
-                                        .tooltip('show', {placement: 'right'});
-                                $("#password").trigger('focus');
-                                if (!$(highPass).find('i').hasClass("fa-eye-slash")) {
-                                    $(highPass).click();
+                                var backslashRegex = new RegExp("\\\\", "g");
+                                var quoteRegex = new RegExp("\'");
+                                //backslash and single quote are not allowed as special characters in the password
+                                if (backslashRegex.test(generatedPassword) || quoteRegex.test(generatedPassword)) {
+                                    $(".password-generator").trigger("click");
+                                } else {
+                                    generatedPassword = 'Your password has been generated : ' + generatedPassword;
+                                    $(".password-generator").attr('data-original-title', generatedPassword)
+                                        .tooltip('show', {
+                                            placement: 'right'
+                                        });
+                                    $("#password").trigger('focus');
+                                    if (!$(highPass).find('i').hasClass("fa-eye-slash")) {
+                                        $(highPass).click();
+                                    }
                                 }
                             }
                         });
@@ -268,6 +286,8 @@ function validateForm(){
 }
 
 function getValidationOptions(){
+    //Add custom validator for database name
+    $.validator.addMethod("validateDatabaseName", validateDatabaseName , dbNameValidationErrorMsg);
     if(isNewUser){
         return getNewUserValidationOptions();
     } else {
@@ -283,7 +303,8 @@ function getExistingValidationOptions(){
         rules: {
             "database-name": {
                 required: true,
-                maxlength: 30
+                maxlength: 30,
+                validateDatabaseName: true
             },
             "user-name-select": {
                 required: true,
@@ -325,7 +346,8 @@ function getNewUserValidationOptions(){
         rules: {
             "database-name": {
                 required: true,
-                maxlength: 30
+                maxlength: 30,
+                validateDatabaseName: true
             },
             "user-name-select": {
                 required: true,
@@ -370,7 +392,7 @@ function addNewDatabase() {
     var validator = $("#addDatabaseForm").validate(getValidationOptions());
     var formValidated = validator.form();
     if (formValidated) {  
-        $("#add-database").loadingButton('show');
+        $("#add-database").loadingButton({action:'show'});
         jagg.post("../blocks/database/add/ajax/add.jag", {
             action: "createDatabaseAndAttachUser",
             databaseName: $("#database-name").val().trim(),
@@ -386,12 +408,29 @@ function addNewDatabase() {
             if (result.value == 'success') {
                 window.location.href = "databases.jag";
             } else {
-                jagg.message({content: 'Error occurred while creating database!', type: 'error', id: 'databasecreation'});
+                jagg.message({content: 'An error occurred while creating the database.', type: 'error', id: 'databasecreation'});
             }
         }, function (jqXHR, textStatus, errorThrown) {
-            jagg.message({content: 'Error occurred while creating database!', type: 'error', id: 'databasecreation'});
+            jagg.message({
+                content: jqXHR.responseText,
+                type: 'error',
+                id: 'databasecreation',
+                timeout: 8000
+            });
+            $("#add-database").loadingButton({action:'hide'});
         });
-        $("#add-database").loadingButton('hide');
     }
 }
 
+function validateDatabaseName(value) {
+    var dbNameValidation = validateDbName(value);
+    if (!dbNameValidation.status) {
+        dbNameValidationErrorMsg = dbNameValidation.msg;
+    }
+    return dbNameValidation.status;
+}
+
+$(document).on('focusout keyup blur change', '#database-name', function() {
+    var validator = $("#addDatabaseForm").validate(getValidationOptions());
+    $('#database-name').valid();
+});

@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: service-loadbalancer-private
+  labels:
+    app: service-loadbalancer-private
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    app: service-loadbalancer-private
+    version: v1
+  template:
+    metadata:
+      labels:
+        app: service-loadbalancer-private
+        version: v1
+    spec:
+      nodeSelector:
+        role: loadbalancer
+      containers:
+      - image: registry.182.docker.appfactory.private.wso2.com:5000/haproxy-dev:0.4-0.7.2
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        name: haproxy
+        resources:
+           limits:
+               cpu: 700m
+               memory: 1Gi
+           requests:
+               cpu: 700m
+               memory: 1Gi
+        ports:
+        # All http services
+        - containerPort: 80
+          hostPort: 10080
+          protocol: TCP
+        # nginx https
+        - containerPort: 443
+          hostPort: 18443
+          protocol: TCP
+        # mysql
+        - containerPort: 3306
+          hostPort: 13306
+          protocol: TCP
+        # haproxy stats
+        - containerPort: 1936
+          hostPort: 11936
+          protocol: TCP
+        args:
+        - --tcp-services=mysql:3306,nginxsvc:443
+        - --ssl-cert= /etc/haproxy/ssl.pem
+        - --ssl-ca-cert=/etc/haproxy/ca.crt
+        - --syslog=true
+        - --load-balancer-type=private
+        - --server-url=https://172.16.2.152:9444/resource/1.0.0/artifact/_system/governance/
+        - --authorization-header-value=YWRtaW46YWRtaW4=
+        - --encoded-key=ABCDEFGHIJ

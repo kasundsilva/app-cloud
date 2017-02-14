@@ -24,6 +24,9 @@ jagg.module("runtimeLogs", {
     },
     getFormattedRuntimeLogs:function () {
         return jagg.require(jagg.getModulesDir() + "runtimeLogs/runtimeLogs.jag").getFormattedRuntimeLogs.apply(this, arguments);
+    },
+    getDownloadableRuntimeLogs:function () {
+        return jagg.require(jagg.getModulesDir() + "runtimeLogs/runtimeLogs.jag").getDownloadableRuntimeLogs.apply(this, arguments);
     }
 });
 %>

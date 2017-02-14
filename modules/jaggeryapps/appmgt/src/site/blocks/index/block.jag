@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -31,10 +31,33 @@ jagg.block("index", {
         var applicationModule = jagg.module("application");
         var applications = applicationModule.getAllApplications();
         var applicationName = request.getParameter("applicationName");
+        var appTypes = applicationModule.getAllAppTypes();
+        var appTypesProperties = require(parse(jagg.getAppTypePropertyConfFilePath()));
+        var appTypeCount = appTypes.length;
+        if (appTypeCount > 0) {
+            var appType = appTypes[0].name;
+        }
 
+        var managerModule = jagg.module("manager");
+        var cloudTitle = managerModule.getCloudTypeProperties().cloudTitle;
+        var pageTitle = managerModule.getCloudTypeProperties().pageTitle;
+        var docURL = managerModule.getPropertyValue(managerModule.getCloudTypeProperties().properties.documentationUrl);
+        var cloudSpecificApplicationRepresentation = managerModule.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
+
+        // include application category too.
+        for (var x = 0; x < applications.length; x++) {
+            applications[x].category = appTypesProperties[applications[x].applicationType].category;
+        }
+        
         return {
             "applications" : applications,
-            "applicationName" :applicationName
+            "applicationName" :applicationName,
+            "appTypeCount" : appTypeCount,
+            "appType" : appType,
+            "cloudTitle" : cloudTitle,
+            "pageTitle" : pageTitle,
+            "docURL" : docURL,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation
         };
     }
 

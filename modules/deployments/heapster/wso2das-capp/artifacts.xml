@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifacts>
+    <artifact name="org.wso2.appcloud.operational.dashboard" version="1.0.0" type="carbon/application">
+        <dependency artifact="appcloud-gadget-commons" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="appcloud-gadget-date_range_picker" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="appcloud-gadget-line_chart" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="appcloud-gadget-search_box" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="dashboard" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+    </artifact>
+</artifacts>

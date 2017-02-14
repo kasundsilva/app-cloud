@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -31,87 +31,104 @@ jagg.module("databases", {
 		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").createDatabase.apply(this, arguments);
 	},
 
+	isDatabaseExists:function () {
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").isDatabaseExists.apply(this, arguments);
+	},
+
 	getDatabaseUsersForRssInstance:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").getDatabaseUsersForRssInstance.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").getDatabaseUsersForRssInstance.apply(this,arguments);
 	},
 
 	getDatabases:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getDatabases.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabases.apply(this,arguments);
 	},
 
 	getDatabasesForStage:function () {
 		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabasesForStage.apply(this, arguments);
 	},
+
 	getDatabaseUrl:function () {
 		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabaseUrl.apply(this, arguments);
 	},
+
     getDbUserTemplateInfoForStage:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getDbUserTemplateInfoForStage.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDbUserTemplateInfoForStage.apply(this,arguments);
 	},
+
     getDatabasesInfoForStage:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getDatabasesInfoForStage.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabasesInfoForStage.apply(this,arguments);
 	},
     
     getDatabaseInfoUrl:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getDatabaseInfoUrl.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabaseInfoUrl.apply(this,arguments);
 	},
 
 	dropDatabase:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/drop/drop.jag").dropDatabase.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/drop/drop.jag").dropDatabase.apply(this,arguments);
 	},
 
 	getTemplates:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").getTemplates.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").getTemplates.apply(this,arguments);
 	},
 
 	getAvailableTemplatesToAttachToDatabase:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").getAvailableTemplatesToAttachToDatabase.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").getAvailableTemplatesToAttachToDatabase.apply(this,arguments);
 	},
 
 	dropTemplate:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").dropTemplate.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").dropTemplate.apply(this,arguments);
 	},
 
     createTemplateWithAllPermissions:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").createTemplateWithAllPermissions.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").createTemplateWithAllPermissions.apply(this,arguments);
 	},
 
+    isDatabasePrivilegeTemplateExist:function(){
+        return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").isDatabasePrivilegeTemplateExist.apply(this,arguments);
+    },
+
 	editTemplate:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").editTemplate.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").editTemplate.apply(this,arguments);
 	},
 
 	editDbTemplate:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/templates/add.jag").editDbTemplate.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/templates/add.jag").editDbTemplate.apply(this,arguments);
 	},
 
 	getDatabaseUsers:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").getDatabaseUsers.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").getDatabaseUsers.apply(this,arguments);
 	},
 
 	getAvailableUsersToAttachToDatabase:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").getAvailableUsersToAttachToDatabase.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").getAvailableUsersToAttachToDatabase.apply(this,arguments);
 	},
 
 	getRSSinstances:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getRSSinstances.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getRSSinstances.apply(this,arguments);
 	},
+
 	getRSSinstanceInStage:function() {
-    		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getRSSinstanceInStage.apply(this,arguments);
+    	return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getRSSinstanceInStage.apply(this,arguments);
     },
+
     getStageFromRssInstanceName:function() {
-        		return jagg.require(jagg.getModulesDir()+"databases/add/add.jag").getStageFromRssInstanceName.apply(this,arguments);
+        return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getStageFromRssInstanceName.apply(this,arguments);
     },
 
 	deleteUser:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").deleteUser.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").deleteUser.apply(this,arguments);
 	},
 
 	createDatabaseUser:function() {
-		return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").createDatabaseUser.apply(this,arguments);
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").createDatabaseUser.apply(this,arguments);
+	},
+
+	isDatabaseUserExists:function() {
+		return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").isDatabaseUserExists.apply(this,arguments);
 	},
 
     getPossibleUsername:function() {
-        return jagg.require(jagg.getModulesDir()+"databases/users/list.jag").getPossibleUsername.apply(this,arguments);
+        return jagg.require(jagg.getModulesDir() + "databases/users/list.jag").getPossibleUsername.apply(this,arguments);
     },
 
 	getAttachedUsers:function () {
@@ -137,13 +154,22 @@ jagg.module("databases", {
 	editUserPermissions:function () {
 		return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").editUserPermissions.apply(this, arguments);
 	},
+
     generateDatabaseInfoForDataTable :function () {
         return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").generateDatabaseInfoForDataTable.apply(this, arguments);
     },  
+
     getAllDatabasesInfo: function () {
         return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getAllDatabasesInfo.apply(this, arguments);
     },
 
+    getDatabaseCount: function () {
+        return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getDatabaseCount.apply(this, arguments);
+    },
+
+    getMaxDatabaseCount: function () {
+        return jagg.require(jagg.getModulesDir() + "databases/add/add.jag").getMaxDatabaseCount.apply(this, arguments);
+    }
   
 });
 %>

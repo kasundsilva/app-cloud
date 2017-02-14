@@ -1,5 +1,5 @@
 <!--
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -22,6 +22,7 @@
         include("/jagg/jagg.jag");
         include("/jagg/constants.jag");
         var log = new Log();
+        var audit = org.wso2.carbon.CarbonConstants.AUDIT_LOG;
 (function () {
 
     var samlResponse = request.getParameter("SAMLResponse");
@@ -32,14 +33,56 @@
     include("/jagg/jagg.jag");
     var site = require("/site/conf/site.json");
     var security = require("sso");
-    var ssoRelyingParty = new security.SSORelyingParty(site.ssoConfiguration.issuer);
+    var ssoRelyingParty = new security.SSORelyingParty(jagg.getIssuer(request.getRequestURL()));
     var isLogoutResponse = false;
     var isLogoutRequest = false;
 
     // if saml response is not a log out response
     if (samlResponse != null) {
         isLogoutResponse = ssoRelyingParty.isLogoutResponse(samlResponse);
-        if (!Boolean(isLogoutResponse)) {
+        if (!isLogoutResponse) {
+            var MultitenantConstants = Packages.org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+            var fullUserName = ssoRelyingParty.getSAMLResponseNameId(samlResponse);
+            var MultitenantUtils = Packages.org.wso2.carbon.utils.multitenancy.MultitenantUtils;
+            var domainName = null;
+            if (fullUserName != null) {
+                domainName = MultitenantUtils.getTenantDomain(fullUserName);
+            } else {
+                log.error("SAML Response Schema verification failed");
+                response.sendRedirect("../site/pages/error-pages/401.html");
+                return;
+            }
+
+            // validate assertion validity period
+            var isValidityPeriodEnabled = site.ssoConfiguration.verifyAssertionValidityPeriod;
+            var timeStampSkewInSeconds = site.ssoConfiguration.timestampSkewInSeconds;
+
+            if (isValidityPeriodEnabled === 'true') {
+
+                if (!timeStampSkewInSeconds || timeStampSkewInSeconds == null) {
+                    timeStampSkewInSeconds = "300";
+                }
+
+                ssoRelyingParty.setProperty("timestampSkewInSeconds", timeStampSkewInSeconds);
+                var isValidityPeriodValid = ssoRelyingParty.validateAssertionValidityPeriod(samlResponse);
+
+                if (!Boolean(isValidityPeriodValid)) {
+                    log.error("SAML response validity period verification failed.");
+                    response.sendRedirect("../site/pages/error-pages/401.html");
+                    return;
+                }
+            }
+
+            // validating the audience restrictions
+            var audienceRestrictionsEnabled = site.ssoConfiguration.audienceRestrictionsEnabled;
+            if (audienceRestrictionsEnabled) {
+                var isAudienceRestrictionsValid = ssoRelyingParty.validateAudienceRestrictions(samlResponse);
+                if (!isAudienceRestrictionsValid) {
+                    log.error("SAML Response Audience Restrictions verification failed");
+                    response.sendRedirect("../site/pages/error-pages/401.html");
+                    return;
+                }
+            }
             // relay state value should be a valid value, this value is mapped with request uri.
             var relayState = request.getParameter("RelayState");
             var requestedURI = ssoRelyingParty.getRelayStateProperty(relayState);
@@ -50,76 +93,67 @@
             }
 
             // validating the signature
-            var isSignatureValid = ssoRelyingParty.validateSignature(samlResponse);
-            if (!Boolean(isSignatureValid)) {
-                log.error("SAML response signature is verification failed.");
-                response.sendRedirect("../error.jag");
-                return;
+            var responseSigningEnabled = site.ssoConfiguration.responseSigningEnabled;
+            if (responseSigningEnabled) {
+                var isSignatureValid = ssoRelyingParty.validateSignature(samlResponse);
+                if (!isSignatureValid) {
+                    log.error("SAML Response Signature verification failed.");
+                    session.remove('ERROR_MSG');
+                    session.put('ERROR_MSG', 'An authorization error occurred in the backend');
+                    response.sendRedirect("../site/pages/error-pages/401.html");
+                    return;
+                }
+            }
+            // validating the saml assertion signature
+            var assertionSigningEnabled = site.ssoConfiguration.assertionSigningEnabled;
+
+            if (assertionSigningEnabled) {
+                // validating the saml assertion signature
+                var isAssertionSignatureValid = ssoRelyingParty.validateAssertionSignature(samlResponse);
+                if (!isAssertionSignatureValid) {
+                    log.error("SAML Assertion Signature verification failed.");
+                    response.sendRedirect("../site/pages/error-pages/401.html");
+                    return;
+                }
             }
             samlResponse = samlResponse.replace('<?xml version="1.0" encoding="UTF-8"?>', "");
             ssoRelyingParty.setSessionAuthenticated(sessionId, samlResponse);
             var userName = ssoRelyingParty.getLoggedInUser(sessionId);
             var modManager = jagg.module("manager");
-            var permission = modManager.getPropertyValue(LOGIN_PERMISSION);
-            var isUserAuthorized = checkAuthorizationForUser(userName, permission);
+            jagg.setSelectedCloud(request.getRequestURL());
+            var permission = modManager.getPropertyValue(jagg.getSelectedCloud() + LOGIN_PERMISSION);
+            var isUserAuthorized = modManager.checkAuthorizationForUser(userName, permission);
             if(isUserAuthorized){
                 jagg.setUser(userName);
                 var email = modManager.getEmailAddressForUser(userName);
                 modManager.setUserEmailAddress(email);
                 session.put("LOGGED_IN_USER", ssoRelyingParty.getLoggedInUser(sessionId));
+                audit.info("User : " + jagg.getUser() + ", Action : login");
                 response.sendRedirect("/appmgt/site/pages/index.jag");
             } else {
+                session.invalidate();
                 response.sendRedirect("/appmgt/site/pages/error-pages/401.html");
             }
             return;
         } else {
             // if the saml response is log out request from IDP, we log out from web app.
             ssoRelyingParty.invalidateSessionBySessionId(sessionId);
+            audit.info("User : " + jagg.getUser() + ", Action : logout");
             session.invalidate();
             response.sendRedirect("../");
             return;
         }
-
     }
-
     // if saml request is a log out request, then invalidate session.
     if (samlRequest != null) {
         isLogoutRequest = ssoRelyingParty.isLogoutRequest(samlRequest);
-        if (Boolean(isLogoutRequest)) {
+        if (isLogoutRequest) {
             ssoRelyingParty.invalidateSessionBySAMLResponse(samlRequest);
+            audit.info("User : " + jagg.getUser() + ", Action : logout");
             session.invalidate();
         }
     }
-
-
 }());
-
-function checkAuthorizationForUser(userName , permission) {
-    var carbon = require('carbon');
-    var server = carbon.server;
-    var isUserAuthorized = false;
-    var tenantDomain = null;
-    if(userName){
-        if (userName.indexOf("@") != -1) {
-            tenantDomain = userName.substring(userName.lastIndexOf('@') + 1);
-            userName = userName.substring(0, userName.lastIndexOf('@'));
-        } else {	// else assume super tenant
-            tenantDomain = SUPER_TENANT_DOMAIN_NAME;
-        }
-    } else {
-        throw "username not specified";
-    }
-    var carbon = require('carbon');
-    var server = carbon.server;
-    var multitenancy = carbon.multitenancy;
-    var tenantManager = multitenancy.getTenantManager();
-    var tenantId = tenantManager.getTenantId(tenantDomain);
-    var realmService = server.osgiService('org.wso2.carbon.user.core.service.RealmService').getTenantUserRealm(tenantId);
-    isUserAuthorized = realmService.getAuthorizationManager().isUserAuthorized(userName, permission, PERMISSION_EXECUTE);
-    return isUserAuthorized;
-};
-
 %>
-
 </body>
 </html>

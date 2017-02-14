@@ -27,15 +27,29 @@ import java.util.List;
 @XmlRootElement
 public interface PlanDao {
 
-	/*
+	/**
 	 * Get all defined subscription plans.
+	 * @return list of subscription plans
+	 * @throws SQLException
 	 */
 	public List<Plan> getAllPlans() throws SQLException;
 
-	/*
+	/**
 	 * Get plan by ID.
+	 * @param planId	Plan Id of the plan
+	 * @return Plan	Details of plan
+	 * @throws SQLException
 	 */
 	public Plan getPlanByPlanId(int planId) throws SQLException;
+
+    /**
+     * Get plan by plan name and cloud
+     * @param cloudType cloud type
+     * @param planName plan name
+     * @return plan
+     * @throws Exception
+     */
+    public Plan getPlanByPlanName(String cloudType, String planName) throws Exception;
 
 	/*
 	 * Define new Plan.
@@ -52,10 +66,12 @@ public interface PlanDao {
 	 */
 	public Plan updatePlanById (int planId, Plan plan) throws SQLException;
 
-	/*
+	/**
 	 * Get the allowed container specifications within the subscription plan.
+	 * @param planId 	Plan Id of plan
+	 * @return list of container specifications
+	 * @throws SQLException
 	 */
-	public List<ContainerSpecifications> getAllowedConSpecs(int planId) throws SQLException ;
-
+	public List<ContainerSpecifications> getAllowedConSpecs(int planId) throws SQLException;
 
 }

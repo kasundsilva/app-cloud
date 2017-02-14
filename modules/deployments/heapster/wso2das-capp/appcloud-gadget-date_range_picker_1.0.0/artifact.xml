@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact name="appcloud-gadget-date_range_picker" version="1.0.0" type="dashboards/gadget" serverRole="DataAnalyticsServer">
+    <file>appcloud-gadget-date_range_picker</file>
+</artifact>

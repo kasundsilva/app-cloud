@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -30,9 +30,16 @@ jagg.block("urlmapper", {
     getOutputs: function (inputs) {
         var applicationModule = jagg.module("application");
         var application = applicationModule.getApplication(inputs.applicationKey);
+        var defaultHostName = applicationModule.constructDefaultAppLaunchURL(application.applicationName);
 
+        var modManager = jagg.module("manager");
+        var cloudSpecificApplicationRepresentation = modManager.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
+        var customUrlSettingsPageUrl = modManager.getPropertyValue(CUSTOM_URL_SETTINGS_PAGE_URL);
         return {
-            "application": application
+            "application": application,
+            "defaultHostName": defaultHostName,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation,
+            "customUrlSettingsPageUrl" : customUrlSettingsPageUrl
         };
     }
 

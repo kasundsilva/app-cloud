@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
 // Beginning of functions functions for add, edit, cancel save save actions for Evn variables and Labels
 $(document).on('click', '.panel-heading a', function(e){
     var $this = $(this);
@@ -11,9 +28,9 @@ $(document).on('click', '.panel-heading a', function(e){
 $(document).on("click",".fw-cancel", function(e){ //user click on remove text
     var propBlock = $(this).parent('span').parent('div').parent('div');
     jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete Tag',content:'Are you sure you want to delete this?',
-        okCallback:function(){
+        yesCallback:function(){
             propBlock.remove();
-        }, cancelCallback:function(){}
+        }, noCallback:function(){}
     });
 
 });
@@ -40,6 +57,9 @@ $(document).on('change focusout keyup', '.element-add-value', function () {
     var propHolder = $(this).parent('div').parent('div');
     var key = propHolder.find('.element-add-key').val();
     var addBtn = propHolder.find('.btn-primary-add-val');
+    if(propHolder.parent('div').attr("id") == "env-pane") {
+        var addBtn = propHolder.find('.btn-primary-add-val-env');
+    }
     if(!value || !key){
         addBtn.prop("disabled" , true);
     } else {
@@ -54,10 +74,7 @@ $(document).on('change focusout keyup', '.element-add-key', function () {
     var addBtn = propHolder.find('.btn-primary-add-val');
 
     if(propHolder.parent('div').attr("id") == "env-pane"){
-        $(this).rules("add", {
-            validateEnvironmentVariable: true
-        });
-
+        var addBtn = propHolder.find('.btn-primary-add-val-env');
         if(validateEnvironmentVariable(key)){
             addBtn.prop("disabled" , false);
             propHolder.find('.element-add-value').prop("disabled" , false);
@@ -74,13 +91,42 @@ $(document).on('change focusout keyup', '.element-add-key', function () {
     }
 });
 
-$(document).on('click', '.btn-primary-add-val', function () {
+$(document).on('click', '.btn-primary-add-val, .btn-primary-add-val-env', function() {
+    activateCreateApplication();
     var addBlock = $(this).parent().parent();
     var key = addBlock.find('.element-add-key')[0].value;
     var value = addBlock.find('.element-add-value')[0].value;
-    drawInitialEnvTagPane(addBlock, key, value);
+    var paneId = addBlock.parent().attr('id');
+    var initialValueElement = '<input type="text" class="form-control element-add-value" placeholder="Value">\n';
+    var initialAddElement = '<button class="btn btn-primary btn-primary-add btn-primary-add-val" disabled>Add</button>\n';
+    if (paneId === "env-pane") {
+        if(noOfDbs == 0){
+            initialValueElement = '<input type="text" class="form-control element-add-value" id="value">\n';
+        } else {
+            initialValueElement = '<select id="value" name="value" class="form-control select2 element-add-value"></select>\n';
+        }
+        initialAddElement = '<button class="btn btn-primary btn-primary-add btn-primary-add-val-env" disabled>Add</button>\n';
+        addBlock.attr('name');
+    }
+    drawInitialEnvTagPane(addBlock, key, value, initialValueElement, initialAddElement);
 });
-function drawInitialEnvTagPane(addBlock, key, value){
+
+function addEnvFromFile(key, val) {
+    activateCreateApplication();
+    var addBlock = $('.btn-primary-add-val-env').parent().parent();
+    var key = key;
+    var value = val;
+    var initialValueElement;
+    if(noOfDbs == 0){
+        initialValueElement = '<input type="text" class="form-control element-add-value" id="value">\n';
+    } else {
+        initialValueElement = '<select id="value" name="value" class="form-control select2 element-add-value"></select>\n';
+    }
+    var initialAddElement = '<button class="btn btn-primary btn-primary-add btn-primary-add-val-env" disabled>Add</button>\n';
+    drawInitialEnvTagPane(addBlock, key, value, initialValueElement, initialAddElement);
+}
+
+function drawInitialEnvTagPane(addBlock, key, value, initialValueElement, initialAddElement){
     var panelBody = addBlock.parent();
     panelBody.append(
         '<div class="form-inline  property-seperator prop-key-vals-holder">\n'+
@@ -102,23 +148,27 @@ function drawInitialEnvTagPane(addBlock, key, value){
     );
     addBlock.remove();
     panelBody.prepend(
-        '<div class="form-inline property-seperator">\n'+
+        '<div class="form-inline property-seperator"  id="env-body">\n'+
         '<div class="form-group">\n'+
         '<label class="sr-only" for="key">Key</label>\n'+
-        '<input type="text" class="form-control element-add-key" id="key" placeholder="Key">\n'+
+        '<input type="text" class="form-control element-add-key" name="envKey" placeholder="Key">\n'+
         '</div>\n'+
-        '<div class="form-group">\n'+
+        '<div class="form-group custom-env-class-for-demo">\n'+
         '<label class="sr-only" for="value">Value</label>\n'+
-        '<select id="value" name="value" class="form-control select2 element-add-value"></select>\n' +
+        initialValueElement +
         '</div>\n'+
         '<div class="form-group">\n'+
-        '<button class="btn btn-primary btn-primary-add btn-primary-add-val" disabled>Add</button>\n'+
+        initialAddElement +
         '</div>\n'+
         '</div>\n'
     );
 
-    initSelect2(null);
+    var valueElem = document.getElementById("value");
+    if (noOfDbs != 0){
+        initSelect2(null, valueElem, "", allDBInfo);
+    }
 }
+
 function drawEnvTagPane(panelBody, key, value){
     panelBody.append(
         '<div class="form-inline  property-seperator prop-key-vals-holder">\n'+

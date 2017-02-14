@@ -1,15 +1,75 @@
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
 var jagg = jagg || {};
 var messageTimer;
 (function () {
     jagg.post = function(url, data, callback, error) {
         return jQuery.ajax({
-                               type:"POST",
-                               url:url,
-                               data:data,
-                               async:true,
-                               cache:false,
-                               success:callback,
-                               error:error
+                       type:"POST",
+                       url:url,
+                       data:data,
+                       async:true,
+                       cache:false,
+                       success:callback,
+                       statusCode: {
+                           401: function isSessionExpired() {
+                                       jagg.infoMessage({
+                                           type: 'confirm',
+                                           modalStatus: true,
+                                           content: 'Your session has timed out due to inactivity and will be reloaded shortly.',
+                                           okCallback: function() {
+                                               window.location.reload();
+                                           }
+                                       });
+                                   }
+                                },
+                       error:error
+        });
+    };
+
+    jagg.infoMessage = function(params) {
+        return noty({
+            theme: 'wso2',
+            layout: 'topCenter',
+            type: 'confirm',
+            closeWith: ['button', 'click'],
+            modal: (params.modalStatus ? params.modalStatus : false),
+            text: params.content ? params.content : 'Do you want to continue?',
+            buttons: [{
+                addClass: 'btn btn-primary',
+                text: (params.okText ? params.okText : 'OK'),
+                onClick: function($noty) {
+                    $noty.close();
+                    if (isFunction(params.okCallback)) {
+                        params.okCallback();
+                    }
+                }
+            }],
+            animation: {
+                open: {
+                    height: 'toggle'
+                }, // jQuery animate function property object
+                close: {
+                    height: 'toggle'
+                }, // jQuery animate function property object
+                easing: 'swing', // easing
+                speed: 500 // opening & closing animation speed
+            }
         });
     };
 
@@ -142,17 +202,17 @@ var messageTimer;
                         modal: (params.modalStatus ? params.modalStatus : false),
                         text: params.content ? params.content : 'Do you want to continue?',
                         buttons: [
-                            {addClass: 'btn btn-primary', text: (params.okText ? params.okText : 'Ok'), onClick: function($noty) {
+                            {addClass: 'btn btn-primary', text: (params.yesText ? params.yesText : 'Yes'), onClick: function($noty) {
                                 $noty.close();
-                                if (isFunction(params.okCallback)) {
-                                    params.okCallback();
+                                if (isFunction(params.yesCallback)) {
+                                    params.yesCallback();
                                 }
                             }
                             },
-                            {addClass: 'btn btn-default', text: 'Cancel', onClick: function($noty) {
+                            {addClass: 'btn btn-default', text: 'No', onClick: function($noty) {
                                 $noty.close();
-                                if (isFunction(params.cancelCallback)) {
-                                    params.cancelCallback();
+                                if (isFunction(params.noCallback)) {
+                                    params.noCallback();
                                 }
 
                             }

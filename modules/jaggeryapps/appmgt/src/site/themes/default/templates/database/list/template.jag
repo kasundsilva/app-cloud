@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -21,6 +21,7 @@ jagg.template("database/list", function (inputs, outputs, jagg) { %>
 <%
 var hasDBs = outputs.hasDBs;
 var isSSRunning = outputs.isSSRunning;
+var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
 %>
 
 <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/datatables-1.10.7/jquery.dataTables.min.css'))%>">
@@ -46,8 +47,7 @@ var isSSRunning = outputs.isSSRunning;
 <div class="container-fluid app-content-section">
         <div class="row">
             <div class="col-md-12 msg-issues">
-            Create new MySQL databases to persist your application data. A new database is created with a default
-            user that has all permissions granted.
+            Create new MySQL databases to store your <%=cloudSpecificApplicationRepresentation%> data. The default user of the new database has all permissions granted.
             </div>
         </div>
     <%if(!isSSRunning) {%>
@@ -86,7 +86,7 @@ var isSSRunning = outputs.isSSRunning;
                             <th>Database URL</th>
                             <th>Type</th>
                             <th>Attached Users</th>
-                            <th>New Users</th>
+                            <th>All Users</th>
                             <th>Delete</th>
                         </tr>
                         </thead>
@@ -150,7 +150,7 @@ function populateDatatable() {
                             var currentId = $(this).attr("id");
                             //getting the database name from  id
                             var dbName = currentId.substr(7);
-                            jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete Database',content:'Are you sure you want to delete the database ' + dbName + ' ?', okCallback:function(){deleteDatabase(dbName);}, cancelCallback:function(){}});
+                            jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete Database',content:'Are you sure you want to delete the database: ' + dbName + ' ?', yesCallback:function(){deleteDatabase(dbName);}, noCallback:function(){}});
                         });
                     }
                 });
@@ -169,7 +169,7 @@ function deleteDatabase(dbName) {
                 databaseDatatable.api().ajax.reload();
             }
         }, function (jqXHR, textStatus, errorThrown) {
-            jagg.message({type:'error',content:'Database deletion failed for ' + dbName , id:'delete_db'});
+            jagg.message({type:'error',content:'Failed to delete database: ' + dbName + '.' , id:'delete_db'});
     });
 }
 

@@ -18,8 +18,47 @@
  */
 
 jagg.module("admin", {
+    redeployApplicationVersion:function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").redeployApplicationVersion.apply(this, arguments);
+    },
+    getApplicationVersionsOfTenants:function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").getApplicationVersionsOfTenants.apply(this, arguments);
+    },
+    deleteTenant:function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").deleteTenant.apply(this, arguments);
+    },
     stopIdleApplicationsByRunningTimePeriod:function () {
         return jagg.require(jagg.getModulesDir() + "admin/admin.jag").stopIdleApplicationsByRunningTimePeriod.apply(this, arguments);
+    },
+    whiteListApplicationVersion:function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").whiteListApplicationVersion.apply(this, arguments);
+    },
+    whiteListTenant:function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").whiteListTenant.apply(this, arguments);
+    },
+    getApplicationVersions: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").getApplicationVersions.apply(this, arguments);
+    },
+    getTenantAppMaxCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").getTenantAppMaxCount.apply(this, arguments);
+    },
+    updateContainerSpecification: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").updateContainerSpecification.apply(this, arguments);
+    },
+    whiteListMaxDatabaseCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").whiteListMaxDatabaseCount.apply(this, arguments);
+    },
+    whiteListMaxApplicationCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").whiteListMaxApplicationCount.apply(this, arguments);
+    },
+    whiteListMaxReplicaCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").whiteListMaxReplicaCount.apply(this, arguments);
+    },
+    getTenantMaxDatabaseCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").getTenantMaxDatabaseCount.apply(this, arguments);
+    },
+    getTenantReplicaCount: function () {
+        return jagg.require(jagg.getModulesDir() + "admin/admin.jag").getTenantReplicaCount.apply(this, arguments);
     }
 });
 %>

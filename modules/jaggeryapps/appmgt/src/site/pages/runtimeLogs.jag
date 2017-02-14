@@ -29,7 +29,9 @@
      }
 
      var applicationKey = request.getParameter('applicationKey');
-     var applicationRevision = request.getParameter('applicationRevision');
+     var versionKey = request.getParameter('versionKey');
+     var selectedRevision = request.getParameter('selectedRevision');
+     var selectedReplica = request.getParameter('selectedReplica');
      jagg.render({
          "name":"page/master",
          "inputs":{
@@ -48,9 +50,23 @@
                              	"name":"runtimeLogs",
                              "inputs":{
                                  "applicationKey":applicationKey,
-                                 "applicationRevision":applicationRevision,
+                                 "versionKey":versionKey,
+                                 "selectedRevision":selectedRevision,
+                                 "selectedReplica":selectedReplica,
                                  "pageName":"logs"
                              }
+                             }
+                         ],
+                         "leftMenu": [
+                             {
+                                 "name": "leftMenu",
+                                 "inputs": {
+                                     "applicationKey": applicationKey,
+                                     "versionKey": versionKey,
+                                     "selectedRevision": selectedRevision,
+                                     "selectedReplica": selectedReplica,
+                                     "pageName": "Logs"
+                                 }
                              }
                          ]
                      }

@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -24,9 +24,6 @@ include("/jagg/constants.jag");
             action = request.getParameter("action"),
             applicationMod = jagg.module("application"),
             site = require("/site/conf/site.json");
-    if (!jagg.getUser()) {
-        return;
-    }
     if (action == "getAppIconUrl") {
         var applicationName = request.getParameter("applicationName");
         var selectedRevision = request.getParameter("selectedRevision");

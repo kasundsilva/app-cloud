@@ -1,29 +1,36 @@
 # ------------------------------------------------------------------------
 #
-# Copyright 2016 WSO2, Inc. (http://wso2.com)
+# Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   WSO2 Inc. licenses this file to you under the Apache License,
+#   Version 2.0 (the "License"); you may not use this file except
+#   in compliance with the License.
+#   You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
+#   Unless required by applicable law or agreed to in writing,
+#   software distributed under the License is distributed on an
+#   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#   KIND, either express or implied.  See the License for the
+#   specific language governing permissions and limitations
+#   under the License.
 #
 # ------------------------------------------------------------------------
 
-FROM wso2-appcloud/jaggery:0.11.0-base
+FROM docker.wso2.com/wso2-cloud/jaggery:0.11.0-alpine3.4-oracle-jdk1.8.0
 
-ENV JAGGERY_APP_HOME /opt/wso2as-5.3.0/repository/deployment/server/jaggeryapps/
+ENV CARBON_HOME_DIR="/home/wso2user/wso2as-5.3.0"
+ENV JAGGERY_APP_HOME $CARBON_HOME_DIR/repository/deployment/server/jaggeryapps/
 ENV MNT /mnt
 ENV APP_HOST HOST_NAME
+ENV GIT_BASE_DIR PROJECT_ROOT
+ENV TOTAL_MEMORY VAL_TOTAL_MEMORY
 
 RUN git clone GIT_REPO_URL --branch GIT_REPO_BRANCH --single-branch "$MNT/" && \
-    mv "$MNT"PROJECT_ROOT "$JAGGERY_APP_HOME/" && \
+    mv "$MNT""$GIT_BASE_DIR" "$JAGGERY_APP_HOME/" && \
     rm -rf "$MNT"/* && \
-    sed -i '/<!--HostName>/c\\t<HostName>'$APP_HOST'</HostName>' /opt/wso2as-5.3.0/repository/conf/carbon.xml && \
-    sed -i '/<!--MgtHostName>/c\\t<MgtHostName>'$APP_HOST'</MgtHostName>' /opt/wso2as-5.3.0/repository/conf/carbon.xml
+    sed -i '/<!--HostName>/c\\t<HostName>'$APP_HOST'</HostName>' $CARBON_HOME_DIR/repository/conf/carbon.xml && \
+    sed -i '/<!--MgtHostName>/c\\t<MgtHostName>'$APP_HOST'</MgtHostName>' $CARBON_HOME_DIR/repository/conf/carbon.xml
+
+CMD ["bash", "-c", "source /init.sh"]

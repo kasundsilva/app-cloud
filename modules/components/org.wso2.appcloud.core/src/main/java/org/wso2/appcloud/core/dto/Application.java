@@ -29,6 +29,8 @@ public class Application {
     private String applicationType;
     private Blob icon;
     private List<Version> versions;
+    private String customDomain;
+    private String cloudType;
 
 
     public Application(){
@@ -90,5 +92,21 @@ public class Application {
 
     public void setVersions(List<Version> versions) {
         this.versions = versions;
+    }
+
+    public String getCustomDomain() {
+        return customDomain;
+    }
+
+    public void setCustomDomain(String customDomain) {
+        this.customDomain = customDomain;
+    }
+
+    public String getCloudType() {
+        return cloudType;
+    }
+
+    public void setCloudType(String cloudType) {
+        this.cloudType = cloudType;
     }
 }

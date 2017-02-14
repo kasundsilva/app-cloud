@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -21,30 +21,49 @@ var ARTIFACT_UPLOAD_DIRECTORY = "/tmp/";
 var POD_TIMEOUT = "Pod.TimeOut";
 var PROPERTY_APPMGT_DEPLOYMENT_DIR_PATH="Appmgt.DeploymentDirPath";
 var PROPERTY_DOCKER_REGISTRY_URL="DockerRegistryURL";
+var PROPERTY_DOCKER_REGISTRY_URL_INFRA="DockerRegistryURL_Infra";
 var PROPERTY_STORAGE_SERVER_URL="StorageServerURL";
 var PROPERTY_RSS_ENVIRONMENT_NAME="RSSEnvironmentName";
 var DOCKER_FILE_NAME = "Dockerfile";
 var TENANT_DOMAIN_NAME = "tenantDomainName";
 var SUPER_TENANT_DOMAIN_NAME = "carbon.super";
 var CLOUD_TYPE = "AppCloud";
-var DOCUMENTATION_REDIRECTION_URL = "https://docs.wso2.com/display/AppCloud/WSO2+App+Cloud+Documentation";
-var SUPPORT_REDIRECTION_URL = "http://wso2.com/support/";
-var APP_TYPES_PROPERTIES_CONFIG = "/site/themes/default/templates/apptype/select/app-types-properties.json";
+var APP_TYPES_PROPERTIES_CONFIG = "/jagg/app-types-properties.json";
 var KUB_SERVICE_PORT = 80;
 var KUB_SERVICE_BACKEND_PORT = 8080;
 var KUB_SERVICE_PHP_BACKEND_PORT = 80;
 var KUB_SERVICE_PROTOCOL = "TCP";
-var DASHBOARD_BASE_URL="https://analytics.cloud.wso2.com/monitoring/webapps/";
-var NOT_ALLOWED_ENV_VARIABLES = "EnvironmentVariables.NotAllowedVariables"
+var DATA_ANALYTICS_SERVER_URL = "DataAnalyticsServerURL";
+var DAS_RECEIVER_EP = "DASReceiverEp";
+var APP_CLOUD_URL = "AppCloud.Url";
+var INTEGRATION_CLOUD_URL = "IntegrationCloud.Url";
+var API_CLOUD_PUBLISHER__URL = "APICloud.Publisher.Url";
+var CLOUD_MGT_URL = "CloudMgt.Url";
+var NOT_ALLOWED_ENV_VARIABLES = "EnvironmentVariables.NotAllowedVariables";
+var POD_DELETE_TIMEOUT = "Pod.Delete.Timeout";
+var POD_DELETE_WAIT = "Pod.Delete.Wait";
+var MAX_CONTAINER_SPEC_MEMORY = "Max.ContainerSpec.Memory";
+var MAX_CONTAINER_SPEC_CPU = "Max.ContainerSpec.CPU";
+var GOOGLE_ANALYTICS_ENABLED = "Google.Analytics.Enabled";
+var GOOGLE_TRACKING_ID = "Google.Tracking.Id";
+var ZOPIM_CHAT_ID = "Zopim.Chat.Id";
+var FILE_UPLOAD_TIMEOUT = "File.Upload.Timeout";
+var CUSTOM_URL_SETTINGS_PAGE_URL = "CustomUrlSettingsPage.Url";
 
 //events related constants
 var DATABASE_ADD = "Adding application to database";
-var DOCKER_FILE_CREATE = "Creating docker file";
-var DOCKER_IMAGE_BUILD = "Building docker image";
-var DOCKER_REGISTRY_PUSH = "Updating docker registry";
+var DOCKER_FILE_CREATE = "Creating Docker file";
+var DOCKER_IMAGE_BUILD = "Building Docker image";
+var DOCKER_REGISTRY_PUSH = "Updating Docker registry";
+var DOCKER_IMAGE_PULL = "Pulling Docker image from remote repo";
+var DOCKER_IMAGE_TAG = "Tagging Docker image in registry";
 var KUBE_DEPLOY = "Initializing deployment";
+var KUBE_DEPLOY = "Initializing deployment";
+var STOP_CONTAINERS = "Stopping Containers";
 var INGRESS = "Creating ingress";
 var POD_STATUS = "Status";
+
+var DEFAULT_TEMPLATE = 'DEFAULT_ALL_PERMISSIONS';
 
 var EVENT_SUCCEEDED = "success";
 var EVENT_PENDING = "pending";
@@ -62,6 +81,35 @@ var FILE_EXTENSTION_ALTER = ".upload";
 var FILE_EXTENTION_ZIP = "zip";
 
 var PERMISSION_EXECUTE = "ui.execute";
-var LOGIN_PERMISSION = "AppCloud.Login.Permission"
+var LOGIN_PERMISSION = ".Login.Permission";
+var CUSTOM_URL_PERMISSION = "Custom.Url.Permission";
+var DOC_URL = "_doc_url";
 
+var CLOUD_TYPES_PROPERTIES_CONFIG = "/jagg/cloud-types-properties.json";
+var DASHBOARD_TYPES_PROPERTIES_CONFIG = "/jagg/dashboard-types-properties.json";
+var SELECTED_CLOUD = "SELECTED_CLOUD";
+var APP_CLOUD = "app_cloud";
+var APP_CLOUD_HOSTNAME = "AppCloud.Hostname";
+var INTEGRATION_CLOUD = "integration_cloud";
+var INTEGRATION_CLOUD_HOSTNAME = "IntegrationCloud.Hostname";
+
+//DAS receiver default login base64 encoded
+var DAS_RECEIVER_AUTH_BASE64 = "Receiver.Auth";
+
+var CUSTOM = "custom";
+var PROFILE_URL = "Profile.Url";
+var CHANGE_PASSWORD_URL = "ChangePassword.Url";
+
+//Regex patterns
+var ENV_KEY_REGEX = "^[A-Za-z0-9_]+$";
+
+//JWT Authentication constants
+var AUTHORIZATION_HEADER_TYPE = "Bearer";
+var SIGNED_JWT_AUTH_USERNAME = "Username";
+var SUPER_TENANT_ID = -1234;
+var DEFAULT_LOGIN_PERMISSION = "default.Login.Permission";
+
+//Service Prefixes
+var HTTP_SERVICE_PREFIX = "htp-";
+var HTTPS_SERVICE_PREFIX = "hts-";
 %>

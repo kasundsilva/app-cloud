@@ -1,0 +1,45 @@
+{
+  "streamId": "org.wso2.appcloud.container.log.stream:1.0.0",
+  "name": "org.wso2.appcloud.container.log.stream",
+  "version": "1.0.0",
+  "nickName": "",
+  "description": "",
+  "payloadData": [
+    {
+      "name": "log",
+      "type": "STRING"
+    },
+    {
+      "name": "stream",
+      "type": "STRING"
+    },
+    {
+      "name": "time",
+      "type": "STRING"
+    },
+    {
+      "name": "docker_container_id",
+      "type": "STRING"
+    },
+    {
+      "name": "kubernetes_namespace_name",
+      "type": "STRING"
+    },
+    {
+      "name": "kubernetes_pod_name",
+      "type": "STRING"
+    },
+    {
+      "name": "kubernetes_container_name",
+      "type": "STRING"
+    },
+    {
+      "name": "kubernetes_host",
+      "type": "STRING"
+    },
+    {
+      "name": "kubernetes_labels",
+      "type": "STRING"
+    }
+  ]
+}

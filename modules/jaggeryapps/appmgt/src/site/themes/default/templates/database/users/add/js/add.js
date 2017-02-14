@@ -1,6 +1,6 @@
 /*
  *
- *   Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -145,7 +145,7 @@ $(document).ready(function () {
                 });
             } else {
                 jagg.message({
-                    content: "Successfully added user "+$('#username').val(),
+                    content: "The user " + $('#username').val() + " is successfully added.",
                     type: 'success',
                     id: 'myuniqeid'
                 });
@@ -208,11 +208,10 @@ function getValidationOptions(){
 
 function validatePattern(userNameVal) {
     var validation = true;
-    var username = userNameVal.trim();
-    if (!username) {
+    if (!userNameVal) {
         validation=false;
     }
-    if (username.length > 0 && !usernamePattern.test(username)) {
+    if (userNameVal.length > 0 && !usernamePattern.test(userNameVal)) {
         validation=false;
     }
     return validation;

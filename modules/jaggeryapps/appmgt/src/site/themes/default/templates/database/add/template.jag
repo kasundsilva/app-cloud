@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -19,9 +19,11 @@
 
 jagg.template("database/add", function (inputs, outputs, jagg) { %>
 <%
-var isDefaultMode = request.getParameter("isDefaultMode");
-var dbUsers = outputs.dbUsers;
-isEdit = request.getParameter("isEdit");
+    var isDefaultMode = request.getParameter("isDefaultMode");
+    var dbUsers = outputs.dbUsers;
+    isEdit = request.getParameter("isEdit");
+    var databaseCount = outputs.databaseCount;
+    var maxDatabases = outputs.maxDatabases;
     %>
 
  <!-- BOF App factory menu actionbar -->
@@ -33,13 +35,13 @@ isEdit = request.getParameter("isEdit");
                 </span> Back to Databases
         </a>
     </div><!-- EOF App factory menu actionbar-->
-<div class="container-fluid cloud-container">
+<div class="container-fluid cloud-container" id="outerContainer">
         <div class="row">
 <form name="addDatabaseForm" id="addDatabaseForm" enctype="multipart/form-data" method='post' action='#'>
             <div class="col-md-5 col-lg-5 forms">
                     <div class="form-group col-md-12 ">
-                        <label for="database-name">Database Name: </label>
-                        <input type="text" class="form-control" id="database-name"  name="database-name"  placeholder="Enter the database name">
+                        <label for="database-name">Database Name:* </label>
+                        <input type="text" class="form-control" id="database-name"  name="database-name"  placeholder="Enter database name">
                     </div>
                     <!--<div class="form-group col-md-12">
                         <label for="description">Description: </label>
@@ -57,7 +59,7 @@ isEdit = request.getParameter("isEdit");
                     <div class="clearfix"></div>
                     
                     <div class="form-group col-md-6">
-                        <label for="user-name-select">Default User Name: </label>
+                        <label for="user-name-select">Default User Name: <I>(max 5 characters)</I></label>
                         <select id="user-name-select" name="user-name-select" class="form-control select2">
                         </select>
                         <!--input type="text" class="form-control" id="user-name-select" name="user-name-select" placeholder="Enter user name"-->
@@ -80,7 +82,7 @@ isEdit = request.getParameter("isEdit");
                                         <li class="invalid" id="length"><span class="status_icon"></span>At least 6 characters</li>
                                         <li class="invalid" id="pnum"><span class="status_icon"></span>At least one number</li>
                                         <li class="invalid" id="capital"><span class="status_icon"></span>At least one lowercase &amp; one uppercase letter</li>
-                                        <li class="invalid" id="spchar"><span class="status_icon"></span>At least one special character</li>
+                                        <li class="invalid" id="spchar"><span class="status_icon"></span>At least one special character excluding \ and '</li>
                                     </ul>
                                 </div><!-- END pswd_info -->
                             </div><!-- END pwd_strength_wrap -->
@@ -114,6 +116,8 @@ isEdit = request.getParameter("isEdit");
 <!-- start of setting global javascript variable values from jaggery side -->
 <script type="text/javascript" charset="utf-8">
     var dbUsers = '<%=dbUsers%>';
+    var databaseCount = '<%=databaseCount%>';
+    var maxDatabases = parseInt('<%=maxDatabases%>');
 </script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/select2-4.0.0/select2.min.js'))%>"></script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/jQueryValidationPlugin-1.14.0/jquery.validate.min.js'))%>"></script>

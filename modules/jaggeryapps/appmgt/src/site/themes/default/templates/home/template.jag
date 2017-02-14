@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -23,26 +23,40 @@ include("/jagg/constants.jag");
 jagg.template("home", function(inputs, outputs, jagg) {
     var application = outputs.application;
     var selectedRevision = outputs.selectedRevision;
+    var restartCounts = outputs.restartCounts;
     var conSpecCpu = outputs.conSpecCpu;
     var conSpecMemory = outputs.conSpecMemory;
     var versions = application.versions;
-    var defaultVersionName = application.defaultVersionName;
-    if (application.defaultVersionName != null && versions[defaultVersionName] != undefined) {
-        versions[defaultVersionName].deploymentURL = versions[defaultVersionName].customtUrl;
+    var keyArray = Object.keys(versions);
+    var versionArray = []
+    for (var x = 0; x < keyArray.length; x++) {
+        versionArray.push(versions[keyArray[x]].versionName);
     }
     var selectedApplicationRevision = versions[selectedRevision];
     var revisions = outputs.revision;
     var applicationName = application.applicationName;
     var applicationKey = application.hashId;
     var appCreationPageBaseUrl = jagg.getAbsoluteUrl("/site/pages/application.jag");
-    var dashboardBaseUrl = DASHBOARD_BASE_URL;
-    var dashboardUrl = dashboardBaseUrl + applicationName + "-" + selectedRevision;
     var encodedLabels = encodeURIComponent(stringify(selectedApplicationRevision.tags), "UTF-8");
     var encodedEnvs = encodeURIComponent(stringify(selectedApplicationRevision.runtimeProperties), "UTF-8");
+    var defaultAppLaunchURL = selectedApplicationRevision.deploymentURL;
+    var applicationCount = outputs.applicationCount;
+    var maxApplications = outputs.maxAppCount;
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
+    if(application.defaultVersion == selectedRevision) {
+        if (application.customURL != null) {
+            defaultAppLaunchURL = application.customURL;
+        } else if (application.defaultURL != null) {
+            defaultAppLaunchURL = application.defaultURL;
+        }
+    }
+    var dashboardProperties = outputs.dashboardProperties;
+    var dataAnalyticsServerUrl = outputs.dataAnalyticsServerUrl;
+    var tenantDomain = outputs.tenantDomain;
+    var replicaCount = outputs.replicaCount;
 %>
 
 <script>
-
     var applicationName = "<%=applicationName%>";
     var applicationKey = "<%=applicationKey%>";
     var conSpecCpu = "<%=conSpecCpu%>";
@@ -52,63 +66,34 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var revisions = jQuery.parseJSON('<%=revisions%>');
     var appCreationPageBaseUrl = "<%=appCreationPageBaseUrl%>";
     var selectedApplicationRevision =  jQuery.parseJSON('<%=selectedApplicationRevision%>');
-    var dashboardBaseUrl = "<%=dashboardBaseUrl%>";
     var encodedLabels = "<%=encodedLabels%>";
     var encodedEnvs = "<%=encodedEnvs%>";
-
-
-
+    var APPLICATION_STOPPED = "<%=APPLICATION_STOPPED%>";
+    var APPLICATION_RUNNING = "<%=APPLICATION_RUNNING%>";
+    var APPLICATION_INACTIVE = "<%=APPLICATION_INACTIVE%>";
+    var pageTitle = "<%=outputs.pageTitle%>";
+    var applicationType = "<%=application.applicationType%>";
+    var applicationCount = <%=applicationCount%>;
+    var maxApplications = <%=maxApplications%>;
+    var cloudSpecificApplicationRepresentation = "<%=cloudSpecificApplicationRepresentation%>";
+    var versionArray = jQuery.parseJSON('<%=versionArray%>');
+    var requestNewAppTypeURL = "<%=outputs.requestNewAppTypeURL%>";
+    var custom = "<%=CUSTOM%>";
+    var dashboardProperties = <%=dashboardProperties%>;
+    var dataAnalyticsServerUrl = "<%=dataAnalyticsServerUrl%>";
+    var tenantDomain = "<%=tenantDomain%>";
+    var replicaCount = <%=replicaCount%>;
 </script>
-    <div class="navbar navbar-secondary">
-    <div class="container-fliud">
-        <div class="row">
-             <div class="side-pane-trigger">
-                <i class="fa fa-reorder"></i>
-            </div>
-            <div class="col-md-3 breadcrumb-secondary">
-                <a href="/appmgt/site/pages/index.jag"><i class="fa fa-cubes visible-xs visible-lg"></i></a>
-                <span class="hidden-xs"><a href="/appmgt/site/pages/index.jag">Application Cloud</a></span>
-            </div>
-        </div>
-    </div>
-    </div>
-    <div class="inner-wrapper">
-   <!-- left pane wrapper -->
-    <div class="left-pane ">
-        <ul>
-            <li class="selected">
-                <a href="#"><i class="fa fa-laptop"></i> Overview</a>
-            </li>
-            <li>
-                <a id="leftMenuEnvVars" href="/appmgt/site/pages/envs.jag?versionKey=<%=selectedApplicationRevision.hashId%>&applicationKey=<%=applicationKey%>"><i class="fa fa-wrench"></i> Env Variables</a>
-            </li>
-            <li>
-                <a id="leftMenuTagSet" href="/appmgt/site/pages/tags.jag?applicationKey=<%=applicationKey%>&versionKey=<%=selectedApplicationRevision.hashId%>"><i class="fa fa-tag"></i> Tags</a>
-            </li>
-            <li>
-                <a href="/appmgt/site/pages/runtimeLogs.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>"><i class="fa
-                fa-hdd-o"></i>Runtime Logs</a>
-            </li>
-            <li>
-                <a href="/appmgt/site/pages/customurl.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>"><i class="fa
-                fa-link"></i>Custom URL</a>
-            </li>
-        </ul>
-    </div>
 
-    <!-- left pane wrapper -->
-    <div class="right-pane">
+    <div class="right-pane visible">
     <!-- BOF App factory menu actionbar -->
     <div class="action-bar">
-        <a href="<%=jagg.getAbsoluteUrl("/site/pages/index.jag")%>" class="btn-action"  title="Back to Application listing">
-                <span class="fw-stack fw-lg btn-action-ico">
-                    <i class="fw fw-circle-outline fw-stack-2x"></i>
-                    <i class="fw fw-left-arrow fw-stack-1x"></i>
-                </span> Back to Listing
-        </a>
+        <div class="side-pane-trigger">
+            <i class="fw fw-left"></i>
+        </div>
     </div><!-- EOF App factory menu actionbar-->
 
-    <div class="container-fluid app-content-section">
+    <div class="container-fluid app-content-section" id="outerContainer">
 
         <div class="row">
           <div class="col-xs-12 col-md-12 col-lg-12 app-preview">
@@ -122,14 +107,20 @@ jagg.template("home", function(inputs, outputs, jagg) {
                     <input id="applicationKey" type="hidden" name="applicationKey" value="<%=applicationKey%>"/>
                 </form>
               </div>
-              <div class="app-desc">
+              <div class="app-desc col-md-6">
                 <h2><%=applicationName%></h2>
                   <h4 class="app-run-time">Runtime: <span id="runtime"><%=selectedApplicationRevision.runtimeName%></span></h4>
-                <p id="app-description"><%=(application.description)?application.description:''%></p>
-                <%if(defaultVersionName !== null && versions[defaultVersionName] != undefined) { %>
+                  <h4 class="app-run-time"></h4>
+                <div id="app-description" title="<%=(application.description)?application.description:''%>" class="ellipsis"><%=(application.description)?application.description:''%></div>
+                <%if (defaultAppLaunchURL != null) { %>
                 <div class="app-preview-action-bar" id="custom-url-block">
-                    <div class="sec prod-url"><a href="<%=versions[defaultVersionName].customtUrl%>"><%=versions[defaultVersionName].customtUrl%></a>
-                    <a href="/appmgt/site/pages/customurl.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>"><i class="fw fw-settings"></i></a>
+                    <div class="sec prod-url" id="launch-default-url-block">
+                        <% if(selectedApplicationRevision.status==APPLICATION_RUNNING){ %>
+                            <a id="launch-default-url-a" target="_blank" href="<%=defaultAppLaunchURL%>"><%=defaultAppLaunchURL%></a>
+                            <a href="/appmgt/site/pages/customurl.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>"><i class="fw fw-settings"></i></a>
+                        <% } else { %>
+                            <a id="launch-default-url-a" target="_blank"><%=defaultAppLaunchURL%></a>
+                        <% } %>
                     </div>
                 </div>
                 <% } %>
@@ -137,72 +128,93 @@ jagg.template("home", function(inputs, outputs, jagg) {
           </div>
         </div>
         <div class="row padding-bottom-xlg">
-          <div class="col-xs-12 col-md-9 col-lg-9">
+          <div class="col-xs-12 col-md-12 col-lg-12">
               <div class="block-general" style="background-color: #303030;">
-                      <div class="col-xs-12 col-md-12 col-lg-9">
+                      <div class="col-xs-12 col-md-12 col-lg-7">
+                        <div class="row nomarginflex">
                           <div class="btn-group pull-left version-number">
                               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               <span id="selected-version"><%=selectedRevision%> </span><span class="caret"></span>
                               </button>
                               <ul id="appVersionList" class="dropdown-menu" >
                               <%
-                                var versions = application.versions;
-                                var keyArray = Object.keys(versions);
-                                for (var x = 0; x < keyArray.length; x++) {
+                                for (var x = 0; x < versionArray.length; x++) {
                               %>
-                                  <li ><a href="#"><%=versions[keyArray[x]].versionName%></a></li>
+                                  <li ><a href="#"><%=versionArray[x]%></a></li>
                               <%
                               }
                               %>
                               </ul>
                           </div>
-                          <div id="version-url-link" class="version-url">
-                          <a href="<%=selectedApplicationRevision.deploymentURL%>" target="_blank"><span>
-                          <b>URL : </b><%=selectedApplicationRevision.deploymentURL%></span></a>
+                          <div id="version-url-link" class="version-url" title="<%=selectedApplicationRevision.deploymentURL%>">
+                          <% if(selectedApplicationRevision.status==APPLICATION_RUNNING){ %>
+                            <a id="launch-version-url-a" href="<%=selectedApplicationRevision.deploymentURL%>" target="_blank">
+                                <span><%=selectedApplicationRevision.deploymentURL%></span>
+                            </a>
+                          <% } else { %>
+                            <a id="launch-version-url-a" target="_blank">
+                                <span><%=selectedApplicationRevision.deploymentURL%></span>
+                            </a>
+                          <% } %>
                           </div>
                           <div class="sec" id="version-app-launch-block">
                               <%
-                                if(selectedApplicationRevision.status=='running'){
+                                if(selectedApplicationRevision.status==APPLICATION_RUNNING){
                                 %>
-                                    <button class="cu-btn cu-btn-md cu-btn-gr-dark btn-launch-app" id="btn-launchApp"
-                                    url="<%=selectedApplicationRevision.deploymentURL%>">Launch App</button>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-red" onclick="stopApplication();">Stop
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-red" id="stop-application-btn" onclick="stopApplicationPopUp();">Stop
                                         <span id="stop-in-progress"><span>
                                       </a>
                                     </div>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-gray" onclick="redeployApplication();">Redeploy
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-gray" onclick="redeployApplicationPopUp();">Redeploy
                                         <span id="redeploy-in-progress"><span>
                                       </a>
                                     </div>
+                          </div>
+                         </div>
                                 <%
-                                }else if(selectedApplicationRevision.status=='stopped' || selectedApplicationRevision.status=='inactive'){
+                                } else if(selectedApplicationRevision.status==APPLICATION_STOPPED){
                                 %>
-                                    <button class="cu-btn cu-btn-md cu-btn-gr-dark btn-launch-app" id="btn-launchApp"
-                                    url="<%=selectedApplicationRevision.deploymentURL%>" disabled>Launch App</button>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
+                          </div>
+                         </div>
                                 <%
-
-                                }else {
+                                } else if(selectedApplicationRevision.status==APPLICATION_INACTIVE){
+                                %>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
+                                    </div>
+                          </div>
+                         </div>
+                         <div class="btn-group row requestbox ctrl-edit-button btn-edit-code fullwidth">
+                            <a type="button" class="btn cu-btn cu-btn-md cu-btn-orange novertical-padding fullwidth" onclick="requestToExtend();">
+                                <span class="fw-stack fw-lg btn-action-ico">
+                                    <i class="fw fw-mail fw-stack-1x"></i>
+                                </span> Request to keep <%=cloudSpecificApplicationRepresentation.toLowerCase()%> running continuously
+                            </a>
+                         </div>
+                                <%
+                                } else {
                                 %>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-red" href="#yourlink">Error has occurred.</a>
                                     </div>
+                          </div>
+                         </div>
                                 <%
                                 }
                                %>
-                          </div>
                       </div>
-                      <div class="col-xs-12 col-md-12 col-lg-3">
+                      <div class="col-xs-12 col-md-12 col-lg-5 overview-version-btn">
                           <a id="delete-version" onclick="deleteApplicationPopUp();">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
                                     <i class="fw fw-delete fw-stack-1x"></i>
-                                  </span> Delete
+                                  </span> Delete Version
                               </div>
                           </a>
                           <a id="upload-revision" href="<%=appCreationPageBaseUrl%>?appTypeName=<%=application.applicationType%>&applicationKey=<%=applicationKey%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>">
@@ -214,95 +226,94 @@ jagg.template("home", function(inputs, outputs, jagg) {
                               </div>
                           </a>
                       </div>
-                        <div class="col-xs-12 col-md-9 col-lg-9">
-                            <div class="block-replica">
-                                <h3>Replicas</h3>
-                                <div class="block-replicas">
-                                    <figure class="node-cicle" data-percent="100">
-                                        <figcaption>01</figcaption>
-                                        <%  if(selectedApplicationRevision.status=='running'){ %>
 
-                                                <svg width="200" height="200">
-                                                   <circle class="outer" cx="95" cy="95" r="85" transform="rotate(-90, 95, 95)"/>
-                                                </svg>
-                                                <a href="/appmgt/site/pages/runtimeLogs.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>"><span class="view-log">View Logs</span></a>
-                                        <%  } else { %>
-                                                <svg width="200" height="200">
-                                                    <circle class="outer" style="stroke: #ACAFAD;" cx="95" cy="95" r="85" transform="rotate(-90, 95, 95)"/>
-                                                </svg>
-                                        <%  } %>
-                                    </figure>
-                                </div>
-                                <div class="block-replicas">
-                                    <figure class="node-cicle">
-                                        <figcaption>
-                                          <span class="fw-stack fw-lg ">
-                                              <i class="fw fw-circle-outline fw-stack-2x"></i>
-                                              <i class="fw fw-add fw-stack-1x" data-toggle="tooltip" title="Adding replicas to your application will not support in this release."></i>
-                                          </span>
-                                        </figcaption>
-                                    </figure>
+                      <div id="app-type-data" class="col-xs-12 col-md-12 col-lg-12">
+
+                      </div>
+
+                        <div class="col-xs-12 col-md-9 col-lg-8">
+                            <div class="block-replica clearfix" >
+                                <a href="/appmgt/site/pages/settings.jag?applicationKey=<%=applicationKey%>&selectedRevision=<%=selectedRevision%>&scale=true">
+                                    <div class="btn-create-version">
+                                      <span class="fw-stack fw-lg btn-action-ico">
+                                         <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                         <i class="fw fw-settings fw-stack-1x"></i>
+                                      </span>
+                                        &nbsp;
+                                            Scale Deployment
+                                    </div>
+                                </a>
+                                <h3>Replicas</h3>
+                                <h5>
+                                    Container Specification:
+                                    <span class="container-spec-info">
+                                        <span id="memory"><%=selectedApplicationRevision.conSpecMemory%></span>MB RAM and
+                                        <span id="cpu"><%=selectedApplicationRevision.conSpecCpu/1000%></span> vCPU
+                                    </span>
+                                </h5>
+                                <div id="replica-data">
+
                                 </div>
                             </div>
                         </div>
-                        <div class="col-xs-12 col-md-3 col-lg-3" data-toggle="tooltip" title="HTTP Monitoring Dashboard is not supported in this release. It will be available soon!">
-                            <a class="block-anch" href="#" onclick="return false;" target="_blank">
-                                <div class="block-monitoring">
-                                    <h3>HTTP Monitoring Dashboard</h3>
-                                    <div class="block-icon pull-left">
-                                        <i class="fw fw-dashboard demo-dashboard-block"></i>
-                                    </div>
-                                <div class="clearfix"></div>
+                        <div class="col-xs-12 col-md-3 col-lg-4">
+                            <div id="dashboards" class="row dashboard-right-column"></div>
+                            <div class="row dashboard-right-column">
+                                <div class="col-xs-12 col-md-12 col-lg-6">
+                                  <div class="block-team pull-left">
+                                    <a class="block-anch" id="envVars" href="/appmgt/site/pages/envs.jag?applicationKey=<%=applicationKey%>&versionKey=<%=selectedApplicationRevision.hashId%>">
+                                      <h3 class="env-title">Environment Variables</h3>
+                                      <div class="block-icon pull-left col-xs-12 col-md-3 col-lg-3">
+                                        <i class="fw fw-gadget fw-4x"></i>
+                                      </div>
+                                      <div class="block-number pull-right col-xs-12 col-md-4 col-lg-4">
+                                       <span id="runtimePropCount"><%=selectedApplicationRevision.runtimeProperties.length.toString()%></span>
+                                      </div>
+                                      <div class="list-box ellipsis col-xs-12 col-md-5 col-lg-5" id="env-list"></div>
+                                      <div class="clearfix"></div>
+                                    </a>
+                                  </div>
                                 </div>
-                            </a>
+                                <div class="col-xs-12 col-md-12 col-lg-6">
+                                  <div class="block-database pull-left">
+                                    <a class="block-anch" id="tagSet" href="/appmgt/site/pages/tags.jag?applicationKey=<%=applicationKey%>&versionKey=<%=selectedApplicationRevision.hashId%>">
+                                      <h3 class="tags-title">Tags</h3>
+                                      <div class="block-icon pull-left col-xs-12 col-md-3 col-lg-3">
+                                        <i class="fw fw-tag fw-4x"></i>
+                                      </div>
+                                      <div class="block-number pull-right col-xs-12 col-md-4 col-lg-4">
+                                       <span id="tagCount"><%=selectedApplicationRevision.tags.length.toString()%></span>
+                                      </div>
+                                      <div class="list-box ellipsis col-xs-12 col-md-5 col-lg-5" id="tag-list"></div>
+                                      <div class="clearfix"></div>
+                                    </a>
+                                  </div>
+                              </div>
+                            </div>
                         </div>
                       <div class="clearfix"></div>
                     </div>
 
                 </div>
-          <div class="col-xs-12 col-md-3 col-lg-3">
-              <div class="block-team pull-left">
-                <a class="block-anch" id="envVars" href="/appmgt/site/pages/envs.jag?applicationKey=<%=applicationKey%>&versionKey=<%=selectedApplicationRevision.hashId%>">
-                  <h3>Env Variables</h3>
-                  <div class="block-icon pull-left">
-                    <i class="fa fa-wrench fa-5x"></i>
-                  </div>
-                  <div class="block-number pull-right">
-                   <span id="runtimePropCount"><%=selectedApplicationRevision.runtimeProperties.length.toString()%></span>
-                  </div>
-                  <div class="clearfix"></div>
-                </a>
-              </div>
-              <div class="block-database pull-left">
-                <a class="block-anch" id="tagSet" href="/appmgt/site/pages/tags.jag?applicationKey=<%=applicationKey%>&versionKey=<%=selectedApplicationRevision.hashId%>">
-                  <h3>Tags</h3>
-                  <div class="block-icon pull-left">
-                    <i class="fa fa-tags fa-5x"></i>
-                  </div>
-                  <div class="block-number pull-right">
-                   <span id="tagCount"><%=selectedApplicationRevision.tags.length.toString()%></span>
-                  </div>
-                  <div class="tag-list" id="tag-list"></div>
-                  <div class="clearfix"></div>
-                </a>
-              </div>
-          </div>
         </div>
     </div><!-- /.container -->
     </div>
 
+</div> <!-- closing tag of inner wrapper div-->
     <!-- --------------------------------------- Overlay ----------------------------------------- -->
     <div class="modal fade build-logs-modal" id="app_creation_progress_modal">
         <div class="modal-dialog modal-dialog-margin-top-md ">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="modal-title"></h4>
+                    <h3 class="modal-title" id="modal-title"></h3>
+                    <span class="app-creation-loader" id="app-creation-header-loader">
+                        <i class="fw fw-loader2 fw-spin fw-2x pull-right"></i>
+                    </span>
                 </div>
                 <div class="modal-body">
                     <div class="container-fluid">
                         <div class="row">
                             <div id="progress_table" class="col-xs-12 col-md-12 section-title">
-                            <i class="fa fa-2x fa-circle-o-notch fa-spin"></i>
                         </div>
                     </div>
                 </div>
@@ -311,68 +322,65 @@ jagg.template("home", function(inputs, outputs, jagg) {
      </div><!-- /.modal -->
 <script>
 
-    function generateNextPossibleVersion(revisionsSet){
-        var revArry = [];
-        for (var x in revisionsSet){
-            var rev = x.split(".")[0];
-            console.log(rev);
-            revArry.push(rev);
-        }
-        revArry.sort(function(a, b){return a-b});
-        var x = parseInt(revArry.pop()) + 1;
-        var nextVersion = x + '.0.0';
-
-        return nextVersion;
-    }
-
-    $('.side-pane-trigger').click(function(){
-        var rightPane = $('.right-pane');
-        var leftPane = $('.left-pane');
-        if (rightPane.hasClass('visible')){
-            rightPane.animate({"left":"0em"}, "slow").removeClass('visible');
-            leftPane.animate({"left":"-18em"}, "slow");
-            $(this).find('i').removeClass('fa-arrow-left').addClass('fa-reorder');
-        } else {
-            rightPane.animate({"left":"18em"}, "slow").addClass('visible');
-            leftPane.animate({"left":"0em"}, "slow");
-            $(this).find('i').removeClass('fa-reorder').addClass('fa-arrow-left');
-        }
-    });
-
   // stop application
     function redeployApplication(){
-        $("#redeploy-in-progress").html("<i class=\"fa fa-circle-o-notch fa-spin\"></i>");
-        //executeAsync(waitAndReloadAfterStop());
-        executeAsync(drawProgressWindow("Redeploying..."));
+        $("#redeploy-in-progress").html("<i class=\"fw fw-loader2 fw-spin\"></i>");
+        executeAsync(drawProgressWindow("Redeploying the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
         jagg.post("../blocks/application/application.jag", {
             action: "redeployApplication",
             applicationName: applicationName,
             applicationRevision: selectedRevision,
-            versionKey: selectedApplicationRevision.hashId,
-            conSpecCpu: conSpecCpu,
-            conSpecMemory: conSpecMemory
+            versionKey: selectedApplicationRevision.hashId
+        }, function(result) {
+        }, function(jqXHR, textStatus, errorThrown) {
+            setTimeout(reloadAppHome, 5000);
+            jagg.message({
+                content: jqXHR.responseText,
+                type: 'error',
+                id: 'view_log',
+                timeout: '5000'
+            });
+        });
+    }
+
+    //deleting redeploying events
+    function deleteAppCreationEvents() {
+        jagg.post("../blocks/application/application.jag", {
+            action:"deleteAppCreationEvents",
+            applicationName: applicationName,
+            applicationRevision: selectedRevision
         }, function (result) {
-            jagg.message({content: "Application redeployed successfully.", type: 'info'});
+            //This just return a boolean from backend
+        }, function(jqXHR, textStatus, errorThrown) {
+            //do not interrupt the application creation process even deletion of events fails.
         });
     }
 
     // stop application
     function stopApplication(){
-        $("#stop-in-progress").html("<i class=\"fa fa-circle-o-notch fa-spin\"></i>");
-        executeAsync(waitAndReloadAfterStop());
+        $("#stop-application-btn").attr("disabled", true);
+        $("#stop-in-progress").html("<i class=\"fw fw-loader2 fw-spin\"></i>");
         jagg.post("../blocks/application/application.jag", {
             action: "stopApplication",
             applicationName: applicationName,
             applicationRevision: selectedRevision,
             versionKey: selectedApplicationRevision.hashId
-
-        }, function (result) {
-            jagg.message({content: "Application stop request is submitted successfully.", type: 'info'});
+        }, function(result) {
+            setTimeout(reloadAppHome, 2000);
+            jagg.message({
+                content: cloudSpecificApplicationRepresentation + " was successfully stopped.",
+                type: 'success',
+                timeout: '5000'
+            });
+        }, function(jqXHR, data, errorThrown) {
+            setTimeout(reloadAppHome, 2000);
+            jagg.message({
+                content: jqXHR.responseText,
+                type: 'error',
+                id: 'view_log',
+                timeout: '5000'
+            });
         });
-    }
-
-    function waitAndReloadAfterStop(){
-        setTimeout(reloadAppHome, 5000);
     }
 
     function reloadAppHome(){
@@ -381,30 +389,24 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     // redeploy application
     function startApplication(){
-
-        executeAsync(drawProgressWindow("Restarting..."));
-
-        jagg.post("../blocks/application/application.jag", {
-            action: "startApplication",
-            applicationName: applicationName,
-            applicationRevision: selectedRevision,
-            versionKey: selectedApplicationRevision.hashId,
-            conSpecCpu: conSpecCpu,
-            conSpecMemory: conSpecMemory
-
-        }, function(result) {
-            var versions = jQuery.parseJSON(result);
-
-            //check if application has more than one version
-            if (versions.length > 1) {
-                jagg.message({
-                    content: "You can start only one version of an application at a time on a free subscription." +
-                        " Other versions have been stopped automatically.",
-                    type: 'info',
-                    timeout: 3500
-                });
-            }
-        });
+        if (applicationCount >= maxApplications) {
+            $('#outerContainer').empty();
+            $('#outerContainer').html('<div class="container-fluid"><div class="row row-centered">' +
+                '<div class="col-centered col-xs-10 col-sm-7  col-md-7 col-lg-6"><div class="cloud-new-content">' +
+                '<h3>You cannot have more than ' + maxApplications + " running " + cloudSpecificApplicationRepresentation.toLowerCase() + ' versions on a free subscription. ' +
+                'Please stop an existing ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' version to continue.</h3></div></div></div></div>');
+        } else {
+            executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
+            jagg.post("../blocks/application/application.jag", {
+                action: "startApplication",
+                applicationName: applicationName,
+                applicationRevision: selectedRevision,
+                versionKey: selectedApplicationRevision.hashId,
+                conSpecCpu: conSpecCpu,
+                conSpecMemory: conSpecMemory
+            }, function(result) {
+            });
+        }
     }
 
     function drawProgressWindow(heading){
@@ -425,72 +427,80 @@ jagg.template("home", function(inputs, outputs, jagg) {
             applicationRevision:selectedRevision,
 
         },function (result) {
-            $("#progress_table").html("");
             var result = jQuery.parseJSON(result);
-            var table = "<table class='table' style='width:100%; color:black'>" ;
-            for(var i = 0; i < result.length; i++){
-                var statusStyle;
-                var event = result[i];
+            if (result.length > 0) {
+                $("#progress_table").html("");
+                $("#app-creation-header-loader").html("");
+                var table = "<table class='table' style='width:100%; color:black'>" ;
+                for(var i = 0; i < result.length; i++){
+                    var statusStyle;
+                    var event = result[i];
 
-                if(event.status == "success"){
-                    statusStyle = "success";
-                    if (event.name === "Status") {
-                            table = table + "<tr class='" + statusStyle + "'><td>Container Status</td>" +
-                                            "<td>"+event.description+"</td>" +
-                                            "<td><i class=\"fa fa-check\"></i></td></tr>";
-                    } else {
+                    if(event.status == "success"){
+                        statusStyle = "success";
+                        if (event.name === "Status") {
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-check\"></i></td></tr>";
+                        } else {
                             table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
                                             "<td></td>" +
-                                            "<td><i class=\"fa fa-check\"></i></td></tr>";
-                    }
-                } else if (event.status == "failed") {
-                    statusStyle = "danger";
-                    if (event.name === "Status") {
-                            table = table + "<tr class='" + statusStyle + "'><td>Container Status</td>" +
-                                            "<td>"+event.description+"</td>" +
-                                            "<td><i class=\"fa fa-times\"></i></td></tr>";
-                    } else {
+                                            "<td><i class=\"fw fw-check\"></i></td></tr>";
+                        }
+                    } else if (event.status == "failed") {
+                        statusStyle = "danger";
+                        if (event.name === "Status") {
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-error\"></i></td></tr>";
+                        } else {
                             table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
                                             "<td></td>" +
-                                            "<td><i class=\"fa fa-times\"></i></td></tr>";
-                    }
-                } else if (event.status == "pending"){
-                    if (event.name === "Status") {
-                        statusStyle = "active";
-                            table = table + "<tr class='" + statusStyle + "'><td>Container Status</td>" +
-                                            "<td>"+event.description+"</td>" +
-                                            "<td><i class=\"fa fa-circle-o-notch fa-spin\"></i></td></tr>";
-                    } else {
-                        statusStyle = "active";
+                                            "<td><i class=\"fw fw-error\"></i></td></tr>";
+                        }
+                    } else if (event.status == "pending"){
+                        if (event.name === "Status") {
+                            statusStyle = "active";
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-loader2 fw-spin\"></i></td></tr>";
+                        } else {
+                            statusStyle = "active";
                             table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
                                             "<td></td>" +
-                                            "<td><i class=\"fa fa-circle-o-notch fa-spin\"></i></td></tr>";
+                                            "<td><i class=\"fw fw-loader2 fw-spin\"></i></td></tr>";
+                        }
                     }
                 }
-            }
-
-            table = table + "</table>";
-            $("#progress_table").html(table);
-
-            for(var i = 0; i < result.length; i++){
-                var statusStyle;
-                var event = result[i];
-                if(event.name === "Status" && event.status === "success"){
-                    setTimeout(redirectAppHome, 4250);
-                    function redirectAppHome(){
-                        window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
-
-                    }
-                } else if(event.status == "failed"){
-                    jagg.message({content: "Error occurred while creating application.", type: 'error'});
-                    setTimeout(redirectAppListing, 5000);
-                    function redirectAppListing(){
-                        window.location.replace("index.jag");
+                table = table + "</table>";
+                $("#progress_table").html(table);
+                for(var i = 0; i < result.length; i++){
+                    var statusStyle;
+                    var event = result[i];
+                    if (event.name === "Status" && event.status === "success") {
+                        setTimeout(redirectAppHome, 4250);
+                        function redirectAppHome(){
+                            deleteAppCreationEvents();
+                            window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+                        }
+                    } else if(event.status == "failed") {
+                        //When redeploying an application the associated pod is deleted and an event with the name
+                        //"Stopping Containers" is persisted in the database. Due to the pod not getting deleted within the
+                        //specified time period the "Stopping Containers" event gets a status of "failed". Since only
+                        //application deletion is involved with the "Stopping Containers" event if the event name is
+                        //"Stopping Containers" the following message is not displayed
+                        if (event.name !== "Stopping Containers") {
+                            jagg.message({content: "Error occurred while creating " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});
+                        }
+                        setTimeout(redirectAppListing, 5000);
+                        function redirectAppListing(){
+                            window.location.replace("index.jag");
+                        }
                     }
                 }
             }
         },function (jqXHR, textStatus, errorThrown) {
-             jagg.message({content: "Error occurred while restarting application.", type: 'error'});
+             jagg.message({content: "Error occurred while restarting " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});
         });
     }
 
@@ -504,10 +514,10 @@ jagg.template("home", function(inputs, outputs, jagg) {
       $('.version-url a span').text(urlText);
     }
 
-
-
 </script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/home/js/home.js'))%>"></script>
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/home/js/endpoint.js'))%>"></script>
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/home/js/dashboard.js'))%>"></script>
 <script src="/appmgt/site/themes/default/js/app-listing-tile-icon.js"></script>
 
 <%

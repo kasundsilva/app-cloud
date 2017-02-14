@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -22,22 +22,22 @@ include("/jagg/constants.jag");
 
 var log = new Log('modules/databases/users/list.jag');
 var modManager = jagg.module("manager");
+var RSSManagerHelper = Packages.org.wso2.carbon.rssmanager.common.RSSManagerHelper;
 
 var wso2_rss_instanceName = 'SYSTEM';
 var storageServerURL = modManager.getPropertyValue(PROPERTY_STORAGE_SERVER_URL);
 var environmentName = modManager.getPropertyValue(PROPERTY_RSS_ENVIRONMENT_NAME);
 
 function buildResponse(result){
-	var databaseObject=[];
+	var databaseObject = [];
 	if(result != undefined){
 		var response=result.*::["return"]
 		for(var index=0; index < response.length();index++){
-			var task={
-			};
-			var entry=response[index];
-			var name=entry.*::username.text();
-			var rssInstanceName=entry.*::rssInstanceName.text();
-			task.name=name;
+			var task = {};
+			var entry = response[index];
+			var name = entry.*::username.text();
+			var rssInstanceName = entry.*::rssInstanceName.text();
+			task.name = name;
 			//task.rssInstanceName=getProperty(DEPLOYMENT_STAGES+'.'+stage+'.'+RSS_NAME);
 			databaseObject.push(task);
 		}
@@ -56,20 +56,20 @@ var createDatabaseUser = function (username, password ){
                  'xmlns:xsd="http://dto.core.rssmanager.carbon.wso2.org/xsd">' +
 	             '<ser:environmentName>' + environmentName + '</ser:environmentName>' +
 	             '<ser:user>' +
-                 '<xsd:password>'+password+'</xsd:password>'+
-	             '<xsd:rssInstanceName>'+wso2_rss_instanceName+'</xsd:rssInstanceName>'+
-	             '<xsd:username>'+username+'</xsd:username>'+
+                 '<xsd:password><![CDATA[' + password + ']]></xsd:password>'+
+	             '<xsd:rssInstanceName>' + wso2_rss_instanceName + '</xsd:rssInstanceName>'+
+	             '<xsd:username>' + username + '</xsd:username>'+
                  '</ser:user>'+
                  '</ser:addDatabaseUser>';
 
-	var result="";
+	var result = "";
 	try {
 		modManager.setAuthHeaders(options);
 		createDatabaseUsersService.open(options, storageServerURL+'RSSAdmin', false);
 		createDatabaseUsersService.send(payload);
 		result = createDatabaseUsersService.responseE4X;
 		var ns = new Namespace("http://service.core.rssmanager.carbon.wso2.org");
-		var response=result.ns::["return"];
+		var response = result.ns::["return"];
 		var entry = response[0];
 		var ax = new Namespace("http://dto.core.rssmanager.carbon.wso2.org/xsd");
 		result = entry.ax::["username"].text();
@@ -82,6 +82,38 @@ var createDatabaseUser = function (username, password ){
 
 };
 
+var isDatabaseUserExists = function (username){
+    var fullQualifiedUsername = username + "_" + RSSManagerHelper.getDatabaseUserPostfix();
+
+	var ws = require('ws');
+	var isDatabaseUserExistService = new ws.WSRequest();
+	var options = new Array();
+	options.useSOAP = 1.2;
+	options.action = "urn:isDatabaseUserExist";
+	options.robust = true;
+	var payload = '<ser:isDatabaseUserExist xmlns:ser="http://service.core.rssmanager.carbon.wso2.org" ' +
+                 'xmlns:xsd="http://dto.core.rssmanager.carbon.wso2.org/xsd">' +
+	             '<ser:environmentName>' + environmentName + '</ser:environmentName>' +
+	             '<xsd:rssInstanceName>' + wso2_rss_instanceName + '</xsd:rssInstanceName>'+
+	             '<xsd:username>' + fullQualifiedUsername + '</xsd:username>' +
+                 '</ser:isDatabaseUserExist>';
+
+	var result = "";
+	try {
+		modManager.setAuthHeaders(options);
+		isDatabaseUserExistService.open(options, storageServerURL + 'RSSAdmin', false);
+		isDatabaseUserExistService.send(payload);
+		result = isDatabaseUserExistService.responseE4X;
+		var ns = new Namespace("http://service.core.rssmanager.carbon.wso2.org");
+		var response = result.ns::["return"].text();
+		return response;
+	} catch (e) {
+		log.error('Error while checking the existance of database user : ' + username );
+		log.error(e);
+		throw e;
+	}
+}
+
 
 var getAvailableUsersToAttachToDatabase = function (dbname){
 	var ws = require('ws');
@@ -93,11 +125,11 @@ var getAvailableUsersToAttachToDatabase = function (dbname){
 	var payload ='<ser:getAvailableUsers  xmlns:ser="http://service.core.rssmanager.carbon.wso2.org">'+
 	             '<ser:environmentName>' + environmentName + '</ser:environmentName>' +
 	             '<ser:rssInstanceName>' + wso2_rss_instanceName + '</ser:rssInstanceName>' +
-	             '<ser:databaseName>'+dbname+'</ser:databaseName>'+
+	             '<ser:databaseName>' + dbname + '</ser:databaseName>' +
 	             '</ser:getAvailableUsers>';
 
 	try {
-		getAvailableUsersToAttachToDatabaseService.open(options, storageServerURL+'RSSAdmin', false);
+		getAvailableUsersToAttachToDatabaseService.open(options, storageServerURL + 'RSSAdmin', false);
 		getAvailableUsersToAttachToDatabaseService.send(payload);
 		var result = getAvailableUsersToAttachToDatabaseService.responseE4X;
         return getUserList(result);
@@ -109,14 +141,14 @@ var getAvailableUsersToAttachToDatabase = function (dbname){
 };
 
 function getUserList(result){
-    var databaseObject=[];
+    var databaseObject = [];
     if(result != undefined){
         var ns = new Namespace("http://service.core.rssmanager.carbon.wso2.org");
         var response=result.ns::["return"];
-        for(var index=0; index < response.length();index++){
+        for(var index = 0 ; index < response.length() ; index++){
             var entry = response[index];
             var ax = new Namespace("http://dto.core.rssmanager.carbon.wso2.org/xsd");
-            var username=entry.ax::["username"].text();
+            var username = entry.ax::["username"].text();
             databaseObject.push(username);
         }
     }
@@ -136,10 +168,10 @@ var deleteUser = function ( name){
 	var payload ='<ser:removeDatabaseUser  xmlns:ser="http://service.core.rssmanager.carbon.wso2.org">'+
 	'<ser:environmentName>' + environmentName + '</ser:environmentName>' +
 	'<ser:rssInstanceName>' + wso2_rss_instanceName + '</ser:rssInstanceName>' +
-	'<ser:username>'+ name +'</ser:username></ser:removeDatabaseUser>';
+	'<ser:username>' + name + '</ser:username></ser:removeDatabaseUser>';
 
 	try {
-		deleteDatabaseUsersService.open(options, storageServerURL+'RSSAdmin', false);
+		deleteDatabaseUsersService.open(options, storageServerURL + 'RSSAdmin', false);
 		deleteDatabaseUsersService.send(payload);
 	} catch (e) {
 		log.error("Error while deleting user : " + name );

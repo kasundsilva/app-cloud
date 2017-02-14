@@ -1,0 +1,25 @@
+{
+    "dashboards": [
+        {
+            "isAvailable" : "false",
+            "title" : "Operational Dashboard",
+            "runtimes" : ["0"],
+            "dashboardContext" : "/portal",
+            "dashboardTypeUtil" : "new OperationalDashboardTypeUtil()"
+        },
+        {
+            "isAvailable" : "false",
+            "title" : "HTTP Monitoring Dashboard",
+            "runtimes" : ["8"],
+            "dashboardContext" : "http://www.wso2.com",
+            "dashboardTypeUtil" : "new HttpMonitoringDashboardTypeUtil()"
+        },
+        {
+            "isAvailable" : "true",
+            "title" : "ESB Analytics Dashboard",
+            "runtimes" : ["9"],
+            "dashboardContext" : "/portal",
+            "dashboardTypeUtil" : "new ESBAnalyticsDashboardTypeUtil()"
+        }
+    ]
+}

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+* Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
 */
 package org.wso2.appcloud.provisioning.runtime;
 
+import org.json.JSONArray;
 import org.wso2.appcloud.provisioning.runtime.beans.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface RuntimeProvisioningService {
@@ -62,7 +64,7 @@ public interface RuntimeProvisioningService {
      */
     void archiveOrganization(TenantInfo tenantInfo) throws RuntimeProvisioningException;
 
-   
+
     /**
      * Deploy an application.
      *
@@ -159,7 +161,6 @@ public interface RuntimeProvisioningService {
 
     /**
      * Create the launch URL with respective to the environment, tenant domain, app name and the version.
-     *
      * An example launch URL:
      * https://appserver.dev.milestones.appfactory.wso2.com:9443/t/man.com/webapps/foo-default-SNAPSHOT/
      *
@@ -174,7 +175,7 @@ public interface RuntimeProvisioningService {
      *
      * @throws RuntimeProvisioningException
      */
-    void deleteDeployment() throws RuntimeProvisioningException;
+    boolean deleteDeployment() throws RuntimeProvisioningException;
 
     /**
      * Create a service in K8s.
@@ -183,4 +184,76 @@ public interface RuntimeProvisioningService {
      * @throws RuntimeProvisioningException
      */
     public void createService(ServiceProxy serviceProxy) throws RuntimeProvisioningException;
+
+    /**
+     * Get restart count for each pod of the application
+     *
+     * @return
+     * @throws RuntimeProvisioningException
+     */
+    Map<String, String> getPodRestartCounts() throws RuntimeProvisioningException;
+
+    /**
+     * Get replica info for each pod of the application
+     *
+     * @return
+     * @throws RuntimeProvisioningException
+     */
+    JSONArray getReplicaInfo() throws RuntimeProvisioningException;
+
+    /**
+     * Delete kubernetes kind by name from the deployment
+     *
+     * @param k8sKind kubernetes kind
+     * @param name    unique name refer in Kubernetes
+     * @throws RuntimeProvisioningException
+     */
+    void deleteK8sKindByName(String k8sKind, String name) throws RuntimeProvisioningException;
+
+    /**
+     * This method will update the exposure level in a given service
+     *
+     * @param serviceName   service name
+     * @param exposureLevel new exposure level that needs to be updated in the service
+     * @param lbHost        new host name with the exposure level change
+     * @throws RuntimeProvisioningException
+     */
+    void changeExposureLevelInServices(String serviceName, String exposureLevel, String lbHost) throws RuntimeProvisioningException;
+
+    /**
+     * Method to add a label to the default domain service
+     *
+     * @param serviceName default domain service name
+     * @param labelKey    key of the label to be added
+     * @param labelValue  value of the label to be added
+     * @throws RuntimeProvisioningException
+     */
+    void updateKubernetesServiceWithLabel(String serviceName, String labelKey, String labelValue)
+            throws RuntimeProvisioningException;
+    /**
+     *This method will create a new horizontal pod autoscaler for a given deployment
+     *
+     * @param name deployment name
+     * @throws RuntimeProvisioningException
+     */
+    void createDeploymentAutoScalePolicy(String name) throws RuntimeProvisioningException;
+
+    /**
+     * This method will scale a given deployment
+     *
+     * @param name deployment name
+     * @param replicaCount  expected replica count to scale
+     * @throws RuntimeProvisioningException
+     */
+    void scaleDeployment(String name, int replicaCount) throws RuntimeProvisioningException;
+
+    /**
+     * This method will return the existing replica count in a given deployment
+     *
+     * @param name deployment name
+     * @return current replica count in the given deployment
+     * @throws RuntimeProvisioningException
+     */
+    int getReplicasForDeployment(String name) throws RuntimeProvisioningException;
+
 }

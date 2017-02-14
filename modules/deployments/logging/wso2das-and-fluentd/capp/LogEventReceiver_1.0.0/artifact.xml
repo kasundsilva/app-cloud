@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact name="LogEventReceiver" version="1.0.0" type="event/receiver" serverRole="DataAnalyticsServer">
+    <file>LogEventReceiver.xml</file>
+</artifact>

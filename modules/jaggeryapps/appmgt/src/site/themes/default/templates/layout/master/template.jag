@@ -18,10 +18,8 @@
  */
 
 jagg.template("layout/master", function(inputs, outputs, jagg) { %>
-    <% jagg.includeBlocks(outputs.breadcrumb); %>
 
-        <% jagg.includeBlocks(outputs.tablinks); %>
-
-            <% jagg.includeBlocks(outputs.middle); %>
+    <% jagg.includeBlocks(outputs.leftMenu); %>
+    <% jagg.includeBlocks(outputs.middle); %>
 
 <% }); %>

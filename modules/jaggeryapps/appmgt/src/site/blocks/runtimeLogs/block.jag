@@ -34,19 +34,28 @@ jagg.block("runtimeLogs", {
         var viewRuntimeLogPermission = true;
         var applicationMod = jagg.module("application");
         var applicationKey = inputs.applicationKey;
-        var selectedRevision = inputs.applicationRevision;
-        var revisionsList = applicationMod.getVersionListOfApplication(applicationKey);
-        if(!selectedRevision) {
-            selectedRevision = applicationMod.getSelectedRevisionFromSession(applicationKey);
-            if(!selectedRevision && revisionsList.length > 0){
-                selectedRevision = revisionsList[0];
-            }
+        var application = applicationMod.getApplication(applicationKey);
+        var selectedRevision = inputs.selectedRevision;
+        if (!selectedRevision) {
+            selectedRevision = applicationMod.getSelectedRevisionFromSession(inputs.applicationKey);
         }
+        if (!selectedRevision && application.defaultVersion) {
+            selectedRevision = application.defaultVersion;
+        }
+
+        var versionKey = inputs.versionKey;
+        var revisionsList = applicationMod.getVersionListOfApplication(applicationKey);
+        var modManager = jagg.module("manager");
+        var cloudSpecificApplicationRepresentation = modManager.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
+        var selectedReplica = inputs.selectedReplica;
         return {
             "viewRuntimeLogPermission": viewRuntimeLogPermission,
             "applicationKey": applicationKey,
             "selectedRevision": selectedRevision,
-            "revisionsList":revisionsList
+            "revisionsList":revisionsList,
+            "versionKey":versionKey,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation,
+            "selectedReplica":selectedReplica
         };
     }
 

@@ -18,10 +18,11 @@ package org.wso2.appcloud.tierapi.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.appcloud.tierapi.SQLQueryConstants;
 import org.wso2.appcloud.tierapi.bean.ContainerSpecifications;
 import org.wso2.appcloud.tierapi.bean.Plan;
 import org.wso2.appcloud.tierapi.dao.PlanDao;
-import org.wso2.appcloud.tierapi.util.DBConfiguration;
+import org.wso2.appcloud.tierapi.util.DBUtil;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Connection;
@@ -30,7 +31,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @XmlRootElement
 public class PlanDaoImpl implements PlanDao{
@@ -38,27 +38,20 @@ public class PlanDaoImpl implements PlanDao{
 	private static final Log log = LogFactory.getLog(PlanDaoImpl.class);
 
 	@Override
-	public List<Plan> getAllPlans() throws SQLException{
+	public List<Plan> getAllPlans() throws SQLException {
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
 
 		List<Plan> plans = new ArrayList<Plan>();
-		String sql = "select * from AC_SUBSCRIPTION_PLANS";
-
+		ResultSet rs = null;
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
+			dbConnection = DBUtil.getConnection();
 
-
-			preparedStatement = dbConnection.prepareStatement(sql);
-			ResultSet rs = preparedStatement.executeQuery();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_ALL_SUBSCRIPTION_PLANS);
+			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				Plan plan = new Plan();
-				plan.setId(rs.getInt("PLAN_ID"));
-				plan.setPlanName(rs.getString("PLAN_NAME"));
-				plan.setMaxApplications(rs.getInt("MAX_APPLICATIONS"));
-
+				Plan plan = getPlan(rs);
 				plans.add(plan);
 			}
 		} catch (SQLException e) {
@@ -66,13 +59,9 @@ public class PlanDaoImpl implements PlanDao{
 			log.error(msg, e);
 			throw e;
 		} finally {
-
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return plans;
 	}
@@ -81,61 +70,78 @@ public class PlanDaoImpl implements PlanDao{
 	public Plan getPlanByPlanId(int planId) throws SQLException {
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
-		Logger log = Logger.getLogger(PlanDaoImpl.class.getName());
 		Plan plan = new Plan();
-		String sql = "select * from AC_SUBSCRIPTION_PLANS WHERE PLAN_ID ="+planId;
+		ResultSet rs = null;
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
-			preparedStatement = dbConnection.prepareStatement(sql);
-			ResultSet rs = preparedStatement.executeQuery();
+			dbConnection = DBUtil.getConnection();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_SUBSCRIPTION_PLANS_BY_PLAN_ID);
+			preparedStatement.setInt(1, planId);
+			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
-				plan.setId(rs.getInt("PLAN_ID"));
-				plan.setPlanName(rs.getString("PLAN_NAME"));
-				plan.setMaxApplications(rs.getInt("MAX_APPLICATIONS"));
+				plan = getPlan(rs);
 			}
 			rs.close();
 		} catch (SQLException e) {
-			String msg = "Error while getting details of Plan with ID "+planId;
+			String msg = "Error while getting plan for plan ID: " + planId;
+			log.error(msg, e);
 			throw e;
 		} finally {
-
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return plan;
 	}
+
+    @Override
+    public Plan getPlanByPlanName(String cloudType, String planName) throws SQLException {
+        Connection dbConnection = null;
+        PreparedStatement preparedStatement = null;
+        Plan plan = new Plan();
+        ResultSet rs = null;
+        try {
+            dbConnection = DBUtil.getConnection();
+            preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_SUBSCRIPTION_PLANS_BY_PLAN_NAME_AND_CLOUD);
+            preparedStatement.setString(1, planName);
+            preparedStatement.setString(2, cloudType);
+            rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                plan = getPlan(rs);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            String msg = "Error while getting plan for plan name: " + planName + " and cloud : " + cloudType;
+            log.error(msg, e);
+            throw e;
+        } finally {
+            DBUtil.closeResultSet(rs);
+            DBUtil.closePreparedStatement(preparedStatement);
+            DBUtil.closeDatabaseConnection(dbConnection);
+        }
+        return plan;
+    }
 
 	@Override
 	public Plan definePlan(Plan plan) throws SQLException {
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
-
-		String sql = "INSERT INTO AC_SUBSCRIPTION_PLANS (PLAN_NAME, TEAM, MAX_INSTANCES) VALUES (?, ?)";
+		ResultSet rs = null;
 
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
-			preparedStatement = dbConnection.prepareStatement(sql);
+			dbConnection = DBUtil.getConnection();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.ADD_SUBSCRIPTION);
 			preparedStatement.setString(1, plan.getPlanName());
 			preparedStatement.setInt(2, plan.getMaxApplications());
 
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
 
-			String sql2 = "select * from AC_SUBSCRIPTION_PLANS WHERE PLAN_NAME= ?";
-			preparedStatement= dbConnection.prepareStatement(sql2);
+			preparedStatement= dbConnection.prepareStatement(SQLQueryConstants.GET_SUBSCRIPTION_PLANS_BY_PLAN_NAME);
 			preparedStatement.setString(1, plan.getPlanName());
-			ResultSet rs = preparedStatement.executeQuery();
+			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				plan.setId(rs.getInt("PLAN_ID"));
-				plan.setPlanName(rs.getString("PLAN_NAME"));
-				plan.setMaxApplications(rs.getInt("MAX_APPLICATIONS"));
+				plan = getPlan(rs);
 			}
 
 		} catch (SQLException e) {
@@ -143,14 +149,9 @@ public class PlanDaoImpl implements PlanDao{
 			log.error(msg, e);
 			throw e;
 		} finally {
-
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return plan;
 	}
@@ -160,23 +161,18 @@ public class PlanDaoImpl implements PlanDao{
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
 		boolean isDeleted;
-		String sql = "DELETE FROM AC_SUBSCRIPTION_PLANS WHERE PLAN_ID="+planId;
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
-			preparedStatement = dbConnection.prepareStatement(sql);
+			dbConnection = DBUtil.getConnection();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.DELETE_SUBSCRIPTION_PLAN);
+			preparedStatement.setInt(1, planId);
 			isDeleted = preparedStatement.executeUpdate() == 1 ? true : false;
 		} catch (SQLException e) {
 			String msg = "Error while deleting the Plan with ID "+planId+"from Data Base";
 			log.error(msg, e);
 			throw e;
 		} finally {
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return isDeleted;
 	}
@@ -185,11 +181,10 @@ public class PlanDaoImpl implements PlanDao{
 	public Plan updatePlanById(int planId, Plan plan) throws SQLException {
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
-		String sql = "Update AC_SUBSCRIPTION_PLANS SET PLAN_NAME=?, MAX_INSTANCES=?, WHERE PLAN_ID = ?";
+		ResultSet rs = null;
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
-			preparedStatement = dbConnection.prepareStatement(sql);
+			dbConnection = DBUtil.getConnection();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.UPDATE_SUBSCRIPTION_PLAN);
 
 			preparedStatement.setString(1, plan.getPlanName());
 			preparedStatement.setInt(2, plan.getMaxApplications());
@@ -197,27 +192,21 @@ public class PlanDaoImpl implements PlanDao{
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
 
-			String sql2 = "select * from AC_SUBSCRIPTION_PLANS WHERE PLAN_ID= ?";
-			preparedStatement = dbConnection.prepareStatement(sql2);
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_SUBSCRIPTION_PLANS_BY_PLAN_ID);
 			preparedStatement.setInt(1, planId);
-			ResultSet rs = preparedStatement.executeQuery();
+			rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				plan.setId(rs.getInt("PLAN_ID"));
-				plan.setPlanName(rs.getString("PLAN_NAME"));
-				plan.setMaxApplications(rs.getInt("MAX_APPLICATIONS"));
+				plan = getPlan(rs);
 			}
 		} catch (SQLException e) {
 			String msg = "Error while updating the Plan with ID "+planId+"from Data Base";
 			log.error(msg, e);
 			throw e;
 		} finally {
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return plan;
 	}
@@ -226,16 +215,13 @@ public class PlanDaoImpl implements PlanDao{
 	public List<ContainerSpecifications> getAllowedConSpecs(int planId) throws SQLException {
 		Connection dbConnection = null;
 		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
 		List<ContainerSpecifications> allowedContainerSpecs = new ArrayList<ContainerSpecifications>();
-		String sqlAllContainerSpecs = "select * from AC_CONTAINER_SPECIFICATIONS WHERE CON_SPEC_ID NOT IN "
-		                              + "(SELECT CON_SPEC_ID FROM AC_SUBSCRIPTION_PLANS JOIN RestrictedPlanContainerSpecs ON"
-		                              + " AC_SUBSCRIPTION_PLANS.PLAN_ID = RestrictedPlanContainerSpecs.PLAN_ID WHERE"
-		                              + " RestrictedPlanContainerSpecs.PLAN_ID ="+planId+")";
 		try {
-			DBConfiguration dbCon = new DBConfiguration();
-			dbConnection = dbCon.getConnection();
-			preparedStatement = dbConnection.prepareStatement(sqlAllContainerSpecs);
-			ResultSet rs = preparedStatement.executeQuery();
+			dbConnection = DBUtil.getConnection();
+			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_ALLOWED_CONTAINER_SPECIFICATIONS);
+			preparedStatement.setInt(1, planId);
+			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
 				ContainerSpecifications containerSpecification = new ContainerSpecifications();
 				containerSpecification.setId(rs.getInt("CON_SPEC_ID"));
@@ -251,13 +237,20 @@ public class PlanDaoImpl implements PlanDao{
 			log.error(msg, e);
 			throw e;
 		} finally {
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-			if (dbConnection != null) {
-				dbConnection.close();
-			}
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(preparedStatement);
+			DBUtil.closeDatabaseConnection(dbConnection);
 		}
 		return allowedContainerSpecs;
+	}
+
+	private Plan getPlan(ResultSet rs) throws SQLException {
+		Plan plan = new Plan();
+		plan.setId(rs.getInt(SQLQueryConstants.PLAN_ID));
+		plan.setPlanName(rs.getString(SQLQueryConstants.PLAN_NAME));
+		plan.setMaxApplications(rs.getInt(SQLQueryConstants.MAX_APPLICATIONS));
+		plan.setMaxDatabases(rs.getInt(SQLQueryConstants.MAX_DATABASES));
+		plan.setMaxReplicas(rs.getInt(SQLQueryConstants.MAX_REPLICA_COUNT));
+		return plan;
 	}
 }

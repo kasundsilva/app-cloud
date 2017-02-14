@@ -21,6 +21,7 @@ include("/jagg/jagg.jag");
 
 jagg.template("runtimeLogs", function (inputs, outputs, jagg) {
     var applicationKey = outputs.applicationKey;
+    var versionKey = outputs.versionKey;
 
     // revision list of the application
     // ex: ["1.0.0" , "2.0.0"]
@@ -29,6 +30,9 @@ jagg.template("runtimeLogs", function (inputs, outputs, jagg) {
     // currently selected revision
     // ex: "1.0.0"
     var selectedRevision = outputs.selectedRevision;
+    // var selectedReplica = request.getParameter("selectedReplica");
+    var selectedReplica = outputs.selectedReplica;
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
 
 %>
 <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/CodeMirror-5.7.0/codemirror.css'))%>">
@@ -38,79 +42,128 @@ jagg.template("runtimeLogs", function (inputs, outputs, jagg) {
     var applicationKey = "<%=applicationKey%>";
     var selectedRevision = "<%=selectedRevision%>";
     var revisionsList = jQuery.parseJSON('<%=revisionsList%>');
+    var APPLICATION_STOPPED = "<%=APPLICATION_STOPPED%>";
+    var APPLICATION_RUNNING = "<%=APPLICATION_RUNNING%>";
+    var APPLICATION_INACTIVE = "<%=APPLICATION_INACTIVE%>";
+    var cloudSpecificApplicationRepresentation = "<%=cloudSpecificApplicationRepresentation%>";
+    var selectedReplica = "<%=selectedReplica%>";
 </script>
+
+   <!-- right pane wrapper -->
+ <div class="right-pane visible">
 
         <!-- BOF App factory menu actionbar -->
         <div class="action-bar">
-            <a href="/appmgt/site/pages/home.jag?applicationKey=<%=applicationKey%>" class="btn-action" data-toggle="tooltip" data-placement="top" title="Go back to application home page">
+            <div class="side-pane-trigger">
+                <i class="fw fw-left"></i>
+            </div>
+            <a class="btn-action" data-toggle="tooltip" data-placement="top" title="Download Logs" id="log-download">
                     <span class="fw-stack fw-lg btn-action-ico">
                         <i class="fw fw-circle-outline fw-stack-2x"></i>
-                        <i class="fw fw-left-arrow fw-stack-1x"></i>
-                    </span> <span class="hidden-xs">Back to Application</span>
+                        <i class="fa fa-download fa-stack-1x"></i>
+                    </span> <span class="hidden-xs"> Download Logs</span>
             </a>
-            <a class="btn-action" data-toggle="tooltip" data-placement="top" title="reload logs" id="log-reload">
+
+            <a class="btn-action" data-toggle="tooltip" data-placement="top" title="Reload Logs" id="log-reload">
                     <span class="fw-stack fw-lg btn-action-ico">
                         <i class="fw fw-circle-outline fw-stack-2x"></i>
-                        <i class="fw fw-refresh fw-stack-1x"></i>
-                    </span> <span class="hidden-xs">Reload Logs</span>
+                        <i class="fw fw fw-refresh fa-stack-1x"></i>
+                    </span> <span class="hidden-xs"> Reload Logs</span>
+            </a>
+
+            <a class="btn-action" data-toggle="tooltip" data-placement="top" title="Disable Tailing Logs" id="disable-tailing" style="display: none">
+                    <span class="fw-stack fw-lg btn-action-ico">
+                        <i class="fw fw-circle-outline fw-stack-2x"></i>
+                        <i class="fw fw fw-uncheck fa-stack-1x"></i>
+                    </span> <span class="hidden-xs"> Disable Tailing</span>
+            </a>
+
+            <a class="btn-action" data-toggle="tooltip" data-placement="top" title="Enable Tailing" id="enable-tailing">
+                    <span class="fw-stack fw-lg btn-action-ico">
+                        <i class="fw fw-circle-outline fw-stack-2x"></i>
+                        <i class="fw fw fw-check fa-stack-1x"></i>
+                    </span> <span class="hidden-xs"> Enable Tailing</span>
             </a>
         </div><!-- EOF App factory menu actionbar-->
 
         <div class="container-fluid app-content-section">
-
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 msg-issues">
-                Download the logs of the deployed applications that are archived daily.
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 msg-issues">
+                    Download the logs of the deployed <%=cloudSpecificApplicationRepresentation.toLowerCase()%>s that are archived daily.
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="div-search">
-                <div class="form-horizontal" role="form">
-                    <div class="form-group">
-                        <label for="log-search" class="col-sm-1 control-label">Revision: </label>
-                        <div class="col-sm-4">
-                            <select class="form-control" id="revision" disabled>
-                                <option><%=selectedRevision%></option>
-                                <% for(var i = 0; i < revisionsList.length; i++){
-                                    if(selectedRevision == revisionsList[i]){
-                                        continue;
-                                    }
-                                %>
-                                <option><%=revisionsList[i]%></option>
-                                <% }%>
-                            </select>
-                        </div>
-                        <label for="log-search" class="col-sm-1 control-label">Replica: </label>
-                        <div class="col-sm-4">
-                            <select class="form-control" id="replicas">
+            <div class="row">
+                <div class="div-search">
+                    <div class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label for="log-search" class="col-md-1 control-label">Revision : </label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="revision" disabled>
+                                    <% for(var i = 0; i < revisionsList.length; i++){
+                                        if(selectedRevision == revisionsList[i]){
+                                    %>
+                                        <option selected><%=revisionsList[i]%></option>
+                                    <%
+                                            continue;
+                                        }
+                                    %>
+                                    <option><%=revisionsList[i]%></option>
+                                    <% }%>
+                                </select>
+                            </div>
+                            <label for="log-search" class="col-md-2 control-label">Replica : </label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="replicas">
 
-                            </select>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="log-search" class="col-md-1 control-label">Search : </label>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" class="form-control log-search" id="log-search" placeholder="Enter search text">
+                                                  <span class="input-group-btn">
+                                                      <button type="button" action="findPrev" class="prev btn btn-default"><i class="fa fa-backward"></i> </button>
+                                                        <button type="button" action="findNext" class="next btn btn-default"><i class="fa  fa-forward"></i> </button>
+                                                  </span>
+                                </div><!-- /input-group -->
+                            </div><!-- /.col-lg-6 -->
+                            <label for="noOfLines" class="col-md-2 control-label">Number of Lines : </label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="noOfLines">
+                                    <option value="100" selected="selected">100</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="log-search" class="col-sm-1 control-label">Search: </label>
-                        <div class="col-sm-4">
-                            <div class="input-group">
-                                <input type="text" class="form-control log-search" id="log-search" placeholder="Enter search text">
-                                              <span class="input-group-btn">
-                                                  <button type="button" action="findPrev" class="prev btn btn-default"><i class="fa fa-backward"></i> </button>
-                                                    <button type="button" action="findNext" class="next btn btn-default"><i class="fa  fa-forward"></i> </button>
-                                              </span>
-                            </div><!-- /input-group -->
-                        </div><!-- /.col-lg-6 -->
+                </div>
+                <div class="col-xs-12 col-md-12">
+                    <div class="scroll-container" style="margin-top: 1.2em;">
+                        <textarea id="build-logs" name="build-logs" style="display: none">
+                            Loading...
+                        </textarea>
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 col-md-12">
-                <div class="scroll-container" style="margin-top: 1.2em;">
-                    <textarea id="build-logs" name="build-logs" style="display: none">
-                        Loading...
-                    </textarea>
-                </div>
-            </div>
-        </div>
-    </div><!-- /.container -->
+        </div><!-- /.container -->
 
+ </div></div>
+    <!-- --------------------------------------- Overlay ----------------------------------------- -->
+    <div class="modal fade build-logs-modal" id="log_download_progress_modal">
+        <div class="modal-dialog modal-dialog-margin-top-md ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal-title">Downloadable Log File Preparation Progress</h4>
+                </div>
+                <div class="modal-body" id="log_download_progress_modal_body">
+                </div>
+                <div class="modal-body" id="log_download_progress_modal_footer"></div>
+            </div><!-- /.modal-content -->
+        </div>
+     </div><!-- /.modal -->
 <!-- include codemirror functions -->
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/CodeMirror-5.7.0/lib/codemirror.js'))%>"></script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/CodeMirror-5.7.0/addon/selection/active-line.js'))%>"></script>

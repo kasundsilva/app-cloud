@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -18,114 +18,152 @@
  */
 
 include("/jagg/jagg.jag");
+include('/jagg/constants.jag');
 
 jagg.template("index", function(inputs, outputs, jagg) {
     var applications = outputs.applications;
+    var appTypeCount = outputs.appTypeCount;
+    var appType = outputs.appType;
+    var cloudTitle = outputs.cloudTitle;
+    var pageTitle = outputs.pageTitle;
+    var docURL = outputs.docURL;
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
     var log = new Log("index");
-
+    
     %>
 
     <script type="text/javascript" xmlns="http://www.w3.org/1999/html" charset="utf-8">
-        var applicationList = <%=applications%>
+        var applicationList = <%=applications%>;
+        var cloudSpecificApplicationRepresentation = "<%=cloudSpecificApplicationRepresentation%>";
+        var taggedApplicationsList;
+        var searchbox;
 
-        $(document).ready(function (){
 
+        $(document).on("click","#app-category li", function(e){
+            $('.active').removeClass('active');
+            $($(this)[0]).addClass('active');
+            $('#button-category').html($(this)[0].id+' <span class="caret"></span>');
+            $("#item_list").html('');
+            drawApplicationList();
+
+        });
+
+        function drawApplicationList() {
             for (var i = 0; i < applicationList.length; i++){
                 addTableRow(applicationList[i]);
             }
-
             applicationList.sort(NameComparator);
-
             $("#search-apps").bind("keyup", function () {
-            if ($(this).val() === null || $(this).val() === undefined || $(this).val().length === 0) {
-                init();
-            } else {
-                var finder = $(this).val();
-
-                var typingPattern = new RegExp($(this).val().replace(/^\s+|\s+$/g, ''), "gi");
-                addTableColumnHeaders();
-                jQuery.grep(applicationList, function (element, index) {
-
-                    if (element.applicationName.match(typingPattern) != null) {
-                        var matcher = element.applicationName.match(typingPattern);
-                        if (finder.length > 2) {
-
-                            var pre = element.applicationName.substr(0, element.applicationName.indexOf(matcher));
-                            var highlight = element.applicationName.substr(element.applicationName.indexOf(matcher), (finder.length));
-                            var rest = element.applicationName.substr(element.applicationName.indexOf(matcher) + (finder.length), element.applicationName.length);
-
-                            element.highlightedName = pre + "^" + highlight + "~" + rest;
-                        }
-                        addTableRow(element);
+                if ($(this).val() === null || $(this).val() === undefined || $(this).val().length === 0) {
+                    init();
+                //Searching with the application tag key-value pair
+                } else if ($(this).val().substring(0,4) ==="tag:") {
+                    searchbox = this;
+                    if(taggedApplicationsList == null){
+                        //Ajax call to get the tagged applications list
+                        jagg.post("../blocks/index/ajax/index.jag", {
+                            action: "getTaggedApplicationList"
+                            }, function (result) {
+                                    taggedApplicationsList = jQuery.parseJSON(result);
+                                    searchForTaggedApplications();
+                        });
+                    } else {
+                        searchForTaggedApplications();
                     }
-                });
+                //Search with the application name
+                } else {
+                    var finder = $(this).val();
 
-                if ($("#item_list").children().length <= 1) {
-	                $("#item_list").append($('<div class="col-centered col-md-4 "><div class="cloud-new-content"> ' +
-	                 '<h3>Your search "'+finder+'" did not match any applications.</h3></div></div>'));
-		        }
-            }
+                    var typingPattern = new RegExp($(this).val().replace(/^\s+|\s+$/g, ''), "gi");
+                    addTableColumnHeaders();
+                    jQuery.grep(applicationList, function (element, index) {
+
+                        if (element.applicationName.match(typingPattern) != null) {
+                            var matcher = element.applicationName.match(typingPattern);
+                            if (finder.length > 2) {
+
+                                var pre = element.applicationName.substr(0, element.applicationName.indexOf(matcher));
+                                var highlight = element.applicationName.substr(element.applicationName.indexOf(matcher), (finder.length));
+                                var rest = element.applicationName.substr(element.applicationName.indexOf(matcher) + (finder.length), element.applicationName.length);
+
+                                element.highlightedName = pre + "^" + highlight + "~" + rest;
+                            }
+                            addTableRow(element);
+                        }
+                    });
+
+                    if ($("#item_list").children().length <= 1) {
+                        $("#item_list").append($('<div class="col-centered col-md-4 "><div class="cloud-new-content"> ' +
+                         '<h3>Your search "'+finder+'" did not match any ' + cloudSpecificApplicationRepresentation.toLowerCase() + '.</h3></div></div>'));
+                    }
+                }
             });
+            if ($("#item_list").children().length < 1) {
+                $("#item_list").append($('<div class="col-centered col-md-4 "><div class="cloud-new-content"> ' +
+                 '<h3>Your search did not match any application.</h3></div></div>'));
+            }
+        }
+
+        $(document).ready(function (){
+            drawApplicationList();
         });
 
 
     function addTableRow(application) {
+        var searchCriteria = $('#button-category').text().trim().toLocaleLowerCase();
+        removeTableRow(application.applicationName);
+        if(searchCriteria == 'all' || application.category.toLocaleLowerCase() == searchCriteria){
+            application = getIconDetail(application);
+            // This logic is specific to filter
+            var displayName = "";
 
-        application = getIconDetail(application);
-    removeTableRow(application.applicationName);
-    // This logic is specific to filter
-    var displayName = "";
-
-    if (application.highlightedName === undefined || application.highlightedName === "") {
-        displayName = application.applicationName;
-    } else {        // if this application is in search results
-        displayName = application.highlightedName;
-        // mark the search keyword in yellow in the app name
-        displayName = displayName.replace("^", "<b style=\"background-color:yellow;\">").replace("~", "</b>");
-        application.highlightedName = "";
-    }
-
-
-    var theLi;
-    var appIcon;
-    if (application.icon) {
-        imgSrc = "data:image/bmp;base64,"+application.icon;
-        appIcon = '<div class="app-icon">' +
-            '<img src="'+imgSrc+'" class="square-element">' +
-            '</div>';
-    } else {
-        appIcon = '<div class="app-icon" style="background:'+ application.uniqueColor + ';">' +
-            '<div class="square-element">' +
-             '<div class="app-name-icon">' + application.nameToChar + '</div>' +
-            '</div>' +
-         '</div>';
-    }
+            if (application.highlightedName === undefined || application.highlightedName === "") {
+                displayName = application.applicationName;
+            } else {        // if this application is in search results
+                displayName = application.highlightedName;
+                // mark the search keyword in yellow in the app name
+                displayName = displayName.replace("^", "<b style=\"background-color:yellow;\">").replace("~", "</b>");
+                application.highlightedName = "";
+            }
 
 
-
-        theLi  = '<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" id="' + application.applicationName + '">' +
-
-                            '<div class="cloud-app-listing app-color-one">'+
-                                    '<a href="/appmgt/site/pages/home.jag?applicationKey=' + application.hashId + '">'+
-                                    '<i class="fw '+application.appTypeIcon+' fw-2x app-type-icon" data-toggle="tooltip" data-placement="right" title=application.appTypeTitle></i>' +
-                                     appIcon +
-                                    '<div class="app-name">' + displayName + '</div>' +
-                                    '</a>' +
-                                    '<a class="dropdown-toggle app-extra" data-toggle="dropdown">' +
-                                        '<i class="fa fa-ellipsis-v"></i>' +
-                                        '<span class="sr-only">Toggle Dropdown</span>' +
-                                    '</a>' +
-                                    '<ul class="dropdown-menu app-extra-menu" role="menu">' +
-                                        '<li><a onclick="deleteApplicationPopUp(' +  "'" + displayName + "'," +  "'" + application.hashId + "'"  + ')">Delete</a></li>' +
-                                    '</ul>' +
-
-                            '</div>' +
-
+            var theLi;
+            var appIcon;
+            if (application.icon) {
+                imgSrc = "data:image/bmp;base64,"+application.icon;
+                appIcon = '<div class="app-icon">' +
+                    '<img src="'+imgSrc+'" class="square-element">' +
                     '</div>';
+            } else {
+                appIcon = '<div class="app-icon" style="background:'+ application.uniqueColor + ';">' +
+                    '<div class="square-element">' +
+                     '<div class="app-name-icon">' + application.nameToChar + '</div>' +
+                    '</div>' +
+                 '</div>';
+            }
 
+            theLi  = '<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" id="' + application.applicationName + '">' +
 
+                                '<div class="cloud-app-listing app-color-one">'+
+                                        '<a href="/appmgt/site/pages/home.jag?applicationKey=' + application.hashId + '">'+
+                                        '<i class="fw '+application.appTypeIcon+' fw-2x app-type-icon" data-toggle="tooltip" data-placement="right" title="' + application.appTypeTitle + '"></i>' +
+                                         appIcon +
+                                        '<div class="app-name ellipsis">' + displayName + '</div>' +
+                                        '</a>' +
+                                        '<a class="dropdown-toggle app-extra" data-toggle="dropdown">' +
+                                            '<i class="fa fa-ellipsis-v"></i>' +
+                                            '<span class="sr-only">Toggle Dropdown</span>' +
+                                        '</a>' +
+                                        '<ul class="dropdown-menu app-extra-menu" role="menu">' +
+                                            '<li><a onclick="deleteApplicationPopUp(' +  "'" + displayName + "'," +  "'" + application.hashId + "'"  + ')">Delete</a></li>' +
+                                        '</ul>' +
 
-        $("#item_list").append(theLi);
+                                '</div>' +
+
+                        '</div>';
+
+            $("#item_list").append(theLi);
+        }
     }
 
     function NameComparator(a, b) {
@@ -146,7 +184,7 @@ jagg.template("index", function(inputs, outputs, jagg) {
     }
 
     function removeTableRow(appKey){
-	    var theLi = $('#'+appKey);
+	    var theLi = $('#' + appKey);
         theLi.remove();
     }
 
@@ -154,24 +192,24 @@ jagg.template("index", function(inputs, outputs, jagg) {
 
         $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
         $("#app_creation_progress_modal").show();
-        $("#modal-title").text("Deleting...");
+        $("#modal-title").text("Deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "...");
 
         jagg.post("../blocks/application/application.jag", {
             action:"deleteApplication",
             applicationKey:applicationHashId
         },function (result) {
-            jagg.message({content: "Application : " + appName + " deleted successfully", type: 'success', id:'view_log'});
+            jagg.message({content: cloudSpecificApplicationRepresentation + ': ' + appName + ' was deleted successfully.', type: 'success', id:'view_log'});
             setTimeout(redirectAppListing, 2000);
         },function (jqXHR, textStatus, errorThrown) {
-            jagg.message({content: "Error occurred while deleting application : " + appName, type: 'error', id:'view_log'});
+            jagg.message({content: "An error occurred while deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " : " + appName, type: 'error', id:'view_log'});
         });
     }
 
     function deleteApplicationPopUp(appName, applicationHashId){
-        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete Application',content:'Are you sure you want to delete : ' + appName + ' ?',
-            okCallback:function(){
+        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation,content:'Are you sure you want to delete ' + cloudSpecificApplicationRepresentation.toLowerCase() + ': ' + appName + ' ?',
+            yesCallback:function(){
                deleteApplicationAllVersions(appName, applicationHashId);
-            }, cancelCallback:function(){}
+            }, noCallback:function(){}
         });
     }
 
@@ -179,48 +217,134 @@ jagg.template("index", function(inputs, outputs, jagg) {
         window.location.replace("index.jag");
     }
 
+    function searchForTaggedApplications(){
+        //Remove the string "tag:" from the finder
+        var finder = $(searchbox).val().substring(4);
+        var finderKey = null;
+        var finderVal = null;
+
+        //Searching tagged applications when the user provides both key and value pair
+        if (finder.includes(":")) {
+            var tempFinder = finder.split(":");
+            finderKey = tempFinder[0];
+            finderVal = tempFinder[1];
+
+            var typingPatternKey = new RegExp(finderKey.replace(/^\s+|\s+$/g, ''), "gi");
+            var typingPatternVal = new RegExp(finderVal.replace(/^\s+|\s+$/g, ''), "gi");
+            addTableColumnHeaders();
+
+            jQuery.grep(taggedApplicationsList, function (element, index) {
+                jQuery.each(element.tagArray, function( index, value ) {
+                     if ((value.tagKey.match(typingPatternKey) != null)&&(value.tagValue.match(typingPatternVal) != null)) {
+                         addTableRow(element);
+                     }
+                });
+            });
+        }
+        //Searching tagged applications when the user provides only the key value
+        else {
+            var typingPatternKey = new RegExp(finder.replace(/^\s+|\s+$/g, ''), "gi");
+            addTableColumnHeaders();
+
+            jQuery.grep(taggedApplicationsList, function (element, index) {
+                jQuery.each(element.tagArray, function( index, value ) {
+                     if (value.tagKey.match(typingPatternKey) != null) {
+                         addTableRow(element);
+                     }
+                });
+            });
+        }
+        if ($("#item_list").children().length <= 1) {
+            if(finderKey != null){
+                $("#item_list").append($('<div class="col-centered col-md-4 ">' +
+                                            '<div class="cloud-new-content">' +
+                                                '<h3>No ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' found with tag' +
+                                                        ' key : ' + finderKey +
+                                                        ', and value : '  + finderVal +
+                                                '.</h3>' +
+                                            '</div>' +
+                                         '</div>'));
+            } else {
+                $("#item_list").append($('<div class="col-centered col-md-4 ">' +
+                                            '<div class="cloud-new-content">' +
+                                                '<h3>No ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' found with tag' +
+                                                        ' key : ' + finder +
+                                                '.</h3>' +
+                                            '</div>' +
+                                         '</div>'));
+            }
+        }
+    }
+
     </script>
 
     <div class="action-bar">
-        <a href="/appmgt/site/pages/select-apptype.jag" class="btn-action" data-toggle="tooltip" data-placement="top" title="Add New Application">
-            <span class="fw-stack fw-lg btn-action-ico">
+    <% if (appTypeCount == 1) { %>
+        <a href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appType%>" class="btn-action" data-toggle="tooltip" data-placement="top" title="Create <%=cloudSpecificApplicationRepresentation%>">
+    <% } else { %>
+        <a href="/appmgt/site/pages/select-apptype.jag" class="btn-action" data-toggle="tooltip" data-placement="top" title="Create <%=cloudSpecificApplicationRepresentation%>">
+    <% } %>
+            <span class="fw-stack fw-lg">
                 <i class="fw fw-circle-outline fw-stack-2x"></i>
-                <i class="fw fw-add fw-stack-1x"></i>
-            </span> <span class="hidden-xs">Create Application</span>
+                <i class="fw fw-application fw-stack-1x"></i>
+		<span class="fw-stack fw-move-right fw-move-bottom">
+                  <i class="fw fw-circle fw-stack-2x fw-stroke"></i>
+                  <i class="fw fw-add fw-stack-1x fw-inverse"></i>
+               </span>
+            </span>
+            <span class="hidden-xs">Create <%=cloudSpecificApplicationRepresentation%></span>
         </a>
-        <a href="<%=jagg.getAbsoluteUrl("/site/pages/newdatabase.jag")%>?isEdit=false" class="btn-action" data-toggle="tooltip" data-placement="top" title="Add New Database">
-            <span class="fw-stack fw-lg btn-action-ico">
-                <i class="fw fw-circle-outline fw-stack-2x"></i>
-                <i class="fw fw-add fw-stack-1x"></i>
-            </span> <span class="hidden-xs">Create Database</span>
+        <a href="<%=jagg.getAbsoluteUrl("/site/pages/newdatabase.jag")%>?isEdit=false" class="btn-action" data-toggle="tooltip" data-placement="top" title="Create Database">
+            <span class="fw-stack fw-lg">
+               <i class="fw fw-circle-outline fw-stack-2x"></i>
+               <i class="fw fw-database fw-stack-1x"></i>
+               <span class="fw-stack fw-move-right fw-move-bottom">
+                  <i class="fw fw-circle fw-stack-2x fw-stroke"></i>
+                  <i class="fw fw-add fw-stack-1x fw-inverse"></i>
+               </span>
+            </span><span class="hidden-xs">Create Database</span>
         </a>
     </div>
-    <div class="container-fluid">
 
-    </div><!-- /.container -->
-    <div class="container-fluid">
+    <div class="container-fluid app-type-listing">
     <% if (applications.length > 0 ) { %>
         <div class="row row-centered app-sort-bar">
             <div class="col-centered col-md-5 search">
-                <input type="text" class="form-control" id="search-apps" placeholder="Search applications">
-                <i class="fa fa-2x fa-search" ></i>
+
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search-apps" placeholder="Search applications">
+                    <div class="input-group-btn">
+			<i class="icon fa fa-2x fa-search"></i>
+                        <button id="button-category" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All <span class="caret"></span></button>
+                        <ul id="app-category" class="dropdown-menu dropdown-menu-right">
+                          <li id="All" class="active"><a href="#">All</a></li>
+                          <li id="Integration"><a href="#">Integration</a></li>
+                          <li id="Services"><a href="#">Services</a></li>
+                          <!--<li id="Custom"><a href="#">Custom</a></li>-->
+                        </ul>
+                    </div><!-- /btn-group -->
+                </div><!-- /input-group -->
             </div>
         </div>
     <% } else { %>
         <div class="row row-centered">
             <div class="col-centered col-xs-10 col-sm-7  col-md-7 col-lg-6">
                 <div class="cloud-new-content">
-                    <h1>New to WSO2 Application Cloud ?</h1>
+                    <h1>New to WSO2 <%=cloudTitle%>?</h1>
+                    <% if (appTypeCount == 1) { %>
+                    <a id="app-create-button" class="cu-btn cu-btn-md cu-btn-blue" href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appType%>">
+                    <% } else { %>
                     <a id="app-create-button" class="cu-btn cu-btn-md cu-btn-blue" href="/appmgt/site/pages/select-apptype.jag">
-                      Create your first application</a>
-                    <!--div class="help">
-                        <i class="fa fa-2x fa-book"></i> Need help ? Read App creation guide first..
-                    </div-->
+                    <% } %>
+                      Create your first <%=cloudSpecificApplicationRepresentation.toLowerCase()%></a>
+                    <div class="help">
+                        <i class="fa fa-2x fa-book"></i> Need help ? Read <%=pageTitle%> <a href="<%=docURL%>" target="_blank">documentation</a>.
+                    </div>
                 </div>
             </div>
         </div>
     <% } %>
-        <div class="row row-centered app-listing">
+        <div class="row row-centered app-listing listing">
             <!-- BOF listing block -->
             <div class="" id="item_list"></div>
         </div>
@@ -231,13 +355,14 @@ jagg.template("index", function(inputs, outputs, jagg) {
         <div class="modal-dialog modal-dialog-margin-top-md ">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="modal-title"></h4>
+                    <h3 class="modal-title" id="modal-title"></h3>
+                    <span class="app-creation-loader" id="app-creation-header-loader">
+                        <i class="fw fw-loader2 fw-spin fw-2x pull-right"></i>
+                    </span>
                 </div>
                 <div class="modal-body">
                     <div class="container-fluid">
                         <div class="row">
-                            <div id="progress_table" class="col-xs-12 col-md-12 section-title">
-                            <i class="fa fa-2x fa-circle-o-notch fa-spin"></i>
                         </div>
                     </div>
                 </div>

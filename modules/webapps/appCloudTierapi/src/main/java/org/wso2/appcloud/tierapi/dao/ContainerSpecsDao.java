@@ -25,18 +25,24 @@ import java.util.List;
 @XmlRootElement
 public interface ContainerSpecsDao {
 
-	/*
+	/**
 	 * Get all defined Container Specs.
+	 * @return list of container specifications
+	 * @throws SQLException
 	 */
 	public List<ContainerSpecifications> getAllContainerSpecs() throws SQLException;
 
-	/*
+	/**
 	 * Get Container Spec by ID.
+	 * @param containerSpecId Container Specification ID
+	 * @throws SQLException
 	 */
 	public ContainerSpecifications getContainerSpecById(int containerSpecId) throws SQLException;
 
-	/*
+	/**
 	 * Get Container Spec by Runtime ID.
+	 * @param runtimeId Runtime ID
+	 * @throws SQLException
 	 */
 	public List<ContainerSpecifications> getContainerSpecByRuntimeID (int runtimeId ) throws SQLException;
 
@@ -53,6 +59,7 @@ public interface ContainerSpecsDao {
 	/*
 	 * Update Container Spec by ID.
 	 */
-	public ContainerSpecifications updateContainerSpecById(int containerSpecId, ContainerSpecifications containerSpec) throws SQLException;
+	public ContainerSpecifications updateContainerSpecById(int containerSpecId, ContainerSpecifications containerSpec)
+			throws SQLException;
 
 }

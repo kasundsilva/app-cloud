@@ -16,3 +16,10 @@ hs_err_pid*
 *.ipr
 *.iws
 target
+
+#.crt and .pem files
+*.crt
+*.pem
+
+#service_loadbalancer binary
+modules/deployments/service-loadbalancer/service_loadbalancer

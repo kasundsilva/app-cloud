@@ -1,0 +1,117 @@
+<%
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
+include("/jagg/jagg.jag");
+include("/jagg/constants.jag");
+
+var mod = jagg.module("application");
+
+(function () {
+    var action = request.getParameter("action");
+
+    if (action == "updateDefaultVersion") {
+        var applicationName = request.getParameter("applicationName");
+        var defaultVersion = request.getParameter("defaultVersion");
+        try {
+            if (mod.getDefaultVersion(applicationName) == defaultVersion) {
+                response.status = 400;
+                response.content = "Version: " + defaultVersion + " is the default version. Please select another version.";
+            } else {
+                if (mod.isVersionExist(applicationName, defaultVersion)) {
+                    var result = mod.changeMappedDomain(applicationName, defaultVersion);
+                    print(result);
+                } else {
+                    response.status = 400;
+                    response.content = "Application version does not exist. Please select valid version.";
+                }
+            }
+        } catch (e) {
+            var message = "Error while updating version : " + defaultVersion + " to the default version";
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+
+    } else if (action == "updateVersionExposureLevel") {
+        try{
+            var exposureLevel = request.getParameter("exposureLevel");
+            var versionName = request.getParameter("versionName");
+            var applicationName = request.getParameter("applicationName");
+            var versionHashId = mod.getVersionHashId(applicationName, versionName);
+            mod.updateVersionExposureLevel(exposureLevel, versionHashId, applicationName, versionName);
+        } catch (e) {
+            var message = "Error while updating exposure level for application: " + applicationName + " version : " + versionName;
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+
+    } else if (action == "getExposureLevel") {
+        try{
+            var applicationName = request.getParameter("applicationName");
+            var versionName = request.getParameter("versionName");
+            var exposureLevel = mod.getExposureLevel(applicationName, versionName);
+            print(exposureLevel);
+        } catch (e) {
+            var message = "Error while getting exposure level for application: " + applicationName + " version : " + versionName;
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+
+    } else if (action == "scaleDeployment") {
+        try {
+            var versionName = request.getParameter("versionName");
+            var applicationName = request.getParameter("applicationName");
+            var replicaCount = request.getParameter("replicaCount");
+            mod.scaleDeployment(applicationName, versionName, replicaCount);
+
+        } catch (e) {
+            var message = "Error while scaling deployment for application: " + applicationName + " version : " + versionName;
+            log.error(message);
+            log.error(e);
+            response.status = 400;
+            response.content = message;
+        }
+
+    } else if (action == "getReplicaCountForVersion") {
+        try {
+            var versionName = request.getParameter("versionName");
+            var applicationName = request.getParameter("applicationName");
+            var result = mod.getReplicaCountForVersion(applicationName, versionName);
+            print (result);
+        } catch (e) {
+            var message = "Error while getting replica count for application: " + applicationName + " version : " + versionName;
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+
+    } else {
+        throw new Error("No action specified");
+    }
+
+}());
+
+%>
+

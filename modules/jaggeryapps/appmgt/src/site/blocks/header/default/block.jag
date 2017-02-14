@@ -1,4 +1,23 @@
 <%
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+include("/jagg/jagg.jag");
+include("/jagg/constants.jag");
 
 jagg.block("header/default", {
 
@@ -19,11 +38,39 @@ jagg.block("header/default", {
             loggedInUserName = userEmailAddress;
         }
         var tenantDomain = manager.getTenantDomain(true);
+        var cloudTypeProperties = manager.getCloudTypeProperties();
+        var docUrl = manager.getPropertyValue(cloudTypeProperties.properties.documentationUrl);
+        var supportUrl = manager.getPropertyValue(cloudTypeProperties.properties.supportUrl);
+        var cloudTitle = cloudTypeProperties.cloudTitle;
+        var cloudIcon = cloudTypeProperties.cloudIcon;
+
+        var isGoogleAnalyticsEnabled = manager.getPropertyValue(GOOGLE_ANALYTICS_ENABLED);
+        var googleTrackingId = manager.getPropertyValue(GOOGLE_TRACKING_ID);
+        var appCloudURL = manager.getPropertyValue(APP_CLOUD_URL);
+        var integrationCloudURL = manager.getPropertyValue(INTEGRATION_CLOUD_URL);
+        var apiCloudPublisherURL = manager.getPropertyValue(API_CLOUD_PUBLISHER__URL);
+        var cloudMgtURL = manager.getPropertyValue(CLOUD_MGT_URL);
+        var changePasswordURL = manager.getPropertyValue(CHANGE_PASSWORD_URL);
+        var profileURL = manager.getPropertyValue(PROFILE_URL);
+        var zopimChatId = manager.getPropertyValue(ZOPIM_CHAT_ID);
 
         return {
             "user": user,
             "loggedInUserName": loggedInUserName,
-            "tenantDomain": tenantDomain
+            "tenantDomain": tenantDomain,
+            "docUrl": docUrl,
+            "supportUrl": supportUrl,
+            "cloudTitle" : cloudTitle,
+            "isGoogleAnalyticsEnabled" : isGoogleAnalyticsEnabled,
+            "googleTrackingId" : googleTrackingId,
+            "appCloudURL" : appCloudURL,
+            "integrationCloudURL" : integrationCloudURL,
+            "apiCloudPublisherURL" : apiCloudPublisherURL,
+            "cloudMgtURL" : cloudMgtURL,
+            "cloudIcon" : cloudIcon,
+            "changePasswordURL" : changePasswordURL,
+            "profileURL" : profileURL,
+            "zopimChatId": zopimChatId
         };
     }
 });

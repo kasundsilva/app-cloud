@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -75,6 +75,59 @@ var createTemplateWithAllPermissions = function (templateName){
         throw e;
     }
 };
+
+var dropTemplate = function (templateName) {
+    var ws = require('ws');
+    var dropDatabaseTemplate = new ws.WSRequest();
+    var options = new Array();
+    options.useSOAP = 1.2;
+    options.action = "urn:removeDatabasePrivilegeTemplate";
+    options.mep = "in-only";
+    var payload = '<ser:removeDatabasePrivilegeTemplate  xmlns:ser="http://service.core.rssmanager.carbon.wso2.org">' +
+            '<ser:environmentName>' + environmentName + '</ser:environmentName>' +
+            '<ser:templateName>' + templateName + '</ser:templateName></ser:removeDatabasePrivilegeTemplate>';
+
+    modManager.setAuthHeaders(options);
+    try {
+        dropDatabaseTemplate.open(options, storageServerURL + 'RSSAdmin', false);
+        dropDatabaseTemplate.send(payload);
+    } catch (e) {
+        log.error("Error while dropping database template : " + templateName);
+        log.error(e);
+        throw e;
+    }
+
+};
+
+var isDatabasePrivilegeTemplateExist = function (templateName){
+    var ws = require('ws');
+    var isDatabasePrivilegeTemplateExistService = new ws.WSRequest();
+    var options = new Array();
+    options.useSOAP = 1.2;
+    options.action = "urn:isDatabasePrivilegeTemplateExist";
+    options.robust = true;
+    var payload = '<ser:isDatabasePrivilegeTemplateExist xmlns:ser="http://service.core.rssmanager.carbon.wso2.org" ' +
+            'xmlns:xsd="http://dto.core.rssmanager.carbon.wso2.org/xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+            '<ser:environmentName>' + environmentName + '</ser:environmentName>' +
+            '<ser:templateName>' + templateName + '</ser:templateName>' +
+            '</ser:isDatabasePrivilegeTemplateExist>';
+    modManager.setAuthHeaders(options);
+    try {
+
+        isDatabasePrivilegeTemplateExistService.open(options, storageServerURL + 'RSSAdmin', false);
+        isDatabasePrivilegeTemplateExistService.send(payload);
+        var result = isDatabasePrivilegeTemplateExistService.responseE4X;
+        var ns = new Namespace("http://service.core.rssmanager.carbon.wso2.org");
+        var response = result.ns::["return"];
+        return response.text();
+    } catch (e) {
+
+        log.error("Error while checking isDatabasePrivilegeTemplateExist : " + templateName);
+        log.error(e);
+        throw e;
+    }
+};
+
 
 %>
 

@@ -27,17 +27,45 @@ include("/jagg/constants.jag");
 
     var log = new Log();
 
-    if (!jagg.getUser()) {
-        print(UNAUTHORIZED_ERROR_RESPONSE);
-        return;
-    }
     if (action == "getSnapshotLogs") {
 
         var applicationKey = request.getParameter("applicationKey");
         var selectedRevision = request.getParameter("selectedRevision");
+        var Util = Packages.org.wso2.appcloud.core.Util;
+        var ApplicationManager = Packages.org.wso2.appcloud.core.ApplicationManager;
+        var applicationName = ApplicationManager.getApplicationNameByHashId(applicationKey);
+        var versionHashId = Util.getVersionHashId(applicationName, selectedRevision, modManager.getTenantId());
+        var isFirstRequest = request.getParameter("isFirstRequest");
         var mod = jagg.module("runtimeLogs");
+        var modApplication = jagg.module("application");
         try {
-            var logMap = mod.getFormattedRuntimeLogs(applicationKey, selectedRevision, "");
+            var applicationType = modApplication.getApplication(applicationKey).applicationType;
+            var logMap = mod.getFormattedRuntimeLogs(applicationKey, selectedRevision, applicationType, isFirstRequest);
+            print(logMap);
+        } catch(e) {
+            var msg = "Error while getting deployment logs";
+            log.error(e);
+            log.error(msg+" for application: "+applicationKey+ " and revision: "+ selectedRevision);
+            response.status = 400;
+            response.content = msg;
+        }
+    } else if (action == "downloadLogs") {
+
+        var applicationKey = request.getParameter("applicationKey");
+        var selectedRevision = request.getParameter("selectedRevision");
+        var selectedReplica = request.getParameter("selectedReplica");
+
+	//splitting from the second_ to get the selectedReplica ID
+        var undScore1 = selectedReplica.split("_")[0];
+        var undScore2 = selectedReplica.split("_")[1];
+        var bothUndScores = undScore1 + "_" + undScore2 + "_";
+        var selectedReplicaId = selectedReplica.split(bothUndScores)[1];
+
+        var mod = jagg.module("runtimeLogs");
+        var modApplication = jagg.module("application");
+        try {
+            var applicationType = modApplication.getApplication(applicationKey).applicationType;            
+	    var logMap = mod.getDownloadableRuntimeLogs(selectedReplicaId);
             print(logMap);
         } catch(e) {
             var msg = "Error while getting deployment logs";

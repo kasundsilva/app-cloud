@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -32,6 +32,7 @@ jagg.block("home", {
     getOutputs:function (inputs) {
         var log = new Log();
         var applicationModule = jagg.module("application");
+        var managerModule = jagg.module("manager");
         var appTypePropertyConfPath = jagg.getAppTypePropertyConfFilePath();
         var parsedObject = parse(appTypePropertyConfPath);
         var appTypesProperties = require(parsedObject);
@@ -39,18 +40,46 @@ jagg.block("home", {
         application["appTypeIcon"] = appTypesProperties[application.applicationType].icon;
 
         var selectedRevision = applicationModule.getSelectedRevisionFromSession(inputs.applicationKey);
+
         if(!selectedRevision && application.defaultVersion){
             selectedRevision = application.defaultVersion;
+        } else if (!application.defaultVersion){
+            selectedRevision = Object.keys(application.versions)[0];
         }
+        var restartCounts = applicationModule.getRestartCounts(application.applicationName, selectedRevision, application.applicationType);
         var selectedVersion = application.versions[selectedRevision];
         var conSpecCpu = selectedVersion.conSpecCpu;
         var conSpecMemory = selectedVersion.conSpecMemory;
+        var dataAnalyticsServerUrl = managerModule.getPropertyValue(DATA_ANALYTICS_SERVER_URL);
+        var tenantDomain = managerModule.getTenantDomain();
+
+        var pageTitle = managerModule.getCloudTypeProperties().pageTitle;
+        var maxAppCount = applicationModule.getMaxInstanceCount();
+        var applicationCount = applicationModule.getRunningApplicationVersionCount();
+        var cloudSpecificApplicationRepresentation = managerModule.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
+
+        var requestNewAppTypeSubjectMessage = 'Requesting to keep ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' : ' + application.applicationName + ' running for an extended period of time';
+        var requestNewAppTypeURL = managerModule.getPropertyValue(managerModule.getCloudTypeProperties().properties.supportUrl) +
+                '&subject=' + requestNewAppTypeSubjectMessage;
+
+        var dashboardProperties = managerModule.getDashboardTypeProperties();
+        var replicaCount = applicationModule.getReplicaCountForVersion(application.applicationName, selectedRevision);
 
         return {
             "application" : application,
-            "selectedRevision":selectedRevision,
+            "selectedRevision" : selectedRevision,
             "conSpecCpu" : conSpecCpu,
-            "conSpecMemory" : conSpecMemory
+            "conSpecMemory" : conSpecMemory,
+            "restartCounts" : restartCounts,
+            "pageTitle" : pageTitle,
+            "applicationCount" : applicationCount,
+            "maxAppCount" : maxAppCount,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation,
+            "requestNewAppTypeURL" : requestNewAppTypeURL,
+            "dashboardProperties" : dashboardProperties,
+            "dataAnalyticsServerUrl" : dataAnalyticsServerUrl,
+            "tenantDomain" : tenantDomain,
+            "replicaCount" : replicaCount
         };
     }
 

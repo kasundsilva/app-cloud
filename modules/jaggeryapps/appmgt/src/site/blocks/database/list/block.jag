@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -40,9 +40,13 @@ jagg.block("database/list", {
         } catch (e) {
             isSSRunning = false;
         }
+
+        var modManager = jagg.module("manager");
+        var cloudSpecificApplicationRepresentation = modManager.getCloudTypeProperties().cloudSpecificApplicationRepresentation;
         return {
             "hasDBs":hasDBs,
-            "isSSRunning":isSSRunning
+            "isSSRunning":isSSRunning,
+            "cloudSpecificApplicationRepresentation" : cloudSpecificApplicationRepresentation
         };
     }
 

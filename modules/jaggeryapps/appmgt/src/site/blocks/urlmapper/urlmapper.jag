@@ -1,6 +1,6 @@
 <%
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -25,30 +25,47 @@ var mod = jagg.module("application");
 
 (function () {
     var action = request.getParameter("action");
-
-    if (action == "verifyCustomDomain") {
-        var customUrl = request.getParameter("customUrl");
-        //The url which is generated for application version
-        var pointedUrl = request.getParameter("pointedUrl");
-        var success = mod.verifyCustomUrl(pointedUrl, customUrl);
-
-        if (!success) {
-            response.status = 400;
-            response.content = "The custom domain is not valid";
-        } else {
-            response.status = 200;
-            response.content = "The custom domain is valid";
-        }
-    } else if (action == "updateCustomUrl") {
+    if (action == "updateCustomUrl") {
         var customUrl = request.getParameter("customUrl");
         var applicationName = request.getParameter("applicationName");
-        var versionName = request.getParameter("versionName");
 
-        mod.addCustomUrl(customUrl, applicationName, versionName);
+        try {
+            mod.addCustomDomain(applicationName, customUrl);
+        } catch (e) {
+            var message = "Error while configuring custom url: " + customUrl + " for application name: "
+                    + applicationName;
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+    } else if (action == "setDefaultVersion") {
+        var applicationName = request.getParameter("applicationName");
+        var defaultVersion = request.getParameter("versionName");
+        var set = request.getParameter("set");
+        try {
+            mod.setDefaultVersion(applicationName, defaultVersion, set);
+        } catch (e) {
+            var message = "Error while setting default url to application : " + applicationName;
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
+    } else if (action == "isCustomDomainAvailable") {
+        var customDomain = request.getParameter("customDomain");
+        try {
+            print(mod.isCustomDomainAvailable(customDomain));
+        } catch (e) {
+            var message = "Error while checking if the custom domain " + customDomain + " exists.";
+            log.error(message);
+            log.error(e);
+            response.status = 500;
+            response.content = message;
+        }
     } else {
         throw new Error("No action specified");
     }
-
 }());
 
 %>

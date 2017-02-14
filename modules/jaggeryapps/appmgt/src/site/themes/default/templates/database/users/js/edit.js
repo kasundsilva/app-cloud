@@ -1,6 +1,6 @@
 /*
  *
- *   Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -95,7 +95,7 @@ function populateDatatable() {
                 var currentId = $(this).attr("id");
                 //getting the user name from  id, removing 'delete_'
                 var userName = currentId.substr(7);
-                jagg.popMessage({type:'confirm',title:'Delete User',content:'Are you sure you want to delete the user ' + userName + ' ?', okCallback:function(){deleteUser(userName);}, cancelCallback:function(){}});
+                jagg.popMessage({type:'confirm',title:'Delete User',content:'Are you sure you want to delete the user: ' + userName + ' ?', yesCallback:function(){deleteUser(userName);}, noCallback:function(){}});
             });
         } // end of call back function
     }); // end of datatable
@@ -114,10 +114,10 @@ function detachUserAndDropTemplate(userName){
     }, function (result) {
         if(result) {
             usersDatatable.api().ajax.reload();
-            jagg.message({content:'User ' + userName +' detached from database ' + dbName , type:'success', id:'userdetach'});
+            jagg.message({content:'Successfully removed user: ' + userName + ' from database: ' + dbName + '.' , type:'success', id:'userdetach'});
         }
     },function (jqXHR, textStatus, errorThrown) {
-            jagg.message({content:'Error occured while detaching the user from database' , type:'error', id:'userdetach'});
+            jagg.message({content:'An error occurred while removing user: ' + userName + ' from the database: ' + dbName + '.', type:'error', id:'userdetach'});
     });
 }
 
@@ -136,7 +136,7 @@ function attachUserWithPermissions(userName) {
                 }
         },function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status != 0){
-                    jagg.message({type:'error',content:'User ' + userName + ' attaching failed for database ' + dbName, id:'attach_user'});
+                    jagg.message({type:'error',content:'Failed to attach user: ' + userName + ' to database: ' + dbName + '.', id:'attach_user'});
                 }
         });
     }
@@ -148,7 +148,7 @@ function attachUserWithPermissions(userName) {
 function getCheckedPriviledgesAsJson() {
     var priviledgeCheckboxes = document.getElementsByName('chkbx_priviledge');
     if(priviledgeCheckboxes.length == 0) {
-        jagg.message({type:'error',content:'Please select one or more priviledges', id:'get_priviledges'});
+        jagg.message({type:'error',content:'Please select one or more priviledges.', id:'get_priviledges'});
         return ;
     }
     var allPriviledges = {};
@@ -195,7 +195,7 @@ function editUserPriviledges(userName, permissionsJson) {
             usersDatatable.api().ajax.reload();
         },function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status != 0){
-                    jagg.message({type:'error',content:'User ' + userName + ' attaching failed for database ' + dbName, id:'attach_user'});
+                    jagg.message({type:'error',content:'Failed to attach user: ' + userName + ' to database: ' + dbName + '.', id:'attach_user'});
                 }
         });
 }
@@ -211,7 +211,7 @@ function deleteUser(userName) {
             usersDatatable.api().ajax.reload();
         },function (jqXHR, textStatus, errorThrown) {
             if (jqXHR.status != 0) {
-                jagg.message({content:'Error occurred while deleting user: ' + userName + 'User already attached to a database.',type:'error', id:'dbusercreation' });
+                jagg.message({content:'Cannot delete user: ' + userName + ' as the user is already attached to a database.',type:'error', id:'dbusercreation' });
             }
         });
 }

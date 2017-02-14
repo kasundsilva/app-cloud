@@ -26,7 +26,7 @@ var managerModule = jagg.module("manager");
 var log = new Log('site/blocks/admin/admin.jag');
 (function(){
 
-    if (!jagg.getUser() && !(managerModule.getTenantDomain() == 'carbon.super')) {
+    if (!(managerModule.getTenantDomain() == 'carbon.super')) {
         print(UNAUTHORIZED_ERROR_RESPONSE);
         return;
     }
@@ -36,14 +36,181 @@ var log = new Log('site/blocks/admin/admin.jag');
             adminModule.stopIdleApplicationsByRunningTimePeriod(numberOfHours);
 
             response.status = 200;
-            response.message = "Idle applications are successfully stopped.";
-            print(response);
+            response.content = "Idle applications are successfully stopped.";
         } catch (e) {
             response.status = 400;
-            response.message = "Some of idle applications could not be stopped.";
-            print(response);
+            response.content = "Some of idle applications could not be stopped.";
+        }
+    } else if (action == "whiteListApplicationVersion") {
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+        var tenantDomain = request.getParameter("tenantDomain");
+        try {
+            adminModule.whiteListApplicationVersion(applicationName, applicationRevision, tenantDomain);
+
+            response.status = 200;
+            response.content = "White listed the given application version.";
+        } catch (e) {
+            response.status = 400;
+            response.content = "White listing application version failed.";
+        }
+    } else if (action == "whiteListTenant") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var maxAppCount = request.getParameter("maxAppCount");
+        var maxDatabaseCount = request.getParameter("maxDatabaseCount");
+        var cloudType = request.getParameter("cloudType");
+        var replicaCount = request.getParameter("replicaCount");
+        try {
+            adminModule.whiteListTenant(tenantDomain, maxAppCount, maxDatabaseCount, cloudType, replicaCount);
+            response.status = 200;
+            response.content = "White listed the given tenant.";
+        } catch (e) {
+            response.status = 400;
+            response.content = "White listing tenant failed.";
+        }
+    } else if (action == "getApplicationVersions") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var applicationName = request.getParameter("applicationName");
+
+        try {
+            var applicationVersionList = adminModule.getApplicationVersions(tenantDomain, applicationName);
+            print(applicationVersionList);
+        } catch (e) {
+            response.status = 400;
+            response.content = "Get list of application failed";
+        }
+    } else if (action == "getTenantMaxAppCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var cloudType = request.getParameter("cloudType");
+
+        try {
+            var maxApplicationCount = adminModule.getTenantAppMaxCount(tenantDomain, cloudType);
+            print(maxApplicationCount);
+        } catch (e) {
+            response.status = 400;
+            response.content = "Get list of max application count failed.";
         }
 
+    } else if (action == "getTenantMaxReplicaCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var cloudType = request.getParameter("cloudType");
+
+        try {
+            var maxReplicaCount = adminModule.getTenantReplicaCount(tenantDomain, cloudType);
+            print(maxReplicaCount);
+        } catch (e) {
+            response.status = 400;
+            response.content = "Get list of max application count failed.";
+        }
+    } else if (action == "updateConSpec") {
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+        var tenantDomain = request.getParameter("tenantDomain");
+        var memory = request.getParameter("memory");
+        var cpu = request.getParameter("cpu");
+
+        try {
+            adminModule.updateContainerSpecification(tenantDomain, applicationName, applicationRevision, memory, cpu);
+            
+            response.status = 200;
+            response.content = "Cpu and Memory increased for given application version";
+        } catch (e) {
+            response.status = 400;
+            response.content = "Cpu and Memory increased failed for given application version";
+        }
+    } else if (action == "whiteListMaximumDatabaseCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var maxDatabaseCount = request.getParameter("maxDatabaseCount");
+        var cloudType = request.getParameter("cloudType");
+
+        try {
+            adminModule.whiteListMaxDatabaseCount(tenantDomain, maxDatabaseCount, cloudType);
+
+            response.status = 200;
+            response.content = "White listed the maximum database count for given tenant.";
+        } catch (e) {
+            var msg = "Error while white listing tenant for maximum database count.";
+            log.error(msg);
+            response.status = 400;
+            response.content = "White listing tenant for maximum database count failed.";
+        }
+    } else if (action == "whiteListMaximumApplicationCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var maxAppCount = request.getParameter("maxAppCount");
+        var cloudType = request.getParameter("cloudType");
+
+        try {
+            adminModule.whiteListMaxApplicationCount(tenantDomain, maxAppCount, cloudType);
+
+            response.status = 200;
+            response.content = "White listed the maximum application count for given tenant.";
+        } catch (e) {
+            var msg = "Error while white listing tenant for maximum application count.";
+            log.error(msg);
+            response.status = 400;
+            response.content = "White listing tenant for maximum application count failed.";
+        }
+
+    } else if (action == "whiteListMaximumReplicaCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var cloudType = request.getParameter("cloudType");
+        var replicaCount = request.getParameter("replicaCount");
+
+        try {
+            adminModule.whiteListMaxReplicaCount(tenantDomain, cloudType, replicaCount);
+
+            response.status = 200;
+            response.content = "White listed the maximum application count for given tenant.";
+        } catch (e) {
+            var msg = "Error while white listing tenant for maximum application count.";
+            log.error(msg);
+            response.status = 400;
+            response.content = "White listing tenant for maximum application count failed.";
+        }
+
+    } else if (action == "getTenantMaxDatabaseCount") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var cloudType = request.getParameter("cloudType");
+
+        try {
+            var maxDatabaseCount = adminModule.getTenantMaxDatabaseCount(tenantDomain, cloudType);
+            print(maxDatabaseCount);
+        } catch (e) {
+            response.status = 400;
+            response.content = "Getting maximum database count failed.";
+        }
+    } else if (action == "deleteTenant") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        try {
+            adminModule.deleteTenant(tenantDomain);
+            response.status = 200;
+            response.content = "Tenant :" + tenantDomain + " successfully deleted.";
+        } catch (e) {
+            log.error(e);
+            response.status = 400;
+            response.content = "Failed to delete tenant:" + tenantDomain + ' completely due to ' + e.message;
+        }
+    } else if (action == "getApplicationVersionsOfTenants") {
+        try {
+            print(adminModule.getApplicationVersionsOfTenants());
+        } catch (e) {
+            log.error(e);
+            response.status = 400;
+            response.content = 'Failed to redeploy all applications of all tenants due to ' + e.message;
+        }
+    } else if (action == "redeployApplicationVersion") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var name = request.getParameter("applicationName");
+        var hashId = request.getParameter("applicationVersionHashId");
+        var version = request.getParameter("applicationVersion");
+        var type = request.getParameter("applicationType");
+        try {
+            print(adminModule.redeployApplicationVersion(tenantDomain, name, hashId, version, type));
+        } catch (e) {
+            log.error(e);
+            response.status = 400;
+            response.content = 'Failed to redeploy all applications of all tenants due to ' + e.message;
+        }
     } else {
         throw new Error("No action specified for: " + action);
     }

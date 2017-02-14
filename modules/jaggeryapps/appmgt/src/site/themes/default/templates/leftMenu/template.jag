@@ -1,0 +1,98 @@
+<%
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
+include("/jagg/jagg.jag");
+
+jagg.template("leftMenu", function (inputs, outputs, jagg) {
+    var applicationKey = outputs.applicationKey;
+    var applicationName = outputs.applicationName;
+    var versionKey = outputs.versionKey;
+    var selectedRevision = outputs.selectedRevision;
+    var pageName = outputs.pageName;
+    var cloudTitle = outputs.cloudTitle;
+    var cloudIcon = outputs.cloudIcon;
+    var managerModule = jagg.module("manager");
+    var hasCustomURLSettingsAccess = managerModule.hasCustomURLSettingsAccess();
+
+    // converting application name to camel case ; to display in breadcumb
+    var camelizedAppName = applicationName.split(' ').map(function(item){
+        item = item.toLowerCase();
+        return item.substring(0,1).toUpperCase() + item.substring(1);
+    }).join(' ');
+
+
+    %>
+
+ <div class="navbar navbar-secondary">
+    <div class="container-fliud">
+        <div class="row">
+            <div class="col-md-8 breadcrumb-secondary">
+                <a href="/appmgt/site/pages/index.jag">
+                    <i class="<%=cloudIcon%> visible-xs visible-lg"></i>
+                </a>
+                <span class="hidden-xs"><a href="/appmgt/site/pages/index.jag"><%=cloudTitle%></a> / <a href="/appmgt/site/pages/home.jag?applicationKey=<%=applicationKey%>"> <%=camelizedAppName%></a> / <%=pageName%></span>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<div class="inner-wrapper">
+
+<!-- left pane wrapper -->
+<div class="left-pane ">
+    <ul >
+        <li class="<% if (pageName == "Overview") { %>selected<%}%>">
+            <ul class="overview-inner-list">
+                <li> <a id="leftMenuOverview" href="/appmgt/site/pages/home.jag?applicationKey=<%=applicationKey%>"><i class="left-menu-icon fw fw-laptop"></i>Overview</a></li>
+            </ul>
+        </li>
+        <li class="<% if (pageName == "Environment Variables") { %>selected<%}%>">
+                <a id="leftMenuEnvVars" href="/appmgt/site/pages/envs.jag?versionKey=<%=versionKey%>&applicationKey=<%=applicationKey%>">
+                <i class="left-menu-icon fw fw-gadget"></i>Environment Variables</a>
+        </li>
+        <li class="<% if (pageName == "Tags") { %>selected<%}%>">
+                <a id="leftMenuTagSet" href="/appmgt/site/pages/tags.jag?applicationKey=<%=applicationKey%>&versionKey=<%=versionKey%>">
+                <i class="left-menu-icon fw fw-tag"></i>Tags</a>
+        </li>
+        <li class="<% if (pageName == "Logs") { %>selected<%}%>">
+                <a href="/appmgt/site/pages/runtimeLogs.jag?applicationKey=<%=applicationKey%>&versionKey=<%=versionKey%>">
+                <i class="left-menu-icon fw fw-hdd"></i>Logs</a>
+        </li>
+        <li id="customUrlPage" style="display: none" class="<% if (pageName == "Custom URL") { %>selected<%}%>">
+                <a href="/appmgt/site/pages/customurl.jag?applicationKey=<%=applicationKey%>">
+                <i class="left-menu-icon fw fw-uri"></i>Custom URL</a>
+        </li>
+        <li class="<% if (pageName == "Settings") { %>selected<%}%>">
+                <a href="/appmgt/site/pages/settings.jag?applicationKey=<%=applicationKey%>">
+                <i class="left-menu-icon fw fw-settings"></i>Settings</a>
+        </li>
+
+    </ul>
+ </div>
+
+<script>
+    var hasCustomURLSettingsAccess = "<%=hasCustomURLSettingsAccess%>";
+    $(document).ready(function() {
+        if (hasCustomURLSettingsAccess == "true") {
+            $("#customUrlPage").css("display", "block");
+        }
+    });
+</script>
+<%
+}); %>

@@ -17,13 +17,16 @@
  *   under the License.
  */
 
-jagg.template("page/master", function(inputs, outputs, jagg) {%>
+jagg.template("page/master", function(inputs, outputs, jagg) {
+    var pageTitle = inputs.pageTitle;
+    %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>WSO2 AppCloud</title>
+    <title> <%=pageTitle%> </title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/bootstrap-3.2.0/bootstrap.min.css'))%>">
     <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-wso2-1.0.0/css/font-wso2.css'))%>">
     <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-awesome-4.2.0/font-awesome.min.css'))%>">
@@ -35,19 +38,37 @@ jagg.template("page/master", function(inputs, outputs, jagg) {%>
     <link rel="shortcut icon" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('assets/img/favicon.ico'))%>" type="image/x-icon"/>
 </head>
 
-<body class="top-notification-active">
-    <div class="top-notification">
-        <span class="hidden-xs">This new version of WSO2 App Cloud still in beta stage. Click here for the <a href="https://apps.cloud.wso2.com">old</a> version.</span>
-        <span class="visible-xs">WSO2 App Cloud in beta stage. Click here for the <a href="https://apps.cloud.wso2.com">old</a> version.</span>
-    </div>
+<!--To enable notification banner, uncomment following HTML code snippet-->
+<body>
+    <!--body class="top-notification-active">
+        <div class="top-notification">
+            <span class="hidden-xs">We are upgrading <%=pageTitle%></span>
+        </div>
+    </body-->
     <div id="wrap">
         <div id="header"><% jagg.includeBlocks(outputs.header); %></div>
         <div id="body"><% jagg.includeBlocks(outputs.body); %></div>
         <div id="footer" class="footer-main"><% jagg.includeBlocks(outputs.footer); %></div>
     </div>
-
 </body>
 
+<script>
+    var rightPane = $('.right-pane');
+    var leftPane = $('.left-pane');
+
+
+    $('.side-pane-trigger').click(function(){
+        if (rightPane.hasClass('visible')){
+            rightPane.animate({"left":"0%", "width":"100%"}, "slow").removeClass('visible');
+            leftPane.animate({"left":"-15%"}, "slow");
+            $('.side-pane-trigger').html('<i class="fa fa-reorder"></i>');
+        } else {
+            rightPane.animate({"left":"15%", "width":"85%"}, "slow").addClass('visible');
+            leftPane.animate({"left":"0%"}, "slow");
+            $('.side-pane-trigger').html('<i class="fw fw-left"></i>');
+        }
+    });
+</script>
 </html>
 
 <% }); %>

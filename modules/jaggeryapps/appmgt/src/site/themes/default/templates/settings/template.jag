@@ -1,0 +1,232 @@
+<%
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+include("/jagg/constants.jag");
+jagg.template("settings", function (inputs, outputs, jagg) { %>
+<%
+    var application = outputs.application;
+    var applicationName = application.applicationName;
+    var applicationKey = application.hashId;
+    var defaultVersion = application.defaultVersion;
+    var versions = application.versions;
+    var customUrl = application.customUrl;
+    var tenantDomain = outputs.tenantDomain;
+    var scale = request.getParameter("scale");
+    var maxReplicaCount = outputs.maxReplicaCount;
+    var requestIncreaseReplicaLimitURL = outputs.requestIncreaseReplicaLimitURL;
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
+
+    var versionString = "";
+    for (var version in versions) {
+        var versionName = versions[version].versionName;
+        if (defaultVersion == versionName) {
+            versionString += "<option" + ' value="' + versionName + '" ' + " selected>" + versionName + "</option>";
+        } else {
+            versionString += "<option" + ' value="' + versionName + '" ' + ">" + versionName + "</option>";
+        }
+    }
+    var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
+    var privateURL = outputs.privateURL;
+    var publicURL = outputs.publicURL;
+%>
+
+<!-- start of setting global javascript variable values from jaggery side -->
+<script type="text/javascript" charset="utf-8">
+    var applicationName = "<%=applicationName%>";
+    var tenantDomain = "<%=tenantDomain%>";
+    var scale = "<%=scale%>";
+    var maxReplicaCount = <%=maxReplicaCount%>;
+    var requestIncreaseReplicaLimitURL = "<%=requestIncreaseReplicaLimitURL%>";
+    var cloudSpecificApplicationRepresentation = "<%=cloudSpecificApplicationRepresentation%>";
+</script>
+<!-- end of setting global javascript variable -->
+
+<div class="right-pane visible">
+<!-- BOF App factory menu actionbar -->
+<input type="hidden" maxlength="19" id="defaultDomain" name="defaultDomain" value=""/>
+<div class="action-bar">
+    <div class="side-pane-trigger">
+        <i class="fw fw-left"></i>
+    </div>
+</div><!-- EOF App factory menu actionbar-->
+
+<div class="container-fluid app-content-section">
+    <div class="row">
+         <div class="col-md-12 msg-issues">
+             This allows you to change the current settings of your <%=cloudSpecificApplicationRepresentation.toLowerCase()%>.
+         </div>
+    </div>
+    <div class="row">
+            <div id="push"></div>
+            <div class="col-md-7 forms cloud-tab">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <% if(scale != "true"){ %>
+                        <li role="presentation" class="active"><a href="#default-version" aria-controls="default-version" role="tab" data-toggle="tab">Default Version</a></li>
+                        <%} else {%>
+                        <li role="presentation"><a href="#default-version" aria-controls="default-version" role="tab" data-toggle="tab">Default Version</a></li>
+                        <%}%>
+                        <li role="presentation"><a href="#exposure-level" aria-controls="exposure-level" role="tab" data-toggle="tab">Application Privacy</a></li>
+                        <% if(scale == "true"){ %>
+                        <li role="presentation" class="active"><a href="#scale-deployment-panel" aria-controls="scale-deployment-panel" role="tab" data-toggle="tab">Scale Deployment</a></li>
+                        <%} else {%>
+                        <li role="presentation"><a href="#scale-deployment-panel" aria-controls="scale-deployment-panel" role="tab" data-toggle="tab">Scale Deployment</a></li>
+                        <%}%>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <% if(scale != "true"){ %>
+                        <div role="tabpanel" class="tab-pane active" id="default-version">
+                        <% } else { %>
+                        <div role="tabpanel" class="tab-pane" id="default-version">
+                        <% } %>
+                            <div class="from-group-margin">
+                                <label for="default-version" id="lbl-default-version">Current Default Version: <%=defaultVersion%></label>
+                            </div>
+                            <div class="from-group-margin">
+                                <% if(application.customURL != null) { %>
+                                    <label for="custom-url">Custom URL : <%=application.customURL%>
+                                        <p class="help-block"><b>Tip</b>: The <b>Default Version</b> option means that you make this version the default in a group of different versions of the application. A default version can be invoked through the above custom URL.</p>
+                                        <p class="help-block">For example, if you mark version 2.0 as the default version when the application has 1.0 and 3.0 versions as well, requests made to the custom URL get automatically routed to version 2.0.</p>
+                                    </label>
+                                <% } else if (application.defaultURL != null) { %>
+                                    <label for="custom-url"><span class="default-url">Default URL : <%=application.defaultURL%></span>
+                                        <p class="help-block"><b>Tip</b>: The <b>Default Version</b> option means that you make this version the default in a group of different versions of the application. A default version can be invoked without specifying the version number in the URL.</p>
+                                        <p class="help-block">For example, if you mark version 2.0 as the default version when the application has 1.0 and 3.0 versions as well, requests made to the default URL get automatically routed to version 2.0. The default version gets two URLs- one with the version and the other without. You can invoke a default version using both URLs.</p>
+                                    </label>
+                                <% } %>
+                            </div>
+                            <div class="form-group">
+                                <label for="production-custom">New Default Version: </label>
+                                 <select id="default-version" name="default-version" class="form-control"
+                                 placeholder="Select a version" allowClear="true">
+                                    <%=versionString%>
+                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <a type="button" class="cu-btn cu-btn-sm cu-btn-blue" id="update-default-version">
+                                <span class="fw-stack fw-lg btn-action-ico">
+                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                    <i class="fw fw-add fw-stack-1x"></i>
+                                </span>
+                                    Update
+                                </a>
+                            </div>
+                        </div>
+
+                        <div role="tabpanel" class="tab-pane" id="exposure-level">
+                            <div class="from-group-margin">
+                                <p class="help-block">​​​By default, the applications you create in WSO2 App Cloud are public and accessible via the Internet. In order to secure and limit access to your applications, change your application's privacy using the following setting.</p>
+                            </div>
+                            <div class="from-group-margin">
+                            <div class="form-group">
+                                <label for="production-custom">Available Versions: </label>
+                                 <select id="exposure-level-version-list" name="exposure-level" class="form-control"
+                                 placeholder="Select a version" allowClear="true">
+                                    <%=versionString%>
+                                 </select>
+                            </div>
+                            <div class="form-group-margin">
+                                <div class="radio">
+                                  <label>
+                                      <input type="radio" name="security-radio" id="security-public" class="custom-radio" value="public" checked="checked"/><span class="default-url">Public</span>
+                                      <p class="help-block">Endpoints are visible to the Internet via the URL <b>http://<%=tenantDomain.toLowerCase()%>-<%=applicationName.toLowerCase()%>.<%=publicURL%></b>. You can also access the public endpoints internally from WSO2 Cloud via the URL <b>http://<%=tenantDomain.toLowerCase()%>-<%=applicationName.toLowerCase()%>.<%=privateURL%></b>.</p>
+                                  </label>
+                                </div>
+                                <div class="radio">
+                                  <label>
+                                      <input type="radio" name="security-radio" id="security-private" class="custom-radio" value="private"/><span class="default-url">Private</span>
+                                          <p class="help-block">Endpoints are only visible internally from WSO2 Cloud via the URL <b>http://<%=tenantDomain.toLowerCase()%>-<%=applicationName.toLowerCase()%>.<%=privateURL%></b>.</p>
+                                      </label>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="form-group">
+                                <a type="button" class="cu-btn cu-btn-sm cu-btn-blue" id="update-exposure-level">
+                                <span class="fw-stack fw-lg btn-action-ico">
+                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                    <i class="fw fw-add fw-stack-1x"></i>
+                                </span>
+                                    Update
+                                </a>
+                            </div>
+                        </div>
+                        <% if(scale == "true"){ %>
+                        <div role="tabpanel" class="tab-pane active" id="scale-deployment-panel">
+                        <% } else { %>
+                        <div role="tabpanel" class="tab-pane" id="scale-deployment-panel">
+                        <% } %>
+                            <div class="from-group-margin">
+                                <p class="help-block">By default WSO2 App Cloud will create your deployment in a single instance. But through the following settings you can horizontally scale your application to make it highly available.</p>
+                            </div>
+                            <div class="from-group-margin">
+                                <div class="form-group">
+                                    <label for="production-scale">Available Versions: </label>
+                                     <select id="scale-deployment-list" name="scale-deployment" class="form-control"
+                                     placeholder="Select a version" allowClear="true">
+                                        <%=versionString%>
+                                     </select>
+                                </div>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-xs-3">
+                                        <label for="production-scale">Number of instances:</label>
+                                          <div class="input-group spinner">
+                                            <input type="text" class="form-control" min="1" max="<%=maxReplicaCount%>" id="replica-count" disabled>
+                                            <div class="input-group-btn-vertical">
+                                              <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></button>
+                                              <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                    </div>
+                                    <div class="row" >
+                                        <div class="col-md-12" style="margin-top: 5px; font-style: italic;" id="remaining-instances">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <a type="button" class="cu-btn cu-btn-sm cu-btn-blue" id="scale-deployment">
+                                <span class="fw-stack fw-lg btn-action-ico">
+                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                    <i class="fw fw-add fw-stack-1x"></i>
+                                </span>
+                                    Update
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+</div><!-- /.container -->
+<div class="clearfix"></div>
+<div id="push"></div>
+</div><!-- /.right pane -->
+</div><!-- /.inner wrapper (comes from left menu template) -->
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/bootstrap-3.2.0/bootstrap.min.js'))%>"></script>
+<!-- include custom js functions -->
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/custom/custom.js'))%>"></script>
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/settings/js/settings.js'))%>"></script>
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/custom/loader.js'))%>"></script>
+
+   <%
+}); %>
