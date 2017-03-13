@@ -63,6 +63,7 @@ function getExposureLevel() {
         versionName:versionName,
         applicationName:applicationName
     },function (result) {
+        result = result.trim();
         $("#security-" + result).prop("checked", true);
     },function (jqXHR, textStatus, errorThrown) {
         jagg.message({content: "Error occurred while retrieving the endpoint security level of the selected "
