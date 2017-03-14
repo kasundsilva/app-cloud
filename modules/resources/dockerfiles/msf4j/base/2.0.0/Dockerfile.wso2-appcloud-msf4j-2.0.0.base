@@ -18,7 +18,7 @@
 #
 # ------------------------------------------------------------------------
 
-FROM anapsix/alpine-java:8_server-jre_unlimited
+FROM anapsix/alpine-java:8_jdk
 
 ENV MSF4J_HOME /home/wso2user/
 ENV PATH $MSF4J_HOME:$PATH
@@ -28,7 +28,8 @@ RUN apk update && \
     apk add wget && \
     mkdir -p "$MSF4J_HOME" && \
     mkdir -p "$HTTPS_CONF/" && \
-    addgroup wso2 && adduser -g '' -s /bin/bash -D -G wso2 wso2user 
+    addgroup wso2 && adduser -g '' -s /bin/bash -D -G wso2 wso2user && \
+    chown wso2user:wso2 "$MSF4J_HOME" "$HTTPS_CONF/"
 
 COPY wso2carbon.jks "$HTTPS_CONF"
 COPY netty-transports.yaml "$HTTPS_CONF"
