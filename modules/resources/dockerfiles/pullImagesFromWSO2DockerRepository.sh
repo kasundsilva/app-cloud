@@ -54,3 +54,6 @@ docker_pull docker.wso2.com/wso2-cloud/wso2dss:3.5.1-alpine3.4-oracle-jdk1.8.0
 #esb base image
 docker_pull docker.wso2.com/wso2-cloud/wso2esb:5.0.0-alpine3.4-oracle-jdk1.8.0
 
+#ballerina base image
+docker_pull docker.wso2.com/wso2-cloud/ballerina:0.8.x-base
+
