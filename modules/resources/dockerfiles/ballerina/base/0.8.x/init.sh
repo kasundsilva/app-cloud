@@ -26,9 +26,9 @@ else
     #Calculate max heap size and the perm size for Java Opts
     #Check whether TOTAL_MEMORY env variable defined or and not empty
         if [[ $TOTAL_MEMORY && ${TOTAL_MEMORY-_} ]]; then
-            let MAX_HEAP_SIZE=$TOTAL_MEMORY/256*128
-            let MAX_META_SPACE_SIZE=$TOTAL_MEMORY/256*128
-            JAVA_OPTS="-Xms128m -Xmx"$MAX_HEAP_SIZE"m -XX:MaxMetaspaceSize="$MAX_META_SPACE_SIZE"m"
+            let MAX_HEAP_SIZE=$TOTAL_MEMORY*128/256
+            JAVA_OPTS="-Xms64m -Xmx"$MAX_HEAP_SIZE"m -XX:MaxMetaspaceSize=64m"
+            echo "Default JAVA_OPTS = "$JAVA_OPTS
             export JAVA_OPTS=$JAVA_OPTS
         fi
 fi
