@@ -91,7 +91,6 @@ var throttlingModule = jagg.module("throttling");
             } else {
                 var message = "Error while scaling deployment for application: " + applicationName + " version : " + versionName + ", given replica count exceeds the tier limit.";
                 log.error(message);
-                log.error(e);
                 response.status = 400;
                 response.content = message;
             }
