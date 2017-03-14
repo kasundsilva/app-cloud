@@ -45,7 +45,7 @@ if (uriMatcher.match(PAGE_URL)) {
             if (action != "login") {
                 // check applicationName
                 var applicationName = request.getParameter("applicationName");
-                if ((action != "createApplication" && action != "getApplicationHashIdOfMatchingAppName" && action != "generateApplicationHashId" && action != "getVersionHashId")
+                if ((action!= "uploadExistingArchive" && action != "createApplication" && action != "getApplicationHashIdOfMatchingAppName" && action != "generateApplicationHashId" && action != "getVersionHashId")
                     && (applicationName != null && applicationName != 'null')) {
                     var isApplicationNameValid = applicationModule.isApplicationNameValid(applicationName);
                     if (!isApplicationNameValid) {
