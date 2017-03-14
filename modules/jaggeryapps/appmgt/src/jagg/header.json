@@ -63,7 +63,7 @@
       "Logout": {
         "url": "https://cloudmgt.cloud.wso2.com/cloudmgt/site/pages/logout.jag",
         "icon": "fa fa-sign-out",
-        "target": "_blank",
+        "target": "_self",
         "dropDown": "false"
       }
     }
