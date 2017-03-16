@@ -57,8 +57,8 @@ rm -rf $CARBON_HOME_PATH/repository/deployment/server/webapps/*
 
 #set user defined TIMEZONE
 if [ -n "$TIMEZONE" ]; then
-	export TIMEZONE=$TIMEZONE
-	echo ${TIMEZONE} >/etc/timezone
+        cp /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+        echo $TIMEZONE >  /etc/timezone
 fi
 
 #Enabling log enabled log4j properties

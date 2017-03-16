@@ -23,6 +23,9 @@ ENV INSTALL_PATH /home/wso2user/
 ENV CARBON_HOME_PATH $INSTALL_PATH/wso2esb-5.0.0
 ENV RESOURCES_PATH $INSTALL_PATH/resources
 
+RUN apk add tzdata --no-cache
+RUN chown -R wso2user /etc
+
 USER wso2user
 
 # Add the startup script
