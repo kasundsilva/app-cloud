@@ -268,8 +268,7 @@
                      class="org.apache.axis2.transport.udp.UDPSender"/>
     <transportSender name="local"
                      class="org.apache.axis2.transport.local.LocalTransportSender"/ -->
-	<transportSender name="http"
-                     class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">
+    <transportSender name="http" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">
         <parameter name="PROTOCOL">HTTP/1.1</parameter>
         <parameter name="Transfer-Encoding">chunked</parameter>
         <parameter name="cacheHttpClient">true</parameter>
@@ -278,8 +277,7 @@
         <!--  <parameter name="OmitSOAP12Action">true</parameter>  -->
     </transportSender>
 
-    <transportSender name="https"
-                     class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">
+    <transportSender name="https" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">
         <parameter name="PROTOCOL">HTTP/1.1</parameter>
         <parameter name="Transfer-Encoding">chunked</parameter>
         <parameter name="cacheHttpClient">true</parameter>

@@ -18,6 +18,7 @@
  *
  */
 
+var currentReplicaCount = 0;
 // page initialization
 $(document).ready(function () {
     getExposureLevel();
@@ -62,6 +63,7 @@ function getExposureLevel() {
         versionName:versionName,
         applicationName:applicationName
     },function (result) {
+        result = result.trim();
         $("#security-" + result).prop("checked", true);
     },function (jqXHR, textStatus, errorThrown) {
         jagg.message({content: "Error occurred while retrieving the endpoint security level of the selected "
@@ -85,6 +87,7 @@ function getReplicaCountForVersion() {
         versionName: versionName
     },function scaleDeploymentSuccess(result) {
         $("#replica-count").val(result);
+        currentReplicaCount = result;
         setRemainingInstanceCount(maxReplicaCount, result);
 
     },function (jqXHR, textStatus, errorThrown) {
@@ -98,13 +101,16 @@ function setRemainingInstanceCount(replicaLimit, replicaCount){
 }
 
 function scaleDeploymentPopUp(){
-    jagg.popMessage({type:'confirm', modalStatus: true, title:'Scale Deployment ' + cloudSpecificApplicationRepresentation + ' Version',content:'Are your sure you want to scale ' +
-        $("#scale-deployment-list option:selected").val() + ' version of this ' + cloudSpecificApplicationRepresentation.toLowerCase() +
-        ' to ' + $("#replica-count").val() + ' instances ?',
-        yesCallback:function(){
-           scaleDeployment();
-        }
-    });
+    if(currentReplicaCount != parseInt($("#replica-count").val())) {
+        jagg.popMessage({type:'confirm', modalStatus: true, title:'Scale Deployment ' + cloudSpecificApplicationRepresentation + ' Version',content:'Are your sure you want to scale ' +
+            $("#scale-deployment-list option:selected").val() + ' version of this ' + cloudSpecificApplicationRepresentation.toLowerCase() +
+            ' to ' + $("#replica-count").val() + ' instances ?',
+            yesCallback:function(){
+                scaleDeployment();
+            }
+        });
+    }
+
 }
 
 function scaleDeployment(){

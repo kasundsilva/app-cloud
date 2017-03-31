@@ -69,7 +69,8 @@ public class ContainerSpecDaoImpl implements ContainerSpecsDao {
 		List<ContainerSpecifications> containerSpecsList = new ArrayList<ContainerSpecifications>();
 		try {
 			dbConnection = DBUtil.getConnection();
-			preparedStatement = dbConnection.prepareStatement(SQLQueryConstants.GET_CONTAINER_SPECIFICATIONS_BY_RUNTIME_ID);
+			preparedStatement = dbConnection.prepareStatement(
+					SQLQueryConstants.GET_CONTAINER_SPECIFICATIONS_BY_RUNTIME_ID);
 			preparedStatement.setInt(1, runtimeId);
 			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
@@ -203,6 +204,13 @@ public class ContainerSpecDaoImpl implements ContainerSpecsDao {
 		return containerSpec;
 	}
 
+	/**
+	 * Method to get container specification given the result set.
+	 *
+	 * @param rs result set
+	 * @return container specification
+	 * @throws SQLException
+	 */
 	private ContainerSpecifications getContainerSpecifications(ResultSet rs) throws SQLException {
 		ContainerSpecifications containerSpec = new ContainerSpecifications();
 		containerSpec.setId(rs.getInt(SQLQueryConstants.CON_SPEC_ID));

@@ -126,14 +126,15 @@ var log = new Log();
         var uploadedFileName = request.getParameter("uploadedFileName");
 
         var appIcon = request.getFile("appIcon");
-        var uploadedArtifact = request.getFile("fileupload");
-
+        var uploadedArtifacts = request.getAllFiles();
         var isFileAttached = request.getParameter("isFileAttached");
         if (isFileAttached == 'true') {
-            if (uploadedArtifact == null) {
+            if (uploadedArtifacts == null) {
                 response.status = 400;
                 response.content = "Bad request : fileupload is required!";
-                return;
+                //'return ;' is added because when "createApplication" is called from the REST API we need to
+                // return the error response
+                return ;
             }
         }
 
@@ -174,35 +175,7 @@ var log = new Log();
             applicationContext = null;
         }
 
-        var remoteImageUrl = request.getParameter("remoteImageUrl");
-        // validating docker image url pattern, this will not be required when we validate this from the front end.
-        // At the moment custom docker image app creation happens only by using rest API, hence this validation is required.
-        if(remoteImageUrl) {
-            var remoteImageUrlSegments = remoteImageUrl.split(":");
-            if(remoteImageUrlSegments.length < 2) {
-                logMessage = "Bad request : Image url is invalid, it should be image_name:tag";
-                log.warn(logMessage);
-                response.status = 400;
-                response.content = logMessage;
-                return;
-            }
-        }
-
-        // this is temporary code, will be removed when custom docker images feature is fully completed
-        // this is to enforce use only the local registry images to create apps via custom docker images
-        var localRegistry = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL);
-        var localRegistry_infra = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL_INFRA);
-        if (remoteImageUrl && remoteImageUrl.indexOf(localRegistry) == -1 && remoteImageUrl.indexOf(localRegistry_infra) == -1) {
-            logMessage = "Bad request : Allowed Docker images only from local registry : " + localRegistry;
-            log.warn(logMessage);
-            response.status = 400;
-            response.content = logMessage;
-            return;
-        }
-
-        //var userName = request.getParameter("userName");
-        //var password = request.getParameter("password");
-
+        var imageId = request.getParameter("imageId");
         var setDefaultVersion = request.getParameter("setDefaultVersion");
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
@@ -214,7 +187,6 @@ var log = new Log();
             return;
         } else {
             var isAppCountLowerThanMax = false;
-
             //Added to restrict application creation using the REST api
             //If the user is trying to create a new version first check if an application with the given name exists
             //before creating the new application version
@@ -239,41 +211,33 @@ var log = new Log();
                     response.content = logMessage;
                     return;
                 }
-            } else {
-                //Since the user is trying to create a new application we check if the existing application count is
-                //less than the maximum amount of applications that can be created
-                var RunningApplicationCount = applicationModule.getRunningApplicationVersionCount();
-                var maxRunningAppCount = applicationModule.getMaxInstanceCount();
-                if (RunningApplicationCount < maxRunningAppCount) {
-                    isAppCountLowerThanMax = true;
-                } else {
-                    logMessage = "Application creation request not accepted because the application count has " +
-                            "reached maximum limit of " + maxRunningAppCount;
-                    log.warn(logMessage);
-                    response.status = 200;
-                    response.content = logMessage;
-                    return;
-                }
             }
-            if (isAppCountLowerThanMax) {
+            var isApplicationCreatePossible = jagg.module("throttling").isApplicationCreatePossible(conSpecCpu, conSpecMemory);
+            if (isApplicationCreatePossible) {
                 if (isFileAttached == 'true') {
-                    var fileSuccessfullyUploaded = applicationModule.
-                        uploadExistingArchive(uploadedArtifact, appTypeName, applicationName, applicationRevision);
-                    if (!fileSuccessfullyUploaded) {
-                        logMessage = "Error while uploading file: " + uploadedArtifact.getName();
-                        log.error(logMessage);
-                        response.status = 400;
-                        response.content = logMessage + ". Please retry uploading";
-                        return ;
+                    for (var property in uploadedArtifacts) {
+                        var tmpUploadedArtifact = uploadedArtifacts[property];
+                        var fileSuccessfullyUploaded  = applicationModule.
+                              uploadExistingArchive(tmpUploadedArtifact, appTypeName, applicationName, applicationRevision);
+                        if (!fileSuccessfullyUploaded) {
+                            logMessage = "Error while uploading file: " + tmpUploadedArtifact.getName();
+                            response.status = 400;
+                            log.error(logMessage);
+                            response.content = logMessage + ". Please retry uploading";
+                            return ;
+                        }
                     }
                 }
+                
 
-                if (uploadedFileName || (remoteImageUrl)) {
+
+                if (uploadedFileName || (imageId)) {
+
                     applicationModule
                             .addApplication(applicationName, applicationRevision, applicationDescription, replicas,
                                             runtimeId, appTypeName, runtimeProperties, tags, appIcon, uploadedFileName,
                                             isNewVersion, conSpecMemory, conSpecCpu, artifactUrl, appCreationMethod,
-                                            oldHashId, applicationContext, setDefaultVersion, remoteImageUrl, exposureLevel);
+                                            oldHashId, applicationContext, setDefaultVersion, imageId, exposureLevel);
                 } else {
                     var gitRepoUrl = request.getParameter("gitRepoUrl");
                     var gitRepoBranch = request.getParameter("gitRepoBranch");
@@ -288,7 +252,7 @@ var log = new Log();
                 response.content = logMessage;
                 return;
             } else {
-                logMessage = "Maximum number of applications that you can create is " + maxRunningAppCount;
+                logMessage = "Application creation request not accepted because no resources available to create new application/version";
                 log.warn(logMessage)
                 response.status = 200;
                 response.content = logMessage;
@@ -370,12 +334,11 @@ var log = new Log();
             }
         }
     } else if(action == "startApplication"){
-        var RunningApplicationCount = applicationModule.getRunningApplicationVersionCount();
-        var maxRunningAppCount = applicationModule.getMaxInstanceCount();
-        if (RunningApplicationCount < maxRunningAppCount) {
+        var versionKey = request.getParameter("versionKey");
+        var isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
+        if (isApplicationStartPossible) {
             var applicationName = request.getParameter("applicationName");
             var applicationRevision = request.getParameter("applicationRevision");
-            var versionKey = request.getParameter("versionKey");
             var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
             var versions = applicationModule.getVersionListOfApplication(applicationHashId);
             var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
@@ -385,8 +348,7 @@ var log = new Log();
             applicationModule.redeployApplication(applicationName, applicationRevision, versionKey, applicationType, exposureLevel);
             print(stringify(versions));
         } else {
-            logMessage = "Application creation request not accepted because the application count has " +
-                    "reached maximum limit of " + maxRunningAppCount;
+            logMessage = "Application start request not accepted because no enough resources available to start another application";
             log.warn(logMessage);
             response.status = 406;
             response.content = logMessage;

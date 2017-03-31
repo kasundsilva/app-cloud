@@ -44,6 +44,11 @@ public class PlanServiceImpl implements PlanService {
     private PlanDaoImpl planInstance = (PlanDaoImpl) DAOdelegate.getPlanInstance();
     private static final Log log = LogFactory.getLog(PlanServiceImpl.class);
 
+    /**
+     * Get all subscription plans.
+     *
+     * @return {@link Response}
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response getPlans() {
@@ -61,6 +66,12 @@ public class PlanServiceImpl implements PlanService {
         }
     }
 
+    /**
+     * Get plan given the plan ID.
+     *
+     * @param planId Plan ID of the plan
+     * @return {@link Response}
+     */
     @GET
     @Path("/{planId}")
     @Produces({MediaType.APPLICATION_JSON})
@@ -92,6 +103,12 @@ public class PlanServiceImpl implements PlanService {
         }
     }
 
+    /**
+     * Get allowed container specification for plan.
+     *
+     * @param planId Plan ID of the plan
+     * @return {@link Response}
+     */
     @GET
     @Path("/allowedSpecs/{planId}")
     @Produces({MediaType.APPLICATION_JSON})

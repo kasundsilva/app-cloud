@@ -60,8 +60,14 @@ jagg.module("manager", {
     getDashboardTypeProperties: function () {
         return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getDashboardTypeProperties.apply(this, arguments);
     },
+    getHeaderConfigJson: function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").getHeaderConfigJson.apply(this, arguments);
+    },
     hasCustomURLSettingsAccess:function () {
         return jagg.require(jagg.getModulesDir() + "manager/manager.jag").hasCustomURLSettingsAccess.apply(this, arguments);
+    },
+    isAdminUser:function () {
+        return jagg.require(jagg.getModulesDir() + "manager/manager.jag").isAdminUser.apply(this, arguments);
     }
 });
 %>

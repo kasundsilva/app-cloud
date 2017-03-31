@@ -244,6 +244,13 @@ public class PlanDaoImpl implements PlanDao{
 		return allowedContainerSpecs;
 	}
 
+	/**
+	 * Method to get plan given the result set.
+	 *
+	 * @param rs result set
+	 * @return plan
+	 * @throws SQLException
+	 */
 	private Plan getPlan(ResultSet rs) throws SQLException {
 		Plan plan = new Plan();
 		plan.setId(rs.getInt(SQLQueryConstants.PLAN_ID));

@@ -1,0 +1,296 @@
+<%
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
+include("/jagg/jagg.jag");
+include("/jagg/constants.jag");
+
+var log = new Log("module/customDockerImages/customDockerImages.jag");
+var modManager = jagg.module("manager");
+var modApplication = jagg.module("application");
+var CustomDockerImageManager = Packages.org.wso2.appcloud.core.CustomDockerImageManager;
+var DockerClient = Packages.org.wso2.appcloud.core.docker.DockerClient;
+var fileSeparator = Packages.java.io.File.separator;
+
+/**
+ * This method will do few things
+ * - Add image details in database
+ * - Create security test docker file and build
+ * - Start security test container
+ * @param imageUrl - image url by user input
+ */
+var addImageAndCheckSecurity = function (imageUrl) {
+    try {
+        var dockerClient = new DockerClient(modManager.getPropertyValue("DockerClientURL"));
+        var alphaNeumericImageUrl = imageUrl.replace(/[^A-Za-z0-9]/g, ''); // keeping only numbers and characters in the given image url
+        var imageId = modManager.getTenantDomain() + "-" + alphaNeumericImageUrl; // This is the unique image id
+        addImageInDataBase(imageId, imageUrl);
+        var dockerFileDir = modManager.getPropertyValue(PROPERTY_APPMGT_DEPLOYMENT_DIR_PATH) + fileSeparator +
+                            TMP_UPLOADED_APPLICATIONS_PATH + fileSeparator + modManager.getTenantDomain() + fileSeparator +
+                            alphaNeumericImageUrl;
+        createDockerFile(imageUrl, alphaNeumericImageUrl, dockerFileDir, dockerClient);
+        var buildStatus = buildDockerImage(alphaNeumericImageUrl, dockerFileDir, dockerClient);
+        var dockerImageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + fileSeparator + CUSTOM_SECURITY + ":" +
+                              imageId; // eg: registry.docker.wso2.com:5000/customsecurity/mc.com-maheshcwso2nodejslatest
+        log.info("Docker Image Name : " + dockerImageName);
+        if (buildStatus) {
+            var containerId = createDockerContainer(dockerImageName);
+            if (containerId) {
+                startContainer(containerId);
+            }
+        }
+    } catch (e) {
+        log.error("Error occurred while adding image and checking its security for image : " + imageUrl);
+        throw e;
+    }
+};
+
+/**
+ *  This will create the dockerfile for security test based on DinD (docker in docker)
+ * @param imageUrl image url
+ * @param alphaNeumericImageUrl alphaneumeric image url which is same as the image id
+ * @param dockerFileDir - appmgt/tmUploadedApps/{tenantDomain}/{imageId}/
+ * @param dockerClient - DockerClient instance
+ */
+
+var createDockerFile = function (imageUrl, alphaNeumericImageUrl, dockerFileDir, dockerClient) {
+
+    try {
+        var dockerFilePath = dockerFileDir + fileSeparator + DOCKER_FILE_NAME; // ..../appmgt/tmpUploads/tenant/imageName/Dockerfile
+        log.info("Docker File Path : " + dockerFilePath);
+        var dockerTemplateFilePath = modManager.getPropertyValue(PROPERTY_APPMGT_DEPLOYMENT_DIR_PATH) + fileSeparator +
+                                     DOCKER_TEMPLATE_FILE_DIR_NAME + fileSeparator + CUSTOM + fileSeparator + DEFAULT +
+                                     fileSeparator + DOCKER_FILE_NAME; // appmgt/dockerfiles/custom/default/Dockerfile
+        log.info("dockerTemplateFilePath : " + dockerTemplateFilePath);
+        var dockerFilePropertyMap = new java.util.HashMap();
+        dockerFilePropertyMap.put("CUSTOM_DOCKER_IMAGE_URL_VALUE", imageUrl);
+        dockerFilePropertyMap.put("IMAGE_TAG_VALUE", modManager.getTenantDomain() + "-" + alphaNeumericImageUrl);
+        dockerFilePropertyMap.put("APPCLOUD_URL_VALUE", modManager.getPropertyValue(APP_CLOUD_URL));
+        dockerFilePropertyMap.put("ADMIN_USERNAME_VALUE", modManager.getPropertyValue(ADMIN_USERNAME));
+        dockerFilePropertyMap.put("ADMIN_PASSWORD_VALUE", modManager.getPropertyValue(ADMIN_PASSWORD));
+        modApplication.getAppTypeUtil(CUSTOM).setDockerEnvironmentVariables(dockerFilePropertyMap);
+        dockerClient.createDockerFile(dockerFilePath, null, dockerTemplateFilePath, null, dockerFilePropertyMap, null);
+    } catch (e) {
+        log.error("Error occurred while creating dockerfile for custom docker security test for image : " + imageUrl);
+        throw e;
+    }
+};
+
+/**
+ * This will build the docker image for security test
+ * @param alphaNeumericImageUrl image id
+ * @param dockerFilePath appmgt/tmUploadedApps/{tenantDomain}/{imageId}/Dockerfile
+ * @param dockerClient DockerClient instance
+ * @returns {boolean} this will return true if the docker build is success otherwise it will throw an error
+ */
+var buildDockerImage = function (alphaNeumericImageUrl, dockerFilePath, dockerClient) {
+    try {
+        var tagName = modManager.getTenantDomain() + "-" + alphaNeumericImageUrl;
+        dockerClient.buildDockerImage(modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL), CUSTOM_SECURITY,
+                                      tagName, dockerFilePath);
+        return true;
+    } catch (e) {
+        log.error("Error occurred while building docker image for custom docker security test for image id : "
+                  + alphaNeumericImageUrl);
+        throw e;
+    }
+};
+
+/**
+ *  Create docker container for docker security
+ * @param createdImage image name and tag  eg : registry/customsecurity:tenant-imageid
+ * @returns {*} returns the id of created container, if something goes wrong null will be returned
+ */
+var createDockerContainer = function (createdImage) {
+    try {
+        var createContainerEndPoint = modManager.getPropertyValue(PROPERTY_DOCKER_CLIENT_URL) + "/containers/create";
+        var data = {
+            Image: createdImage,
+            HostConfig: {
+                Privileged: true
+            }
+        };
+        var headers = {
+            "Content-Type": "application/json",
+            "charset": "utf-8"
+        };
+        var type = "json";
+        var result = post(createContainerEndPoint, stringify(data), headers, type);
+        log.info("Docker container created, id : " + result.data.Id);
+        // if no container started this will return null
+        return result.data.Id;
+    } catch (e) {
+        log.error("Error occurred while creating docker container for custom docker security test for the image : " +
+                  createdImage);
+        throw e;
+    }
+
+};
+
+/**
+ * Start the container with given id
+ * @param containerId container id
+ * @returns return status code for rest call , if the call is success this will return 200
+ */
+var startContainer = function (containerId) {
+    try {
+        var startContainerEndPoint = modManager.getPropertyValue(PROPERTY_DOCKER_CLIENT_URL) + "/containers/" + containerId + "/start";
+        var result = post(startContainerEndPoint);
+        return result.xhr.status;
+    } catch (e) {
+        log.error("Error occurred while starting docker container for custom docker security test");
+        throw e;
+    }
+
+};
+
+/**
+ * Proceed after receiving the test results.
+ * @param testResultsJsonString json string contains all security test result data
+ */
+var updateWithTestResults = function (testResultsJsonString) {
+    try {
+        var testResultsJson = parse(testResultsJsonString);
+        var imageId = testResultsJson.imageId;
+        var resultsJson = stringify(testResultsJson.results);
+        var status = testResultsJson.status;
+        if (status == STATUS_PASSED) {//(status=="passed")
+            var imageUrl = testResultsJson.imageUrl;
+            var imageName, tagName;
+            var elementArray = imageUrl.split(":");
+            if (elementArray.length == 3) { // registry : port : tag
+                imageName = elementArray[0] + ":" + elementArray[1];
+                tagName = elementArray[2];
+                log.info("image name : " + imageName + " tag name : " + tagName);
+            } else { // registry : tag
+                imageName = elementArray[0];
+                tagName = elementArray[1];
+                log.info("image name : " + imageName + " tag name : " + tagName);
+            }
+            var dockerClient = new DockerClient(modManager.getPropertyValue("DockerClientURL"));
+            var pullStatus = pullImage(dockerClient, imageName, tagName);
+            if (pullStatus) {
+                var newImageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + fileSeparator + CUSTOM;
+                dockerClient.tagDockerImage(imageName, tagName, newImageName, imageId);
+                dockerClient.pushDockerImage(newImageName, imageId);
+                log.info("Image tagged and pushed to registry");
+            }
+        }
+        CustomDockerImageManager.updateCustomDockerTestResults(imageId, resultsJson, status);
+    } catch (e) {
+        log.error("Error occurred while processing test results.");
+        throw e;
+    }
+};
+
+/**
+ * Add image details in database
+ * @param imageId image id (alphaneumeric image url)
+ * @param imageRemoteUrl image url
+ */
+var addImageInDataBase = function (imageId, imageRemoteUrl) {
+    try {
+        CustomDockerImageManager.addCustomDockerImage(imageId, imageRemoteUrl);
+    } catch (e) {
+        log.error("Error occurred while adding image " + imageId +  " in database.");
+        throw e;
+    }
+};
+
+/**
+ * Check whether image is already added to database
+ * @param remoteUrl image url
+ * @returns {*} returns true if image is available, false if not
+ */
+var isImageAvailable = function (remoteUrl) {
+    try {
+        return CustomDockerImageManager.isImageAvailable(remoteUrl);
+    } catch (e) {
+        log.error("Error occurred while checking image availability for : " + remoteUrl);
+        throw e;
+    }
+};
+
+/**
+ * Pull image to local docker
+ * @param dockerClient
+ * @param imageName
+ * @param tagName
+ * @returns {boolean}
+ */
+var pullImage = function (dockerClient, imageName, tagName) {
+    try {
+        dockerClient.pullDockerImage(imageName, tagName);
+        return true;
+    } catch (e) {
+        log.error("Error occurred while pulling image : " + imageName + " with the tag : " + tagName);
+        throw e;
+    }
+};
+/**
+ * Get all verified(security test passed) images
+ * @returns {*} return arraylist of CustomImage objects
+ */
+var getAllVerifiedImages = function () {
+    try {
+        return CustomDockerImageManager.getAllCustomImages(STATUS_PASSED);
+    } catch (e) {
+        log.error("Error occurred while getting all verified custom docker images.");
+        throw e;
+    }
+};
+/**
+ * Get all images
+ * @returns {*} returns array list of CustomImage objects
+ */
+var getAllImages = function () {
+    try {
+        return CustomDockerImageManager.getAllCustomImages(null); // sending null will give all images regardless the status
+    } catch (e) {
+        log.error("Error occurred while getting all custom docker images.");
+        throw e;
+    }
+};
+/**
+ * Delete image with given id
+ * @param imageId image id
+ * @returns {*} return true if success
+ */
+var deleteImage = function (imageId) {
+    try {
+        return CustomDockerImageManager.deleteImage(imageId);
+    } catch (e) {
+        log.error("Error occurred while deleting image : " + imageId);
+        throw e;
+    }
+};
+/**
+ * Get image by id
+ * @param imageId image id
+ * @returns {*} return CustomImage object
+ */
+var getImageById = function (imageId) {
+    try {
+        return CustomDockerImageManager.getImageById(imageId);
+    } catch (e) {
+        log.error("Error occurred while getting image with the id : " + imageId);
+        throw e;
+    }
+};
+
+%>

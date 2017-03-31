@@ -1,12 +1,12 @@
 /**
  * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,7 +55,7 @@ public class EventsManager {
             throw new AppCloudException(msg, e);
         } catch (SQLException e) {
             String msg = "Error occured committing transaction for adding application creation event for event with " +
-                    "name : " + event.getEventName() + ", status: " + event.getEventStatus() + ", timestamp : " +
+                    "name : " + event.getEventName() + ", status : " + event.getEventStatus() + ", timestamp : " +
                     event.getTimestamp() + " for version : " + versionHashId + " in tenant : " + tenantId;
             log.error(msg, e);
             throw new AppCloudException(msg, e);
@@ -100,13 +100,13 @@ public class EventsManager {
             EventsDAO.getInstance().deleteAppVersionEvents(dbConnection, versionHashId, tenantId);
             dbConnection.commit();
         } catch (AppCloudException e) {
-            String msg = "Error occurred while deleting all the events for the app version has id " + versionHashId +
-                    " in tenant : " + tenantId;
+            String msg = "Error occurred while deleting all the events for the application version hash id : "
+                    + versionHashId + " in tenant : " + tenantId;
             log.error(msg, e);
             throw new AppCloudException(msg, e);
         } catch (SQLException e) {
             String msg = "Error occurred while committing transaction for deleting all the events for application " +
-                    "version hash id " + versionHashId + " in tenant : " + tenantId;
+                    "version hash id : " + versionHashId + " in tenant : " + tenantId;
             log.error(msg, e);
             throw new AppCloudException(msg, e);
         } finally {

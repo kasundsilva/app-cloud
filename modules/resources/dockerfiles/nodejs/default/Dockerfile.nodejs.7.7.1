@@ -1,0 +1,56 @@
+# ------------------------------------------------------------------------
+#
+# Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+#   WSO2 Inc. licenses this file to you under the Apache License,
+#   Version 2.0 (the "License"); you may not use this file except
+#   in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing,
+#   software distributed under the License is distributed on an
+#   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#   KIND, either express or implied.  See the License for the
+#   specific language governing permissions and limitations
+#   under the License.
+#
+# ------------------------------------------------------------------------
+
+FROM wso2-cloud/nodejs:7.7.1-base
+
+ENV APP_FILE_UPLOAD ARTIFACT_NAME
+ENV NODE_ENV production
+ENV APP_ZIP app.zip
+ENV APP_DIR app
+
+# copying resources to image
+COPY "$APP_FILE_UPLOAD" "$APP_HOME/$APP_ZIP"
+
+WORKDIR "$APP_HOME/"
+
+# unzip package.json to the APP_DIR directory
+# -d = path to the directory
+RUN unzip $APP_ZIP package.json -d app
+
+# install dependencies
+WORKDIR "$APP_HOME/app"
+RUN npm install
+#-----------------------------cached-----------------------------------
+
+WORKDIR "$APP_HOME/"
+
+# unzip rest of the content to the APP_DIR directory
+# -o = overwrite
+# -d = path to the directory
+RUN unzip -o $APP_ZIP -d app
+RUN rm $APP_ZIP
+
+WORKDIR "$APP_HOME/app"
+
+# wrap node process inside the tini process
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# start the server
+CMD ["node", "index.js"]

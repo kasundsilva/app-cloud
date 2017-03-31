@@ -53,6 +53,7 @@ var ESBAppTypeUtil = function () {};
 var JaggeryAppTypeUtil = function () {};
 var DSSAppTypeUtil = function () {};
 var CustomAppTypeUtil = function () {};
+var NodeJSAppTypeUtil = function () {};
 
 // extend the AppTypeUtil interface
 WarAppTypeUtil.prototype = Object.create(AppTypeUtil);
@@ -62,6 +63,7 @@ ESBAppTypeUtil.prototype = Object.create(AppTypeUtil);
 JaggeryAppTypeUtil.prototype = Object.create(AppTypeUtil);
 DSSAppTypeUtil.prototype = Object.create(AppTypeUtil);
 CustomAppTypeUtil.prototype = Object.create(AppTypeUtil);
+NodeJSAppTypeUtil.prototype = Object.create(AppTypeUtil);
 
 // actual implementation goes here
 WarAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
@@ -69,6 +71,10 @@ WarAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
 };
 
 PHPAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
+    return getEndpointsWithApplicationContext(deploymentUrl, versionId);
+};
+
+NodeJSAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
     return getEndpointsWithApplicationContext(deploymentUrl, versionId);
 };
 

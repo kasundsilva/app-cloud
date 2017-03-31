@@ -39,6 +39,12 @@ var Util = Packages.org.wso2.appcloud.core.Util;
 var ResourceQuotaLimit = Packages.org.wso2.appcloud.provisioning.runtime.beans.ResourceQuotaLimit;
 var List = Packages.java.util.List;
 var Arrays = Packages.java.util.Arrays;
+var appTypePropertyConfPath = jagg.getAppTypePropertyConfFilePath();
+var parsedObject = parse(appTypePropertyConfPath);
+var appTypesProperties = require(parsedObject);
+var subscriptionManager = jagg.module("subscription");
+var subscription = subscriptionManager.getSubscription();
+
 
 
 /**
@@ -54,14 +60,14 @@ var Arrays = Packages.java.util.Arrays;
 var addApplication = function (applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
                                runtimePropertiesArray, tagArray, appIcon, uploadedFileName, isNewVersion, conSpecMemory,
                                conSpecCpu, artifactUrl, appCreationMethod, oldHashId, applicationContext, setDefaultVersion,
-                               remoteImageUrl, exposureLevel) {
+                               imageId, exposureLevel) {
 
     log.info("Started creating App => Name:" + applicationName + " Version:" + versionName + " Description:" + applicationDescription +
     " RuntimeId:" + runtimeId + " AppType:" + appTypeName + " Runtime Properties:" + stringify(runtimePropertiesArray) +
     " Tags:" + stringify(tagArray) + " Uploaded FileName:" + uploadedFileName + " New Version:" + isNewVersion +
     " Allocated Memory:" + conSpecMemory + " Allocated CPU:" + conSpecCpu + " Artifact Url:" + artifactUrl +
     " App Creation Method:" + appCreationMethod + " Previous HashId:" + oldHashId + " Context:" + applicationContext +
-    " DefaultVersion:" + setDefaultVersion + " Docker Image Id : " + remoteImageUrl +
+    " DefaultVersion:" + setDefaultVersion + " Docker Image Id : " + imageId +
     " DefaultVersion:" + setDefaultVersion + "Exposure Level:" + exposureLevel);
 
     var tenantId = modManager.getTenantId();
@@ -110,30 +116,11 @@ var addApplication = function (applicationName, versionName, applicationDescript
 
         }
     } else { // for custom docker images
-        var elementArray = remoteImageUrl.split(":");
-        log.info("element array length : " + elementArray.length);
-        if (elementArray.length == 3 ) { // registry : port : tag
-            imageName = elementArray[0] + ":" + elementArray[1];
-            tagName = elementArray[2];
-            log.info("image name : " + imageName + "tag name : " + tagName)
-        } else { // registry : tag
-            imageName = elementArray[0];
-            tagName = elementArray[1];
-            log.info("image name : " + imageName + "tag name : " + tagName)
-
-/*
-    var absFileUploadedPath =  createDockerFile(applicationName, versionName, appTypeName, runtimeId, uploadedFileName,
-            versionHashId, dockerClient, artifactUrl, hostName, appCreationMethod, runtimeProperties, conSpecMemory);
-    var buildDockerImageStatus = buildDockerImage(applicationName, versionName, runtimeId, absFileUploadedPath, applicationRuntime, tagName, versionHashId, dockerClient);
-    if (buildDockerImageStatus) {
-
-        var pushDockerImageStatus = pushDockerImage(applicationName, versionName, applicationRuntime, tagName, versionHashId, dockerClient);
-        if (pushDockerImageStatus) {
-            triggerKubernetesDeployment(runtimeProperties, applicationRuntime, tagName, applicationName, versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
-            putSelectedRevisionToSession(applicationHashId, versionName);
-*/
-        }
+        imageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + "/" + CUSTOM;
+        tagName = imageId;
+        log.info("image name : " + imageName + " tag name : " + tagName);
     }
+
     if(readyToTriggerDeployment) {
         triggerKubernetesDeployment(imageName, runtimeProperties, applicationRuntime, tagName, applicationName,
                                 versionName, appTypeName, runtimeId, replicas, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
@@ -439,21 +426,30 @@ var createDockerFile = function (applicationName, versionName, appTypeName, runt
             log.debug("Docker file path for deployment: " + dockerFilePath);
         }
         var dockerTemplateFilePath = modManager.getPropertyValue(PROPERTY_APPMGT_DEPLOYMENT_DIR_PATH) + "/" + "dockerfiles";
+
+        var appType = appTypesProperties[appTypeName];
+        var isMultiArtifactsSupported = (appType.isMultiArtifactsSupported =='true');
+
         var uploadArtifactTmpName;
-        var checkFileExtZIP = isFileExtZIP(uploadedFileName);
-        if (checkFileExtZIP && !artifactUrl) {
-            var fileName = uploadedFileName.substring(0, uploadedFileName.lastIndexOf("."));
-            uploadArtifactTmpName = fileName + FILE_EXTENSTION_ALTER;
+        var artifactNameWithoutExtension;
+        if (!isMultiArtifactsSupported) {
+            var checkFileExtZIP = isFileExtZIP(uploadedFileName);
+            if (checkFileExtZIP && !artifactUrl) {
+                var fileName = uploadedFileName.substring(0, uploadedFileName.lastIndexOf("."));
+                uploadArtifactTmpName = fileName + FILE_EXTENSTION_ALTER;
+            } else {
+                uploadArtifactTmpName = uploadedFileName;
+            }
+            artifactNameWithoutExtension = uploadArtifactTmpName.substring(0, uploadArtifactTmpName.lastIndexOf("."));
         } else {
-            uploadArtifactTmpName = uploadedFileName;
+             uploadArtifactTmpName = uploadedFileName;
         }
         var dockerFilePropertyMap = new java.util.HashMap();
-        var artifactNameWithoutExtension = uploadArtifactTmpName.substring(0, uploadArtifactTmpName.lastIndexOf("."));
         dockerFilePropertyMap.put("ARTIFACT_NAME", uploadArtifactTmpName);
-        dockerFilePropertyMap.put("ARTIFACT_DIR", artifactNameWithoutExtension);
         dockerFilePropertyMap.put("HOST_NAME", hostName);
         dockerFilePropertyMap.put("ARTIFACT_URL", artifactUrl);
         dockerFilePropertyMap.put("VAL_TOTAL_MEMORY", conSpecMemory);
+        dockerFilePropertyMap.put("ARTIFACT_DIR", artifactNameWithoutExtension);
 
         var mod = jagg.module("application");
         mod.getAppTypeUtil(appTypeName).setDockerEnvironmentVariables(dockerFilePropertyMap);
@@ -857,14 +853,21 @@ function getDeploymentConfig(containersList, versionHashId, replicas){
     return deploymentConfig;
 }
 
+// temp fix to disable esb on certain tiers.
+function isAppTypeAllowed() {
+    if (subscription) {
+        return !(subscription.getPlan() == "integration_cloud_starter");
+    }
+    return false;
+}
+
 /**
  * Method for getting all the available application types e.g : war, mss, car
  */
-var getAllAppTypes = function(){
+var getAllAppTypes = function () {
     var appTypeArray = [];
     try {
         var appTypes = ApplicationManager.getAllAppTypesForCloud(jagg.getSelectedCloud());
-
         for (var i = 0; i < appTypes.length; i++) {
             var appType = appTypes[i];
             var appTypeObject = {};
@@ -872,9 +875,16 @@ var getAllAppTypes = function(){
             appTypeObject.name = appType.appTypeName;
             appTypeObject.description = appType.description;
 
-            appTypeArray.push(appTypeObject);
+            if (appTypeObject.name == 'wso2esb') {
+                if (isAppTypeAllowed('wso2esb') == true) {
+                    appTypeArray.push(appTypeObject);
+                }
+            } else {
+                appTypeArray.push(appTypeObject);
+            }
+
         }
-    } catch(e){
+    } catch (e) {
         log.error("Error while getting the list of apptypes");
         log.error(e);
         throw e;
@@ -901,7 +911,6 @@ var getAllRuntimes = function(appType){
             runtimeObject.imageName = runtime.imageName;
             runtimeObject.tag = runtime.tag;
             runtimeObject.description = runtime.description;
-
             runtimeArray.push(runtimeObject);
         }
     } catch(e){
@@ -1383,11 +1392,9 @@ var uploadExistingArchive = function (uploadedArtifact, appTypeName, application
     var fileSuccessfullyUploaded = false;
     if (uploadApplicationTmpPath != null) {
         uploadedArtifact.move(uploadApplicationTmpPath);
-
         var file = new File(uploadApplicationTmpPath);
         var waitCounter = 0;
         var fileUploadTimeout = modManager.getPropertyValue(FILE_UPLOAD_TIMEOUT);
-
         //Wait until file is completely moved
         while (waitCounter < fileUploadTimeout) {
             if (file.isExists()) {
@@ -1779,46 +1786,8 @@ var getNotAllowedEnvVariables = function () {
         return notAllowedVariables;
 };
 
-var getMaxInstanceCount = function () {
-    try {
-        var tenantId = modManager.getTenantId();
-        var maxAppCount = ApplicationManager.getMaxAppCountForWhiteListedTenants(tenantId, jagg.getSelectedCloud());
-        var subscriptionPlanBaseURL = modManager.getPropertyValue("SubscriptionPlanBaseURL");
-        var subscriptionPlanURL = subscriptionPlanBaseURL + "/plans/" + jagg.getSelectedCloud() + "/FREE";
-        if (maxAppCount == -1) {
-            var maxInstancesJson = get(subscriptionPlanURL, {}, "json");
-            maxAppCount = parseInt(maxInstancesJson.data.maxApplications);
-        }
-        return maxAppCount;
-    } catch (e) {
-        log.error("Error while getting the maximum application count for tenant: " + tenantId);
-        log.error(e);
-        throw e;
-    }
-};
-
-var getMaxReplicaCount = function() {
-    try {
-        var tenantId = modManager.getTenantId();
-        var maxReplicaCount = ApplicationManager.getMaxReplicaCountForWhiteListedTenants(tenantId, jagg.getSelectedCloud());
-        var subscriptionPlanBaseURL = modManager.getPropertyValue("SubscriptionPlanBaseURL");
-        var subscriptionPlanURL = subscriptionPlanBaseURL + "/plans/" + jagg.getSelectedCloud() + "/FREE";
-
-        if (maxReplicaCount == -1) {
-            var maxReplicaJson = get(subscriptionPlanURL, {}, "json");
-            maxReplicaCount = parseInt(maxReplicaJson.data.maxReplicas);
-        }
-        return maxReplicaCount;
-    } catch (e) {
-        log.error("Error while getting the maximum replica count for tenant: " + tenantId);
-        log.error(e);
-        throw e;
-    }
-};
-
 var getApplicationRevisionStatus = function(applicationKey, selectedRevision) {
     var selectedRevisionStatus = null;
-
     try {
         var versions = getVersionsOfApplication(applicationKey);
         for (var i = 0; i < versions.length; i++) {
@@ -1835,9 +1804,8 @@ var getApplicationRevisionStatus = function(applicationKey, selectedRevision) {
     return selectedRevisionStatus;
 };
 
-var getVersionsOfApplication = function(applicationKey) {
+var getVersionsOfApplication = function (applicationKey) {
     var applicationVersions = [];
-
     try {
         var versions = ApplicationManager.getAllVersionsOfApplication(applicationKey);
         for (var i = 0; i < versions.size(); i++) {
@@ -1857,19 +1825,28 @@ var getRuntimePropertyMap = function (runtimePropertyArray) {
     return getRuntimeProperties(runtimePropertyList);
 };
 
-var getAllowedContainerSpecificationsForRuntime = function(runtimeID) {
+var getAllowedContainerSpecificationsForRuntime = function (runtimeId) {
     try {
-        var subscriptionPlanBaseURL = modManager.getPropertyValue("SubscriptionPlanBaseURL");
-        var runtimeContainerSpecURL = subscriptionPlanBaseURL + "/containerSpecs/allowedruntime/" + runtimeID;
-        var allowedRuntimeContainerSpecJson = get(runtimeContainerSpecURL, "", "json");
-
-        return allowedRuntimeContainerSpecJson;
+        var containerSpecifications = ApplicationManager.getAllowedContainerSpecificationsForRuntime(runtimeId);
+        var allowedContainerSpecifications = { "data": []};
+        for (var i = 0; i < containerSpecifications.length; i++) {
+            allowedContainerSpecifications.data.push(
+                    {
+                        "conSpecName": containerSpecifications[i].conSpecName,
+                        "costPerHour": containerSpecifications[i].costPerHour,
+                        "cpu": containerSpecifications[i].cpu,
+                        "id": containerSpecifications[i].id,
+                        "memory": containerSpecifications[i].memory
+                    }
+            );
+        }
+        return allowedContainerSpecifications;
     } catch (e) {
-        log.error("Error while getting allowed container specifications for runtime with ID: " + runtimeID);
+        log.error("Error while getting allowed container specifications for runtime with ID: " + runtimeId);
         log.error(e);
         throw e;
     }
-}
+};
 
 /**
   * Get the application summary with tags of all the tagged applications
@@ -1969,7 +1946,7 @@ var scaleDeployment = function (applicationName, versionName, replicaCount) {
         log.error(e);
         throw e;
     }
-}
+};
 
 var getReplicaCountForVersion = function (applicationName, versionName) {
     try {
@@ -1980,5 +1957,25 @@ var getReplicaCountForVersion = function (applicationName, versionName) {
          log.error(e);
          throw e;
     }
-}
+};
+
+var isApplicationNameValid = function (applicationName) {
+    var appHashId = getApplicationHashIdByName(applicationName);
+    return getApplication(appHashId).hashId != null;
+};
+
+var isApplicationKeyValid = function (applicationKey) {
+    return getApplication(applicationKey).hashId == applicationKey;
+};
+
+var getVersionByHashId = function (versionHashId) {
+    try {
+        return ApplicationManager.getVersionByHashId(versionHashId);
+    } catch (e) {
+        log.error("Error while getting version info by hash id : " + versionHashId);
+        log.error(e);
+        throw e;
+    }
+};
+
 %>

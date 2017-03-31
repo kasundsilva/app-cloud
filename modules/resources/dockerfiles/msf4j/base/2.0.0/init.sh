@@ -33,6 +33,10 @@ else
 	fi
 fi
 
+if [ -n "$WORKER_THREAD_POOL_SIZE" ]; then
+        sed -i "s/workerThreadPoolSize: 40/workerThreadPoolSize: $WORKER_THREAD_POOL_SIZE/" /opt/conf/https/netty-transports.yaml
+fi
+
 if [[ $ENABLE_JFR && ${ENABLE_JFR-_} && $ENABLE_JFR == "true" ]]; then
     export JAVA_OPTS=$JAVA_OPTS" -XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:StartFlightRecording=delay=20s,duration=60s,name=jfr_recording,filename=/home/wso2user/jfr_recording.jfr,settings=profile"
 fi

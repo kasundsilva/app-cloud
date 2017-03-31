@@ -156,7 +156,7 @@ function initData(selectedRevision, isFirstRequest){
                 action: "getApplicationRevisionStatus",
                 applicationKey: applicationKey,
                 selectedRevision: selectedRevision
-            }, function(result) {
+            }, function (result) {
                 result = result.trim();
                 var revisionStatus = result;
                 if (revisionStatus == APPLICATION_STOPPED) {
@@ -184,7 +184,7 @@ function initData(selectedRevision, isFirstRequest){
                         timeout: '8000'
                     });
                 }
-            }, function(jqXHR, textStatus, errorThrown) {
+            }, function (jqXHR, textStatus, errorThrown) {
                 jagg.message({
                     content: "An error occurred while getting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " revision's status.",
                     type: 'error',
@@ -194,7 +194,7 @@ function initData(selectedRevision, isFirstRequest){
         }
     },function (jqXHR, textStatus, errorThrown) {
         $('#revision').prop("disabled", false);
-        jagg.message({content: "An error occurred while loading the logs.", type: 'error', id:'view_log'});
+        jagg.message({content: "An error occurred while loading the logs.", type: 'error', id: 'view_log'});
     });
 }
 

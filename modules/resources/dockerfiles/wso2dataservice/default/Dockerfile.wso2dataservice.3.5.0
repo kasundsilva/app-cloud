@@ -21,14 +21,13 @@
 FROM docker.wso2.com/wso2-cloud/wso2dss:3.5.0-alpine3.4-oracle-jdk1.8.0
 
 ENV CARBON_HOME_PATH /home/wso2user/wso2dss-3.5.0
-ENV DATASERVICE_DBS ARTIFACT_NAME
 ENV CAR_DEPLOYMENT_DIR $CARBON_HOME_PATH/repository/deployment/server/carbonapps/
 ENV APP_HOST HOST_NAME
 ENV TOTAL_MEMORY VAL_TOTAL_MEMORY
 
 RUN mkdir -p $CAR_DEPLOYMENT_DIR
 
-COPY "$DATASERVICE_DBS" "$CAR_DEPLOYMENT_DIR"
+COPY ARTIFACT_NAME "$CAR_DEPLOYMENT_DIR"
 RUN sed -i '/<!--HostName>/c\\t<HostName>'$APP_HOST'</HostName>' $CARBON_HOME_PATH/repository/conf/carbon.xml && \
     sed -i '/<!--MgtHostName>/c\\t<MgtHostName>'$APP_HOST'</MgtHostName>' $CARBON_HOME_PATH/repository/conf/carbon.xml
 

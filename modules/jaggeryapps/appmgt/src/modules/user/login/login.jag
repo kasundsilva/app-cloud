@@ -130,98 +130,43 @@ function logout(){
 
 }
 
+/**
+ * Method to allow user to log in by providing a JSON web token.
+ *
+ * returns {}
+ */
 function jwtIsUserAuthenticated(authorizationHeader) {
-    var tenantManager = multitenancy.getTenantManager();
-    var KeyStoreManager = Packages.org.wso2.carbon.core.util.KeyStoreManager;
-    var RSAPublicKey = Packages.java.security.interfaces.RSAPublicKey;
-    var RSASSAVerifier = Packages.com.nimbusds.jose.crypto.RSASSAVerifier;
-    var SignedJWT = Packages.com.nimbusds.jwt.SignedJWT;
-    var MultitenantUtils = Packages.org.wso2.carbon.utils.multitenancy.MultitenantUtils;
     var context = multitenancy.getPrivilegedCarbonContext();
     var finalResult = {
-        error : "true",
-        message : "",
-        username : null
+        error: "true",
+        message: "",
+        username: null
     };
     var msg = null;
-
     try {
         context.startTenantFlow();
         //Get authorization header and check if authtorization type is equal to "Bearer"
         var authType = getAuthType(authorizationHeader);
         if (authType != null && (authType.toUpperCase() == AUTHORIZATION_HEADER_TYPE.toUpperCase())) {
-            //Get the filesystem keystore default primary certificate
-            var keyStoreManager = KeyStoreManager.getInstance(SUPER_TENANT_ID);
-            keyStoreManager.getDefaultPrimaryCertificate();
-            //Decode authorization header
-            var headerData = decodeAuthorizationHeader(authorizationHeader);
-
-            var rsaPublicKey = new RSAPublicKey(keyStoreManager.getDefaultPublicKey());
-            var verifier = new RSASSAVerifier(rsaPublicKey);
-            var jwsObject = SignedJWT.parse(headerData);
-            //Proceed if the server from which the login request originated can be trusted and if a valid JWT token is
-            //provided in the set of claims in the authorization header
-            if (jwsObject.verify(verifier)) {
-                //Get the full username from the set of claims in the JWT token
-                var usernameWithTenantDomain = jwsObject.getJWTClaimsSet().getStringClaim(SIGNED_JWT_AUTH_USERNAME);
-                if (usernameWithTenantDomain) {
-                    var tenantDomain = null;
-                    var username = null;
-                    if (usernameWithTenantDomain.indexOf("@") != -1) {
-                        //Extract username and tenant domain from the full user name
-                        tenantDomain = MultitenantUtils.getTenantDomain(usernameWithTenantDomain);
-                        username = MultitenantUtils.getTenantAwareUsername(usernameWithTenantDomain);
-                        //To get the tenant user realm set the carbon context details
-                        context.getThreadLocalCarbonContext().setTenantId(tenantManager.getTenantId(tenantDomain));
-                        context.getThreadLocalCarbonContext().setUsername(usernameWithTenantDomain);
-                        context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
-
-                        var realmService = carbon.server.osgiService('org.wso2.carbon.user.core.service.RealmService');
-                        var tenantManager = realmService.getTenantManager();
-                        //Get tenant id from the extracted tenant domain
-                        var tenantId = tenantManager.getTenantId(tenantDomain);
-                        if (tenantId == -1) {
-                            msg = "tenantDomain is not valid. username: " + username + ", tenantDomain: "
-                                    + tenantDomain;
-                            finalResult.username = username;
-                        } else { //Proceed if the extracted tenant domain is valid
-                            var realm = realmService.getTenantUserRealm(tenantId);
-                            var userStoreManager = realm.getUserStoreManager();
-                            //Proceed if the user is a valid user within the tenant domain
-                            //Ex:- Suppose the username claim in the set of claims in the JWT token is foo@foodomain
-                            //then foo is the username and foodomain is the tenant domain.
-                            //If foo exists in foodomain the user will authenticated and if foo doesn't exist in
-                            //foodomain the user will not be authenticated
-                            if (userStoreManager != null && userStoreManager.isExistingUser(username)) {
-                                var permission = modManager.getPropertyValue(DEFAULT_LOGIN_PERMISSION);
-                                var isUserAuthorized =
-                                        modManager.checkAuthorizationForUser(usernameWithTenantDomain, permission);
-                                //Proceed if the authenticated user has login permission
-                                if (isUserAuthorized) {
-                                    jagg.setUser(usernameWithTenantDomain);
-                                    msg = "User successfully logged in";
-                                    finalResult.error = "false";
-                                    finalResult.username = username;
-                                } else {
-                                    msg = "Authorization failed for user:" + username + " in tenant:" + tenantDomain;
-                                    finalResult.username = username;
-                                    session.invalidate();
-                                }
-                            } else {
-                                msg = "Invalid user: " + username + " in tenant domain:" + tenantDomain;
-                                finalResult.username = username;
-                            }
-                        }
-                    } else {
-                        msg = "Failing authorization since tenant domain is not present in claim "
-                                + SIGNED_JWT_AUTH_USERNAME;
-                        finalResult.username = usernameWithTenantDomain;
-                    }
+            var claimResponse = getJWTClaim(authorizationHeader, SIGNED_JWT_AUTH_USERNAME);
+            var usernameWithTenantDomain = claimResponse.usernameWithTenantDomain;
+            if (usernameWithTenantDomain) {
+                var tenantIdResponse = getTenantIdFromUsernameWithTenantDomain(context, usernameWithTenantDomain);
+                var tenantId = tenantIdResponse.tenantId;
+                var username = tenantIdResponse.username;
+                if (tenantId == -1) {
+                    msg = tenantIdResponse.message;
+                    finalResult.username = username;
                 } else {
-                    msg = "Failing authorization since claim " + SIGNED_JWT_AUTH_USERNAME + " is not present";
+                    var tenantDomain = tenantIdResponse.tenantDomain;
+                    var authorizationResponse =
+                            checkAuthorizationOfUser(tenantId, tenantDomain, username, usernameWithTenantDomain);
+                    msg = authorizationResponse.message;
+                    finalResult.username = authorizationResponse.username;
+                    finalResult.error = authorizationResponse.error;
                 }
             } else {
-                msg = "Invalid JWT token. Please provide valid token in authorization header.";
+                msg = claimResponse.message;
             }
         } else {
             msg = "Failing authorization since Authorization header with authentication type Bearer is not present.";
@@ -240,20 +185,138 @@ function jwtIsUserAuthenticated(authorizationHeader) {
     }
 }
 
-function getAuthType(authorizationHeader) {
-    var splitValues = null;
-    if (authorizationHeader != null) {
-        splitValues = authorizationHeader.trim().split(" ");
-    }
-    if (splitValues == null || splitValues.length == 0) {
-        if (log.isDebugEnabled()) {
-            log.debug("Authorization Type is not defined. Hence returning null");
+/**
+ * Method to check authorization of user.
+ *
+ * returns {indicate if authorization is successful or not}
+ */
+function checkAuthorizationOfUser(tenantId, tenantDomain, username, usernameWithTenantDomain) {
+    var result = {
+      username : username,
+      message : "",
+      error: "true"
+    };
+    var realmService = carbon.server.osgiService('org.wso2.carbon.user.core.service.RealmService');
+    //Proceed if the extracted tenant domain is valid
+    var realm = realmService.getTenantUserRealm(tenantId);
+    var userStoreManager = realm.getUserStoreManager();
+    //Proceed if the user is a valid user within the tenant domain
+    //Ex:- Suppose the username claim in the set of claims in the JWT token is foo@foodomain
+    //then foo is the username and foodomain is the tenant domain.
+    //If foo exists in foodomain the user will authenticated and if foo doesn't exist in
+    //foodomain the user will not be authenticated
+    if (userStoreManager != null && userStoreManager.isExistingUser(username)) {
+        var permission = modManager.getPropertyValue(DEFAULT_LOGIN_PERMISSION);
+        var isUserAuthorized =
+                modManager.checkAuthorizationForUser(usernameWithTenantDomain, permission);
+        if (isUserAuthorized) {
+            jagg.setUser(usernameWithTenantDomain);
+            result.message = "User successfully logged in";
+            result.error = "false";
+        } else {
+            result.message = "Authorization failed for user:" + username + " in tenant:" + tenantDomain;
+            session.invalidate();
         }
-        return null;
+    } else {
+        result.message = "Invalid user: " + username + " in tenant domain:" + tenantDomain;
     }
-    return splitValues[0].trim();
+    return result;
 }
 
+/**
+ * Method to get tenant Id given the username with tenant domain.
+ *
+ * returns {tenant Id}
+ */
+function getTenantIdFromUsernameWithTenantDomain(context, usernameWithTenantDomain) {
+    var MultitenantUtils = Packages.org.wso2.carbon.utils.multitenancy.MultitenantUtils;
+    var result = {
+        tenantId: -1,
+        username: null,
+        tenantDomain: null,
+        message: ""
+    };
+    //Extract username and tenant domain from the full user name
+    result.tenantDomain = MultitenantUtils.getTenantDomain(usernameWithTenantDomain);
+    result.username = MultitenantUtils.getTenantAwareUsername(usernameWithTenantDomain);
+    //To get the tenant user realm set the carbon context details
+    var multiTenancyTenantManager = multitenancy.getTenantManager();
+    context.getThreadLocalCarbonContext().setTenantId(multiTenancyTenantManager.getTenantId(result.tenantDomain));
+    context.getThreadLocalCarbonContext().setUsername(usernameWithTenantDomain);
+    context.getThreadLocalCarbonContext().setTenantDomain(result.tenantDomain, true);
+    var realmService = carbon.server.osgiService('org.wso2.carbon.user.core.service.RealmService');
+    var realmServiceTenantManager = realmService.getTenantManager();
+    //Get tenant id from the extracted tenant domain
+    var tenantId = realmServiceTenantManager.getTenantId(result.tenantDomain);
+    if (tenantId == -1) {
+        result.message = "tenantDomain is not valid. username: " + result.username + ", tenantDomain: "
+                + result.tenantDomain;
+    } else {
+        result.tenantId = tenantId;
+    }
+    return result;
+}
+
+/**
+ * Method to get claim from JWT.
+ *
+ * returns {username claim}
+ */
+function getJWTClaim(authorizationHeader, claimType) {
+    var KeyStoreManager = Packages.org.wso2.carbon.core.util.KeyStoreManager;
+    var RSAPublicKey = Packages.java.security.interfaces.RSAPublicKey;
+    var RSASSAVerifier = Packages.com.nimbusds.jose.crypto.RSASSAVerifier;
+    var SignedJWT = Packages.com.nimbusds.jwt.SignedJWT;
+    //Get the filesystem keystore default primary certificate
+    var keyStoreManager = KeyStoreManager.getInstance(SUPER_TENANT_ID);
+    //Decode authorization header
+    var headerData = decodeAuthorizationHeader(authorizationHeader);
+    var rsaPublicKey = new RSAPublicKey(keyStoreManager.getDefaultPublicKey());
+    var verifier = new RSASSAVerifier(rsaPublicKey);
+    var jwsObject = SignedJWT.parse(headerData);
+    var result = {
+      usernameWithTenantDomain : null,
+      message : ""
+    };
+    //Proceed if the server from which the login request originated can be trusted and if a valid JWT token is
+    //provided in the set of claims in the authorization header
+    if (jwsObject.verify(verifier)) {
+        //Get the full username from the set of claims in the JWT token
+        var username = jwsObject.getJWTClaimsSet().getStringClaim(claimType);
+        if (username) {
+            result.usernameWithTenantDomain = username;
+        } else {
+            result.message = "Failing authorization since claim " + SIGNED_JWT_AUTH_USERNAME + " is not present";
+        }
+    } else {
+        result.message = "Invalid JWT token. Please provide valid token in authorization header.";
+    }
+    return result;
+}
+
+/**
+ * Method to get authorization header type.
+ *
+ * returns {authorization header type}
+ */
+function getAuthType(authorizationHeader) {
+    if (authorizationHeader != null) {
+        var splitValues = authorizationHeader.trim().split(" ");
+        if (splitValues.length == 0) {
+            return null;
+        } else {
+            return splitValues[0].trim();
+        }
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Method to decode authorization header.
+ *
+ * returns {decoded authorization header value}
+ */
 function decodeAuthorizationHeader(authorizationHeader) {
     var splitValues = authorizationHeader.trim().split(" ");
     var Base64Utils = Packages.org.apache.axiom.util.base64.Base64Utils;

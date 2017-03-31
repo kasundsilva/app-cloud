@@ -1,0 +1,110 @@
+<%
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
+include("/jagg/jagg.jag");
+include("/jagg/constants.jag");
+
+(function () {
+    var mod = jagg.module("customDockerImages");
+    var action = request.getParameter("action");
+    var site = require("/site/conf/site.json");
+    var log = new Log("/blocks/customDockerImages/ajax/customDockerImages.jag");
+
+    if (action == "addImageAndCheckSecurity") {
+        var imageUrl = request.getParameter("imageUrl");
+        log.info("Started adding new image with image url : " + imageUrl);
+        try {
+            mod.addImageAndCheckSecurity(imageUrl);
+            print("image added for security check");
+        } catch (e) {
+            log.error(e);
+            log.error("Error occurred while adding image with url : " + imageUrl);
+            response.status = 500;
+            response.content = "Error occurred while adding image"
+        }
+    } else if (action == "isImageAvailable") {
+        var imageUrl = request.getParameter("imageUrl");
+        log.info("Checking image availability for image : " + imageUrl);
+        try {
+            print(mod.isImageAvailable(imageUrl)); // this will return true if image is already available
+        } catch (e) {
+            log.error(e);
+            log.error("Error occurred while checking image availability for  image with url : " + imageUrl);
+            response.status = 500;
+            response.content = "Error occurred while checking image availability"
+        }
+    } else if (action == "getAllImages") {
+        try {
+            var allImages = mod.getAllImages();
+            //directly passing the result to front end doesn't work, its because this array contains CustomImages java objects
+            var allImagesArray = [];
+            for (var i = 0; i < allImages.length; i++) {
+                var image = allImages[i];
+                var imageJsonObj = {};
+                imageJsonObj.imageId = image.imageId;
+                imageJsonObj.tenantId = image.tenantId;
+                imageJsonObj.remoteUrl = image.remoteUrl;
+                imageJsonObj.results = image.results;
+                imageJsonObj.status = image.status;
+                imageJsonObj.lastUpdated = image.lastUpdated;
+                allImagesArray.push(imageJsonObj);
+            }
+            print(allImagesArray);
+        } catch (e) {
+            log.error(e);
+            var errorMessage = "Error occurred while retrieving all images";
+            log.error(errorMessage);
+            response.status = 500;
+            response.content = errorMessage;
+        }
+    } else if (action == "deleteImage") {
+        var imageId = request.getParameter("imageId");
+        log.info("Deleting image : " + imageId);
+        try {
+            print(mod.deleteImage(imageId));
+        } catch (e) {
+            log.error(e);
+            var errorMessage = "Error occurred while deleting image : " + imageId;
+            log.error(errorMessage);
+            response.status = 500;
+            response.content = errorMessage;
+        }
+    } else if (action == "updateImage") {
+        var imageId = request.getParameter("imageId");
+        try {
+            var image = mod.getImageById(imageId); // first retrieve the existing image
+            var imageUrl = image.remoteUrl; // obtain the remoteUrl
+            imageUrl = stringify(imageUrl); // need to convert the object to string
+            imageUrl = imageUrl.replace(/['"]+/g, ''); //remove the quotes from string
+            log.info("^^^^^^^^^^^^^^ " + imageUrl);
+            if (mod.deleteImage(imageId)) { // delete the existing image and re-add it using obtained remote url
+                mod.addImageAndCheckSecurity(imageUrl);
+            }
+        } catch (e) {
+            log.error(e);
+            var errorMessage = "Error occurred while updating image : " + imageId;
+            log.error(errorMessage);
+            response.status = 500;
+            response.content = errorMessage;
+        }
+    } else {
+        log.error("No action specified");
+    }
+}());
+%>

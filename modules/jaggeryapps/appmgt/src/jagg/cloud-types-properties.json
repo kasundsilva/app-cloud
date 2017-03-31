@@ -5,14 +5,15 @@
         "cloudIcon" : "fa fa-cubes",
         "cloudSpecificApplicationRepresentation" : "Application",
         "properties" : {
-            "documentationUrl": "AppCloud.Documentation.Url",
-            "supportUrl": "AppCloud.Support.Url"
+            "documentationUrl": "AppCloud.Documentation.Url"
         },
         "billing" : {
             "isBillingEnabled" : false,
+            "defaultPlan" : "FREE",
+            "trialPeriod" : 0,
             "plans" : [
-                {"id" : "free", "maxApplications" : 3, "maxDatabases" : 3, "maxReplicas" : 2},
-                {"id" : "paid", "maxApplications" : 10, "maxDatabases" : 6, "maxReplicas" : 4}
+                {"id" : "FREE", "maxApplicationCount" : 3, "maxDatabaseCount" : 3, "maxReplicaCount" : 2,"maxMemory" : 2048, "maxCpu" : 1000},
+                {"id" : "PAID", "maxApplicationCount" : 3, "maxDatabaseCount" : 3, "maxReplicaCount" : 2,"maxMemory" : 2048, "maxCpu" : 1000}
             ]
         }
     },
@@ -20,16 +21,21 @@
         "pageTitle": "WSO2 Integration Cloud",
         "cloudTitle" : "Integration Cloud",
         "cloudIcon" : "fw fw-service",
-        "cloudSpecificApplicationRepresentation" : "Project",
+        "cloudSpecificApplicationRepresentation" : "Application",
         "properties" : {
-            "documentationUrl": "IntegrationCloud.Documentation.Url",
-            "supportUrl": "IntegrationCloud.Support.Url"
+            "documentationUrl": "IntegrationCloud.Documentation.Url"
         },
         "billing" : {
             "isBillingEnabled" : true,
+            "defaultPlan" : "TRIAL",
+            "trialPeriod" : 14,
             "plans" : [
-                {"id" : "free", "maxApplications" : 3, "maxDatabases" : 3, "maxReplicas" : 2},
-                {"id" : "paid", "maxApplications" : 10, "maxDatabases" : 6, "maxReplicas" : 4}
+                {"id" : "TRIAL", "maxApplicationCount" : 3, "maxDatabaseCount" : 3, "maxReplicaCount" : 1,"maxMemory" : 4096, "maxCpu" : 1000},
+                {"id" : "integration_cloud_starter", "maxApplicationCount" : 3, "maxDatabaseCount" : 3, "maxReplicaCount" : 1,"maxMemory" : 2048, "maxCpu" : 1000},
+                {"id" : "integration_cloud_getting_traction", "maxApplicationCount" : 4, "maxDatabaseCount" : 3, "maxReplicaCount" : 2,"maxMemory" : 6144, "maxCpu" : 1500},
+                {"id" : "integration_cloud_medium", "maxApplicationCount" : 6, "maxDatabaseCount" : 5, "maxReplicaCount" : 2,"maxMemory" : 12288, "maxCpu" : 3000},
+                {"id" : "integration_cloud_large", "maxApplicationCount" : 16, "maxDatabaseCount" : 5, "maxReplicaCount" : 2,"maxMemory" : 49152, "maxCpu" : 12000},
+                {"id" : "integration_cloud_extra_large", "maxApplicationCount" : 32, "maxDatabaseCount" : 5, "maxReplicaCount" : 2,"maxMemory" : 196608, "maxCpu" : 48000}
             ]
         }
     }

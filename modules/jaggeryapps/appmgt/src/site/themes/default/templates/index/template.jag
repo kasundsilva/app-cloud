@@ -320,7 +320,7 @@ jagg.template("index", function(inputs, outputs, jagg) {
                           <li id="All" class="active"><a href="#">All</a></li>
                           <li id="Integration"><a href="#">Integration</a></li>
                           <li id="Services"><a href="#">Services</a></li>
-                          <!--<li id="Custom"><a href="#">Custom</a></li>-->
+                          <li id="Custom"><a href="#">Custom</a></li>
                         </ul>
                     </div><!-- /btn-group -->
                 </div><!-- /input-group -->

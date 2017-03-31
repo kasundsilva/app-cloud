@@ -20,11 +20,13 @@ var TMP_UPLOADED_APPLICATIONS_PATH = "tmpUploadedApps";
 var ARTIFACT_UPLOAD_DIRECTORY = "/tmp/";
 var POD_TIMEOUT = "Pod.TimeOut";
 var PROPERTY_APPMGT_DEPLOYMENT_DIR_PATH="Appmgt.DeploymentDirPath";
+var PROPERTY_DOCKER_CLIENT_URL="DockerClientURL";
 var PROPERTY_DOCKER_REGISTRY_URL="DockerRegistryURL";
 var PROPERTY_DOCKER_REGISTRY_URL_INFRA="DockerRegistryURL_Infra";
 var PROPERTY_STORAGE_SERVER_URL="StorageServerURL";
 var PROPERTY_RSS_ENVIRONMENT_NAME="RSSEnvironmentName";
 var DOCKER_FILE_NAME = "Dockerfile";
+var DOCKER_TEMPLATE_FILE_DIR_NAME = "dockerfiles";
 var TENANT_DOMAIN_NAME = "tenantDomainName";
 var SUPER_TENANT_DOMAIN_NAME = "carbon.super";
 var CLOUD_TYPE = "AppCloud";
@@ -37,6 +39,7 @@ var DATA_ANALYTICS_SERVER_URL = "DataAnalyticsServerURL";
 var DAS_RECEIVER_EP = "DASReceiverEp";
 var APP_CLOUD_URL = "AppCloud.Url";
 var INTEGRATION_CLOUD_URL = "IntegrationCloud.Url";
+var IDENTITY_CLOUD_URL = "IdentityCloud.Url";
 var API_CLOUD_PUBLISHER__URL = "APICloud.Publisher.Url";
 var CLOUD_MGT_URL = "CloudMgt.Url";
 var NOT_ALLOWED_ENV_VARIABLES = "EnvironmentVariables.NotAllowedVariables";
@@ -49,6 +52,8 @@ var GOOGLE_TRACKING_ID = "Google.Tracking.Id";
 var ZOPIM_CHAT_ID = "Zopim.Chat.Id";
 var FILE_UPLOAD_TIMEOUT = "File.Upload.Timeout";
 var CUSTOM_URL_SETTINGS_PAGE_URL = "CustomUrlSettingsPage.Url";
+var ADMIN_USERNAME = "Cloud.Admin.Username";
+var ADMIN_PASSWORD = "Cloud.Admin.Password";
 
 //events related constants
 var DATABASE_ADD = "Adding application to database";
@@ -87,6 +92,7 @@ var DOC_URL = "_doc_url";
 
 var CLOUD_TYPES_PROPERTIES_CONFIG = "/jagg/cloud-types-properties.json";
 var DASHBOARD_TYPES_PROPERTIES_CONFIG = "/jagg/dashboard-types-properties.json";
+var HEADER_CONFIG = "/jagg/header.json";
 var SELECTED_CLOUD = "SELECTED_CLOUD";
 var APP_CLOUD = "app_cloud";
 var APP_CLOUD_HOSTNAME = "AppCloud.Hostname";
@@ -97,8 +103,17 @@ var INTEGRATION_CLOUD_HOSTNAME = "IntegrationCloud.Hostname";
 var DAS_RECEIVER_AUTH_BASE64 = "Receiver.Auth";
 
 var CUSTOM = "custom";
+var STATUS_PASSED = "passed";
+var CUSTOM_SECURITY = "customsecurity";
+var DEFAULT = "default";
 var PROFILE_URL = "Profile.Url";
 var CHANGE_PASSWORD_URL = "ChangePassword.Url";
+var PROFILE_URL = "/site/pages/user-profile.jag";
+var CHANGE_PASSWORD_URL = "/site/pages/change-password.jag";
+var CUSTOM_URL_SETTINGS_PAGE_URL = "/site/pages/custom_url.jag";
+var UPGRADE_BILLING_PLAN_URL= "/site/pages/payment-plans.jag";
+var CONTACT_US_URL= "/site/pages/contact-us.jag";
+var ACCOUNT_SUMMARY_URL = "/site/pages/account-summary.jag";
 
 //Regex patterns
 var ENV_KEY_REGEX = "^[A-Za-z0-9_]+$";
@@ -112,4 +127,14 @@ var DEFAULT_LOGIN_PERMISSION = "default.Login.Permission";
 //Service Prefixes
 var HTTP_SERVICE_PREFIX = "htp-";
 var HTTPS_SERVICE_PREFIX = "hts-";
+
+var MYSQL_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+var MYSQL_MAX_DATETIME_STRING = "9999-12-31 12:59:59";
+var MYSQL_MIN_DATETIME_STRING = "1000-01-01 00:00:00";
+
+var CLOUD_ADMIN_USERNAME="Cloud.Admin.Username";
+var CLOUD_ADMIN_PASSWORD="Cloud.Admin.Password";
+
+var SET_COOKIE_HEADER="Set-Cookie";
+
 %>

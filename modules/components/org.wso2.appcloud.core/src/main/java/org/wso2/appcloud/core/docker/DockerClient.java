@@ -92,16 +92,23 @@ public class DockerClient {
             String dockerFileCategory, Map<String, String> dockerFilePropertyMap,
             Map<String, String> customDockerFileProperties) throws  AppCloudException {
 
-        customDockerFileProperties.keySet().removeAll(dockerFilePropertyMap.keySet());
-        dockerFilePropertyMap.putAll(customDockerFileProperties);
-
-        // Get docker template file
-        // A sample docker file can be found at
-        // https://github.com/wso2/app-cloud/blob/master/modules/resources/dockerfiles/wso2as/default/Dockerfile.wso2as.6.0.0-m1
-        String dockerFileTemplatePath = DockerUtil
-                .getDockerFileTemplatePath(runtimeId, dockerTemplateFilePath, dockerFileCategory);
+        // customDockerFileProperties will be null when creating docker files for custom docker security
+        if(customDockerFileProperties != null) {
+            customDockerFileProperties.keySet().removeAll(dockerFilePropertyMap.keySet());
+            dockerFilePropertyMap.putAll(customDockerFileProperties);
+        }
+        String dockerFileTemplatePath;
+        // runtime id will be null when creating docker files for custom docker security
+        if(runtimeId != null && dockerFileCategory != null) {
+            // Get docker template file
+            // A sample docker file can be found at
+            // https://github.com/wso2/app-cloud/blob/master/modules/resources/dockerfiles/wso2as/default/Dockerfile.wso2as.6.0.0-m1
+            dockerFileTemplatePath = DockerUtil
+                    .getDockerFileTemplatePath(runtimeId, dockerTemplateFilePath, dockerFileCategory);
+        } else {
+            dockerFileTemplatePath = dockerTemplateFilePath;
+        }
         List<String> dockerFileConfigs = new ArrayList<>();
-
 
         try {
             for (String line : FileUtils.readLines(new File(dockerFileTemplatePath))) {

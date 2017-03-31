@@ -22,6 +22,7 @@ var site = require("/site/conf/site.json");
 
 var appTypeName = request.getParameter("appTypeName");
 var applicationName = request.getParameter("applicationName");
+var selectedImageId = request.getParameter("selectedImageId");
 
 
 (function () {
@@ -52,7 +53,8 @@ var applicationName = request.getParameter("applicationName");
                                 "inputs": {
                                     "pageName": "AppAdd",
                                     "appTypeName" : appTypeName,
-                                    "applicationName" : applicationName
+                                    "applicationName" : applicationName,
+                                    "selectedImageId" : selectedImageId
                                 }
                             }
                         ]

@@ -1,0 +1,96 @@
+<%
+/*
+ * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
+
+include("/jagg/jagg.jag");
+
+jagg.template("customDockerImages", function (inputs, outputs, jagg) {
+    var testsJson = outputs.testsJson;
+    var log = new Log();
+    %>
+
+    <script type="text/javascript">
+        var testsJson = '<%=testsJson%>'; // This contains the json string value of the parameter CustomDocker.SecurityTests in appcloud.properties
+        testsJson = JSON.parse(testsJson);
+    </script>
+
+    <!-- BOF App factory menu actionbar -->
+   <div class="action-bar">
+       <a href="/appmgt/site/pages/application.jag?appTypeName=custom" class="btn-action">
+               <span class="fw-stack fw-lg btn-action-ico">
+                   <i class="fw fw-circle-outline fw-stack-2x"></i>
+                   <i class="fw fw-left-arrow fw-stack-1x"></i>
+               </span> <span class="hidden-xs">Back to application creation</span>
+        </a>
+   </div><!-- EOF App factory menu actionbar-->
+
+   <div class="container-fluid cloud-container" id="outerContainer">
+        <div class="row">
+            <form name="addImageForm" id="addImageForm" enctype="multipart/form-data" method='post' action='#'>
+                <div class="col-md-5 col-lg-5 forms">
+                    <div class="form-group col-md-12 ">
+                        <label for="imageUrl">Image URL: * </label>
+                        <input type="text" title="Paste here what you usually type with 'docker pull' command" class="form-control" id="imageUrl"  name="imageUrl"  placeholder="registry_url/image_name:tag" value="">
+                    </div>
+                    <div class="clearfix"></div>
+                    <!-- This will be enabled once authentication is done-->
+                    <!--<div class="form-group col-md-6">-->
+                        <!--<label for="userName">User Name: <I>(only for private images)</I></label>-->
+                        <!--<input type="text" class="form-control" id="userName" name="userName" placeholder="Enter user name">-->
+                    <!--</div>-->
+                    <!--<div class="clearfix"></div>-->
+                     <!--<div class="form-group col-md-6">-->
+                        <!--<label for="password">Password: <I>(only for private images)</I></label>-->
+                        <!--<input type="password" class="form-control" id="password" name="password" placeholder="Enter password">-->
+                    <!--</div>-->
+                    <div class="clearfix"></div>
+                    <div class="form-group col-md-6">
+                        <button type="button" class="cu-btn cu-btn-sm cu-btn-blue" id="addImage" name="addImage" onclick="addNewImage()" disabled>
+                            <span class="fw-stack fw-lg btn-action-ico">
+                                <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                <i class="fw fw-add fw-stack-1x"></i>
+                            </span>
+                            Add Image
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="row col-md-8" id="dockerImagesPanelDiv" hidden>
+            <div class="panel panel-default">
+                <table class="table image-panel" id="customImagesTable"></table>
+            </div>
+        </div>
+   </div><!-- /.container -->
+
+<!-- Modal -->
+<div class="modal fade" id="viewResultModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Test Results</h4>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/customDockerImages/js/customDockerImages.js'))%>"></script>
+
+<%}); %>

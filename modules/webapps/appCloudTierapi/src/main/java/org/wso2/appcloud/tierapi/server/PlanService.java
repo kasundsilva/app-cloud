@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response;
 public interface PlanService {
 
     /**
-     * Get all Plans
+     * Get all Plans.
      *
      * @return {@link Response}
      */
@@ -40,7 +40,7 @@ public interface PlanService {
     public Response getPlans();
 
     /**
-     * Get Plan using Plan ID
+     * Get Plan using Plan ID.
      *
      * @param planId    Plan ID of the plan
      * @return {@link Response}
@@ -63,7 +63,7 @@ public interface PlanService {
     public Response getPlan(@PathParam("cloudType") String cloudType, @PathParam("planName") String planName);
 
     /**
-     * Get allowed container specifications using Plan ID
+     * Get allowed container specifications using Plan ID.
      *
      * @param planId    Plan ID of the plan
      * @return {@link Response}

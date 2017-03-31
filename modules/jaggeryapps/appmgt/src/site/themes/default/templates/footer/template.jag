@@ -23,7 +23,7 @@ jagg.template("footer", function(inputs, outputs, jagg) {
 	
 	<div id="footer">
 	    <div class="container-fluid">
-	        <div class="footer-text"><%=pageTitle%> Beta . &copy; 2016 <i class="fw fw-wso2 fw-2x"></i> All Rights
+	        <div class="footer-text"><%=pageTitle%>  . &copy; 2017 <i style="vertical-align:middle;" class="fw fw-wso2 fw-2x"></i> All Rights
 	        Reserved.</div>
 	    </div>
 	</div>

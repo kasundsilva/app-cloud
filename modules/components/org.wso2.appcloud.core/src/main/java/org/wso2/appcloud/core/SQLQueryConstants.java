@@ -64,6 +64,21 @@ public class SQLQueryConstants {
     public static final String MATCHING_VERSION_COUNT = "matching_version_count";
     public static final String EXPOSURE_LEVEL = "exposure_level";
     public static final String REPLICA_COUNT = "replicas";
+    public static final String IMAGE_ID = "image_id";
+    public static final String REMOTE_URL = "remote_url";
+    public static final String TEST_RESULTS_JSON = "test_results_json";
+    public static final String LAST_UPDATED = "last_updated";
+    public static final String PLAN = "plan";
+    public static final String MAX_MEMORY = "max_memory";
+    public static final String MAX_CPU = "max_cpu";
+    public static final String START_DATE = "start_date";
+    public static final String END_DATE = "end_date";
+    public static final String CLOUD_ID = "cloud_id";
+    public static final String CON_SPEC_ID = "CON_SPEC_ID";
+    public static final String CON_SPEC_NAME = "CON_SPEC_NAME";
+    public static final String CPU = "CPU";
+    public static final String MEMORY = "MEMORY";
+    public static final String COST_PER_HOUR = "COST_PER_HOUR";
 
 
     /*==============================
@@ -123,6 +138,13 @@ public class SQLQueryConstants {
             "INSERT INTO AC_APPLICAION_CONTEXTS (tenant_id, version_id, context) values (?,?,?)";
 
     public static final String INSERT_APPLICATION_ICON = "INSERT INTO AC_APP_ICON (icon, application_id) VALUES (?, ?)";
+
+    public static final String ADD_CUSTOM_DOCKER_IMAGE =
+            "INSERT INTO AC_CUSTOM_DOCKER_IMAGES (image_id, tenant_id, remote_url, test_results_json, status, last_updated)" +
+            " values (?,?,?,?,?,?)";
+    public static final String ADD_SUBSCRIPTION = "INSERT INTO AC_TENANT_SUBSCRIPTION (tenant_id, plan, max_app_count, " +
+            "max_database_count, cloud_id, max_replica_count, max_memory, max_cpu, start_date, end_date, is_white_listed, " +
+            "status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     /*Select Queries*/
 
@@ -207,9 +229,17 @@ public class SQLQueryConstants {
 
 
     public static final String GET_ALL_APP_VERSIONS_CREATED_BEFORE_X_DAYS_AND_NOT_WHITE_LISTED =
-            "SELECT * FROM AC_VERSION WHERE is_white_listed=0 AND status='running' " +
-            "AND timestamp <  timestampadd(HOUR, -?, now()) " +
-            "AND tenant_id NOT IN (SELECT tenant_id FROM AC_WHITE_LISTED_TENANTS)";
+            "SELECT * FROM AC_VERSION WHERE status='running' " +
+            "AND timestamp < timestampadd(HOUR, -?, now()) " +
+            "AND tenant_id IN (SELECT tenant_id FROM AC_TENANT_SUBSCRIPTION where plan='TRIAL')";
+
+    public static final String GET_ALL_TRIAL_APP_VERSIONS_CREATED_BEFORE_X_HOURS = "SELECT * from AC_VERSION JOIN AC_TENANT_SUBSCRIPTION" +
+            " WHERE AC_VERSION.tenant_id = AC_TENANT_SUBSCRIPTION.tenant_id AND AC_VERSION.status = 'running' AND " +
+            "(AC_TENANT_SUBSCRIPTION.plan='TRIAL' AND AC_VERSION.timestamp <  timestampadd(HOUR, -?, now()))";
+
+    public static final String GET_ALL_PENDING_DISABLE_APP_VERSIONS = "SELECT * from AC_VERSION JOIN AC_TENANT_SUBSCRIPTION" +
+            " WHERE AC_VERSION.tenant_id = AC_TENANT_SUBSCRIPTION.tenant_id AND AC_VERSION.status = 'running' AND " +
+            "(AC_TENANT_SUBSCRIPTION.status = 'PENDING_DISABLE' AND AC_TENANT_SUBSCRIPTION.end_date < now())";
 
 	public static final String GET_WHITE_LISTED_TENANT_DETAILS = "SELECT * FROM AC_WHITE_LISTED_TENANTS WHERE " +
             "tenant_id=? AND cloud_id=?";
@@ -240,6 +270,10 @@ public class SQLQueryConstants {
     public static final String GET_CUSTOM_DOMAIN_DETAILS_FOR_TENANT = "SELECT name, custom_domain " +
             "FROM AC_APPLICATION WHERE tenant_id =?";
 
+    public static final String GET_CONTAINER_SPECIFICATIONS_BY_RUNTIME_ID = "SELECT * FROM AC_CONTAINER_SPECIFICATIONS "
+            + "JOIN AC_RUNTIME_CONTAINER_SPECIFICATIONS ON AC_CONTAINER_SPECIFICATIONS.CON_SPEC_ID = " +
+            "AC_RUNTIME_CONTAINER_SPECIFICATIONS.CON_SPEC_ID WHERE AC_RUNTIME_CONTAINER_SPECIFICATIONS.id = ?";
+
     /* Update Queries */
     public static final String GET_ALL_APPLICATIONS_LIST_WITH_TAG =
             "SELECT app.name as application_name, app.hash_id as hash_id, type.name as app_type_name, " +
@@ -261,7 +295,23 @@ public class SQLQueryConstants {
                     "JOIN AC_APPLICATION ON AC_VERSION.application_id=AC_APPLICATION.id INNER JOIN AC_APP_TYPE " +
                     "ON AC_APPLICATION.app_type_id = AC_APP_TYPE.id WHERE AC_VERSION.status='running';";
 
+    public static final String GET_RUNNING_APPLICATIONS_OF_A_TENANT =
+            "SELECT AC_VERSION.name as VERSION_NAME, AC_VERSION.hash_id as VERSION_HASH_ID, AC_VERSION.tenant_id, " +
+                    "AC_VERSION.con_spec_cpu as CONTAINER_CPU,AC_VERSION.con_spec_memory as CONTAINER_MEM," +
+                    "AC_APPLICATION.name AS APPLICATION_NAME, AC_APP_TYPE.name AS APP_TYPE_NAME FROM AC_VERSION INNER " +
+                    "JOIN AC_APPLICATION ON AC_VERSION.application_id=AC_APPLICATION.id INNER JOIN AC_APP_TYPE " +
+                    "ON AC_APPLICATION.app_type_id = AC_APP_TYPE.id WHERE AC_VERSION.status='running' AND AC_VERSION.tenant_id=?;";
+
     public static final String IS_CUSTOM_DOMAIN_AVAILABLE = "SELECT * FROM AC_APPLICATION WHERE custom_domain=?";
+    public static final String IS_CUSTOM_IMAGE_AVAILABLE = "SELECT * FROM AC_CUSTOM_DOCKER_IMAGES WHERE remote_url=? AND tenant_id=?";
+    public static final String GET_ALL_CUSTOM_IMAGES = "SELECT * FROM AC_CUSTOM_DOCKER_IMAGES WHERE tenant_id=?";
+    public static final String GET_CUSTOM_IMAGE_BY_ID = "SELECT * FROM AC_CUSTOM_DOCKER_IMAGES WHERE image_id=?";
+    public static final String GET_CUSTOM_IMAGES_BY_STATUS = "SELECT * FROM AC_CUSTOM_DOCKER_IMAGES WHERE tenant_id=? AND status=?";
+    public static final String DELETE_IMAGE = "DELETE FROM AC_CUSTOM_DOCKER_IMAGES WHERE image_id=?";
+
+    public static final String GET_SUBSCRIPTION = "SELECT * FROM AC_TENANT_SUBSCRIPTION WHERE tenant_id = ? AND cloud_id = ?";
+
+    public static final String GET_VERSION_BY_HASH_ID = "SELECT * FROM AC_VERSION WHERE hash_id = ?";
 
     /* Update Queries */
 
@@ -293,7 +343,11 @@ public class SQLQueryConstants {
     public static final String UPDATE_APP_VERSION_CON_SPEC = "UPDATE AC_VERSION SET con_spec_cpu = ?, " +
             "con_spec_memory = ? WHERE hash_id = ? AND tenant_id=?";
 
-
+    public static final String UPDATE_CUSTOM_DOCKER_IMAGE_DETAILS =
+            "UPDATE AC_CUSTOM_DOCKER_IMAGES SET test_results_json=?, status=?, last_updated=? WHERE image_id=?";
+    public static final String UPDATE_SUBSCRIPTION = "UPDATE AC_TENANT_SUBSCRIPTION set plan = ?, max_app_count = ?, " +
+            "max_database_count = ?, max_replica_count = ?, max_memory = ?, max_cpu = ?, start_date = ?, end_date = ?, " +
+            "is_white_listed = ?, status = ? WHERE tenant_id = ? AND cloud_id = ?";
 
     /*Delete Queries*/
 

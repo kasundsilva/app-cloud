@@ -45,7 +45,7 @@ include("/jagg/constants.jag");
         } catch(e) {
             var msg = "Error while getting deployment logs";
             log.error(e);
-            log.error(msg+" for application: "+applicationKey+ " and revision: "+ selectedRevision);
+            log.error(msg + " for application: " + applicationKey + " and revision: " + selectedRevision);
             response.status = 400;
             response.content = msg;
         }
@@ -65,7 +65,8 @@ include("/jagg/constants.jag");
         var modApplication = jagg.module("application");
         try {
             var applicationType = modApplication.getApplication(applicationKey).applicationType;            
-	    var logMap = mod.getDownloadableRuntimeLogs(selectedReplicaId);
+	  //var logMap = mod.getDownloadableRuntimeLogs(selectedReplicaId);
+	    var logMap = mod.getDownloadableRuntimeLogs(applicationKey, selectedRevision, applicationType);
             print(logMap);
         } catch(e) {
             var msg = "Error while getting deployment logs";
@@ -78,7 +79,6 @@ include("/jagg/constants.jag");
         var applicationKey = request.getParameter("applicationKey");
         var selectedRevision = request.getParameter("selectedRevision");
         var mod = jagg.module("application");
-
         try {
             var status = mod.getApplicationRevisionStatus(applicationKey, selectedRevision);
             print(status);
@@ -87,7 +87,6 @@ include("/jagg/constants.jag");
             response.status = 400;
             response.content = msg;
         }
-
     } else {
         log.error("No action specified");
     }

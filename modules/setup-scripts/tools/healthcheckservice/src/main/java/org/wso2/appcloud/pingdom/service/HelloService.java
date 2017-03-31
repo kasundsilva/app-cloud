@@ -57,8 +57,9 @@ public class HelloService {
         String dbURL = System.getenv("PINGDOM_SERVICE_DB_URL");
         String dbUser = System.getenv("PINGDOM_SERVICE_DB_USER");
         String dbUserPassword = System.getenv("PINGDOM_SERVICE_DB_USER_PASSWORD");
-        boolean areAppsHealthy = true;
+        boolean isDatabaseConnectionHealthy = true;
         String msg = null;
+        int appFailureCounter = 0;
 
         Set<Future<Boolean>> futures = new HashSet<>();
         try {
@@ -71,27 +72,29 @@ public class HelloService {
                 futures.add(future);
             }
         } catch (HeartbeatServiceException e) {
-            areAppsHealthy = false;
+            isDatabaseConnectionHealthy = false;
             msg = "Failed to connect to database and get launch URLs of health check applications.";
+            log.error(msg, e);
         }
 
         for (Future<Boolean> future : futures) {
             try {
                 if (!future.get()) {
-                    areAppsHealthy = false;
+                    appFailureCounter++;
                     msg = "Can not access the backend applications.";
-                    break;
+                    log.error(msg);
                 }
             } catch (InterruptedException | ExecutionException e) {
-                areAppsHealthy = false;
+                appFailureCounter++;
                 msg = "Internal error occurred in health checker service.";
                 log.error(msg, e);
             }
         }
-        if (areAppsHealthy) {
+        if (isDatabaseConnectionHealthy && appFailureCounter <2) {
             return Response.ok("Health check applications responded properly.").build();
         } else {
-            log.error(msg);
+            log.error("Health check application responded with 500 error due to database connection health:" +
+                              isDatabaseConnectionHealthy + " or app failure count:" + appFailureCounter);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 

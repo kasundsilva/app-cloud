@@ -16,6 +16,8 @@
 
 package org.wso2.appcloud.core;
 
+import com.nimbusds.jose.util.JSONObjectUtils;
+import net.minidev.json.JSONObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.appcloud.common.AppCloudException;
@@ -29,12 +31,16 @@ import org.wso2.appcloud.core.dto.RuntimeProperty;
 import org.wso2.appcloud.core.dto.Tag;
 import org.wso2.appcloud.core.dto.Transport;
 import org.wso2.appcloud.core.dto.Version;
+import org.wso2.appcloud.core.dto.*;
 import org.wso2.carbon.context.CarbonContext;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -599,7 +605,7 @@ public class ApplicationManager {
                     getRuntimesForAppType(dbConnection, appType, tenantId);
             return runtimes.toArray(new ApplicationRuntime[runtimes.size()]);
         } catch (AppCloudException e) {
-            String msg = "Error while getting all runtimes for application type for type: " + appType +
+            String msg = "Error while getting all runtimes for application type for type : " + appType +
                     " for tenant id : " + tenantId;
             log.error(msg, e);
             throw new AppCloudException(msg, e);
@@ -989,12 +995,37 @@ public class ApplicationManager {
         }
     }
 
+    /**
+     * Get running applications of all tenants
+     *
+     * @return map of running applications
+     * @throws AppCloudException
+     */
     public static Map<Integer, List<Application>> getRunningApplicationsOfAllTenants() throws AppCloudException {
         Connection dbConnection = DBUtil.getDBConnection();
         try {
             return ApplicationDAO.getInstance().getRunningApplicationsOfAllTenants(dbConnection);
         } catch (AppCloudException e) {
             String msg = "Error while getting running applications of all tenants.";
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Get all application with running state.
+     * @param tenantId
+     * @return
+     * @throws AppCloudException
+     */
+    public static Map<Integer, List<Application>> getRunningApplicationsOfTenant(int tenantId) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            return ApplicationDAO.getInstance().getRunningApplicationsOfTenant(dbConnection, tenantId);
+        } catch (AppCloudException e) {
+            String msg = "Error while getting running applications of a tenant.";
             log.error(msg, e);
             throw new AppCloudException(msg, e);
         } finally {
@@ -1432,7 +1463,9 @@ public class ApplicationManager {
         Connection dbConnection = DBUtil.getDBConnection();
         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
-            return ApplicationDAO.getInstance().isVersionExist(dbConnection, applicationName, versionName, tenantId);
+            int matchingVersionCount = ApplicationDAO.getInstance().
+                    getMatchingVersionCount(dbConnection, applicationName, versionName, tenantId);
+            return (matchingVersionCount > 0);
         } catch (AppCloudException e) {
             String msg = "Error while checking if version exists for application name: " + applicationName +
                     " version name: " + versionName + " and tenant id: " + tenantId + ".";
@@ -1569,6 +1602,152 @@ public class ApplicationManager {
         } catch (AppCloudException e) {
             String msg = "Error while checking replica count for the application version: " + versionKey +
                     " and tenant id: " + tenantId + ".";
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Method to get subscriotion details
+     *
+     * @param tenantId  tenant id
+     * @param cloudType cloud type
+     * @return Subscriotion object
+     * @throws AppCloudException
+     */
+    public static Subscription getSubscription(int tenantId, String cloudType) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            return ApplicationDAO.getInstance().getSubscription(dbConnection, tenantId, cloudType);
+        } catch (AppCloudException e) {
+            String msg = "Error while retrieving subscription info for tenant id : " + tenantId + " and cloud : "
+                    + cloudType;
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Method to create new subscription
+     *
+     * @param subscription subscription object
+     * @throws AppCloudException
+     */
+    public static void addNewSubscription(Subscription subscription) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            ApplicationDAO.getInstance().addSubscription(dbConnection, subscription);
+        } catch (AppCloudException e) {
+            String msg = "Error while adding subscription for tenant id: " + subscription.getTenantId() + ", cloud : "
+                    + subscription.getCloudType();
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Method to update subscription
+     *
+     * @param subscription subscription object
+     * @throws AppCloudException
+     */
+    public static void updateSubscription(Subscription subscription) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            ApplicationDAO.getInstance().updateSubscription(dbConnection, subscription);
+        } catch (AppCloudException e) {
+            String msg = "Error while updating subscription for tenant id: " + subscription.getTenantId() + ", cloud : "
+                    + subscription.getCloudType();
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Get version by hash id
+     *
+     * @param hashId hash id of version
+     * @return version info
+     * @throws AppCloudException
+     */
+    public static Version getVersionByHashId(String hashId) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            return ApplicationDAO.getInstance().getVersionByHashId(dbConnection, hashId);
+        } catch (AppCloudException e) {
+            String msg = "Error while retrieving version info for version hash id : " + hashId;
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Get allowed container specifications for runtime
+     *
+     * @param runtimeId id of runtime
+     * @return list of container specifications
+     * @throws AppCloudException
+     */
+    public static ContainerSpecification[] getAllowedContainerSpecificationsForRuntime(int runtimeId)
+            throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            List<ContainerSpecification> containerSpecifications = ApplicationDAO.getInstance()
+                    .getAllowedContainerSpecificationsForRuntime(dbConnection, runtimeId);
+            return containerSpecifications.toArray(new ContainerSpecification[containerSpecifications.size()]);
+        } catch (AppCloudException e) {
+            String msg = "Error while retrieving container specs for runtime id : " + runtimeId;
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Get trial application versions by running time period.
+     *
+     * @param numberOfHours number of hours the application version has been running
+     * @return array of version objects
+     * @throws AppCloudException
+     */
+    public static Version[] getTrialApplicationVersionsByRunningTimePeriod(int numberOfHours) throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            return ApplicationDAO.getInstance().
+                    getTrialApplicationVersionsByRunningTimePeriod(dbConnection, numberOfHours);
+        } catch (AppCloudException e) {
+            String msg = "Error while retrieving TRIAL application versions which was created before " + numberOfHours + " hours ";
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
+     * Get application versions which have reached cancel effective date.
+     *
+     * @return array of version objects
+     * @throws AppCloudException
+     */
+    public static Version[] getApplicationVersionsReachedCancelEffectiveDate() throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        try {
+            return ApplicationDAO.getInstance().
+                    getApplicationVersionsReachedCancelEffectiveDate(dbConnection);
+        } catch (AppCloudException e) {
+            String msg = "Error while retrieving application versions which have reached cancel effective date";
             log.error(msg, e);
             throw new AppCloudException(msg, e);
         } finally {

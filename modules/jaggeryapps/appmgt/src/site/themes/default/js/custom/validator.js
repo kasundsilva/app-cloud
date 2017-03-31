@@ -21,6 +21,12 @@ function validateEnvKey(envKey){
     return validator;
 }
 
+/**
+ * Method to validate database name
+ *
+ * @param databaseName database name
+ * @returns {if database name is valid or not}
+ */
 function validateDbName(databaseName) {
     var databaseNameRegex = new RegExp(ALPHA_NUMERIC_PLUS_UNDERSCORE_REGEX);
     var validator;
@@ -32,7 +38,7 @@ function validateDbName(databaseName) {
     } else {
         validator = {
             status: true,
-            msg: "Database name is successfully added."
+            msg: "Database name is valid."
         }
     }
     return validator;

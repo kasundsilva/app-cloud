@@ -58,4 +58,7 @@ then
     #esb base image
     docker_push docker.wso2.com/wso2-cloud/wso2esb:5.0.0-alpine3.4-oracle-jdk1.8.0
 
+    #ballerina base image
+    docker_push docker.wso2.com/wso2-cloud/ballerina:0.8.x-base
+
 fi

@@ -23,14 +23,14 @@ jagg.template("apptype/select", function(inputs, outputs, jagg) {
     var appTypes = outputs.appTypes;
     var requestNewAppTypeURL = outputs.requestNewAppTypeURL;
     var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
-     %>
+    %>
 
-    <div class="action-bar">
-        <a href="/appmgt/site/pages/index.jag" class="btn-action">
-                <span class="fw-stack fw-lg btn-action-ico">
-                    <i class="fw fw-circle-outline fw-stack-2x"></i>
-                    <i class="fw fw-left-arrow fw-stack-1x"></i>
-                </span> <span class="hidden-xs">Back to <%=cloudSpecificApplicationRepresentation%> listing</span>
+   <div class="action-bar">
+       <a href="/appmgt/site/pages/index.jag" class="btn-action">
+               <span class="fw-stack fw-lg btn-action-ico">
+                   <i class="fw fw-circle-outline fw-stack-2x"></i>
+                   <i class="fw fw-left-arrow fw-stack-1x"></i>
+               </span> <span class="hidden-xs">Back to <%=cloudSpecificApplicationRepresentation%> listing</span>
         </a>
         <a href="<%=requestNewAppTypeURL%>" class="btn-action" target="_blank">
                 <span class="fw-stack fw-lg btn-action-ico">
@@ -41,43 +41,49 @@ jagg.template("apptype/select", function(inputs, outputs, jagg) {
     </div>
 
     <div class="container-fluid app-type-listing padding-bottom-xlg padding-top-xlg">
-        <h1 class="page-header">Integration</h1>
-           <div class="row listing">
-              <%
-                if (appTypes.length > 0) {
-                    for (var x = 0; x < appTypes.length; x++) {
-                        if(appTypes[x].cssProperties && appTypes[x].cssProperties.category == 'integration'){
-                            %>
-                        <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
-                            <div class="cloud-app-type <%=appTypes[x].cssProperties.color%>" app-type="<%=appTypes[x].name%>">
-                                <div class="app-thumbnail">
-                                    <i class="fw <%=appTypes[x].cssProperties.icon%> fw-5x"></i>
-                                    <div class="type-name" ><%=appTypes[x].cssProperties.displayName%></div>
-                                </div>
-                                <div class="description <%=appTypes[x].cssProperties.color%>-dark">
-                                    <i class="fw <%=appTypes[x].cssProperties.icon%> fw-5x"></i>
-                                    <%=appTypes[x].description%>
-                                </div>
-                            </div>
-                        </div>
-                             <%
-
-                        }
-                    }
+      <%
+    var integrationAppTypeCount = 0;
+    if (appTypes.length > 0) {
+        for (var x = 0; x < appTypes.length; x++) {
+            if(appTypes[x].cssProperties && appTypes[x].cssProperties.category == 'integration'){
+                integrationAppTypeCount++;
+                if(integrationAppTypeCount==1){ %>
+                            <h1 class="page-header">Integration</h1>
+                            <div class="row listing"> <%
                 }
-
                 %>
-            </div>
+            <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
+                <div class="cloud-app-type <%=appTypes[x].cssProperties.color%>" app-type="<%=appTypes[x].name%>">
+                        <div class="app-thumbnail">
+                            <i class="fw <%=appTypes[x].cssProperties.icon%> fw-5x"></i>
+                            <div class="type-name" ><%=appTypes[x].cssProperties.displayName%></div>
+                        </div>
+                        <div class="description <%=appTypes[x].cssProperties.color%>-dark">
+                            <i class="fw <%=appTypes[x].cssProperties.icon%> fw-5x"></i>
+                            <%=appTypes[x].description%>
+                        </div>
+                    </div>
+                </div>
+                     <%
+            }
+        }
+        if (integrationAppTypeCount > 0) { %>
+                        </div> <%
+        }
+    }
 
-        <h1 class="page-header">Services</h1>
-            <div class="row listing">
-            <%
-            if (appTypes.length > 0) {
-                for (var y = 0; y < appTypes.length; y++){
-                    if(appTypes[y].cssProperties && appTypes[y].cssProperties.category == 'services'){
-                    %>
-                        <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
-                            <div class="cloud-app-type <%=appTypes[y].cssProperties.color%>" app-type="<%=appTypes[y].name%>">
+    %>
+
+
+    <h1 class="page-header">Services</h1>
+        <div class="row listing">
+        <%
+    if (appTypes.length > 0) {
+        for (var y = 0; y < appTypes.length; y++){
+            if(appTypes[y].cssProperties && appTypes[y].cssProperties.category == 'services'){
+                %>
+                    <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
+                        <div class="cloud-app-type <%=appTypes[y].cssProperties.color%>" app-type="<%=appTypes[y].name%>">
                                 <div class="app-thumbnail">
                                     <i class="fw <%=appTypes[y].cssProperties.icon%> fw-5x"></i>
                                     <div class="type-name" ><%=appTypes[y].cssProperties.displayName%></div>
@@ -89,22 +95,20 @@ jagg.template("apptype/select", function(inputs, outputs, jagg) {
                             </div>
                         </div>
                     <%
-                    }
-                }
             }
-            %>
-        </div>
-    <!--
-    Note: This will be enabled once custom docker image feature is completely supported.
-        <h1 class="page-header">Custom</h1>
-         <div class="row listing">
-        <%
-            if (appTypes.length > 0) {
-                for (var z = 0; z < appTypes.length; z++){
-                    if(appTypes[z].cssProperties && appTypes[z].cssProperties.category == 'custom'){
-                        %>
-                            <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
-                                <div class="cloud-app-type <%=appTypes[z].cssProperties.color%>" app-type="<%=appTypes[z].name%>">
+        }
+    }
+    %>
+</div>
+<h1 class="page-header">Custom</h1>
+ <div class="row listing">
+<%
+    if (appTypes.length > 0) {
+        for (var z = 0; z < appTypes.length; z++){
+            if(appTypes[z].cssProperties && appTypes[z].cssProperties.category == 'custom'){
+                %>
+                    <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2 ">
+                        <div class="cloud-app-type <%=appTypes[z].cssProperties.color%>" app-type="<%=appTypes[z].name%>">
                                         <div class="app-thumbnail">
                                             <i class="fw <%=appTypes[z].cssProperties.icon%> fw-5x"></i>
                                             <div class="type-name" ><%=appTypes[z].cssProperties.displayName%></div>
@@ -116,20 +120,19 @@ jagg.template("apptype/select", function(inputs, outputs, jagg) {
                                 </div>
                             </div>
                             <%
-                    }
-                }
             }
-            %>
-            </div>
-    -->
+        }
+    }
+    %>
     </div>
+</div>
 
 
 
 <script type="text/javascript">
-    $(document).on('click', '.cloud-app-type', function(){
-        var appType = $(this).attr('app-type');
-        location.href = '<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=' + appType;
+$(document).on('click', '.cloud-app-type', function(){
+var appType = $(this).attr('app-type');
+location.href = '<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=' + appType;
     })
 </script>
 <%

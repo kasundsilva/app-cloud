@@ -31,7 +31,7 @@ var messageTimer;
                                        jagg.infoMessage({
                                            type: 'confirm',
                                            modalStatus: true,
-                                           content: 'Your session has timed out due to inactivity and will be reloaded shortly.',
+                                           content: 'Your session has expired and will be reloaded shortly.',
                                            okCallback: function() {
                                                window.location.reload();
                                            }
@@ -116,6 +116,7 @@ var messageTimer;
              params.callback();
          }
     };
+
 
 
     /*
@@ -209,7 +210,7 @@ var messageTimer;
                                 }
                             }
                             },
-                            {addClass: 'btn btn-default', text: 'No', onClick: function($noty) {
+                            {addClass: 'btn btn-default', text: params.noText ? params.noText : 'No', onClick: function($noty) {
                                 $noty.close();
                                 if (isFunction(params.noCallback)) {
                                     params.noCallback();
@@ -227,8 +228,6 @@ var messageTimer;
                     });
 
     };
-
-
 
 		var e = jQuery.Event("keyup"); // or keypress/keydown
 		e.keyCode = 27; // for Esc

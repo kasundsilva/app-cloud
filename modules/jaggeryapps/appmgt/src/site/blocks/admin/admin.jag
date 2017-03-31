@@ -211,6 +211,30 @@ var log = new Log('site/blocks/admin/admin.jag');
             response.status = 400;
             response.content = 'Failed to redeploy all applications of all tenants due to ' + e.message;
         }
+    } else if (action == "publishDockerSecurityTestResults") {
+        var testResultJsonString = request.getParameter("testResultsJson");
+        log.info(testResultJsonString);
+        var modCustom = jagg.module("customDockerImages");
+        try {
+            modCustom.updateWithTestResults(testResultJsonString);
+        } catch (e) {
+            log.error(e);
+            // no need to set response since this is called by docker security container.
+        }
+    } else if (action == "publishTenantSubscription") {
+        var tenantDomain = request.getParameter("tenantDomain");
+        var cloudType = request.getParameter("cloudType");
+        var plan = request.getParameter("plan");
+        var startDate = request.getParameter("startDate");
+        var endDate = request.getParameter("endDate");
+        var status = request.getParameter("status");
+        try {
+            print(adminModule.publishTenantSubscription(tenantDomain, cloudType, plan, startDate, endDate, status));
+        } catch (e) {
+            log.error(e);
+            response.status = 400;
+            response.content = 'Failed to redeploy all applications of all tenants due to ' + e.message;
+        }
     } else {
         throw new Error("No action specified for: " + action);
     }

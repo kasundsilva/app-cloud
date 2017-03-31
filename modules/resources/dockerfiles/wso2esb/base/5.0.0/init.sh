@@ -8,6 +8,9 @@ sed -i "/port=\"9763\"/a    proxyPort=\"80\"" $CARBON_HOME_PATH/repository/conf/
 sed -i "/port=\"9443\"/a    proxyPort=\"443\"" $CARBON_HOME_PATH/repository/conf/tomcat/catalina-server.xml
 #sed -i '/<WebContextRoot>/c\\t<WebContextRoot>/dss</WebContextRoot>' $CARBON_HOME_PATH/repository/conf/carbon.xml
 
+#Change file properties
+cd $CARBON_HOME_PATH/repository/conf/ && bash config_modifier.sh;
+
 #Changing tenant admin password
 if [ -z ${TENANT_PASSWORD+x} ]; then
     echo "TENANT_PASSWORD is not set.";
@@ -42,15 +45,65 @@ else
 fi
 
 #Remove bundles from plugins dir and the bundles.info to minimize jaggery runtime
-PLUGINS_DIR_PATH="$CARBON_HOME_PATH/repository/components/plugins/"
-DEFAULT_PROFILE_BUNDLES_INFO_FILE="$CARBON_HOME_PATH/repository/components/default/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info"
-LIST_OF_BUNDLES_FILE="removed-bundles.txt"
+#PLUGINS_DIR_PATH="$CARBON_HOME_PATH/repository/components/plugins/"
+#DEFAULT_PROFILE_BUNDLES_INFO_FILE="$CARBON_HOME_PATH/repository/components/default/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info"
+#LIST_OF_BUNDLES_FILE="removed-bundles.txt"
 
-while read in; do rm -rf "$PLUGINS_DIR_PATH""$in" && sed -i "/$in/d" "$DEFAULT_PROFILE_BUNDLES_INFO_FILE"; done < $LIST_OF_BUNDLES_FILE
+#while read in; do rm -rf "$PLUGINS_DIR_PATH""$in" && sed -i "/$in/d" "$DEFAULT_PROFILE_BUNDLES_INFO_FILE"; done < $LIST_OF_BUNDLES_FILE
 
 #Remove sample
 rm -rf $CARBON_HOME_PATH/repository/deployment/server/axis2services/*
 rm -rf $CARBON_HOME_PATH/repository/deployment/server/webapps/*
+
+#set user defined TIMEZONE
+if [ -n "$TIMEZONE" ]; then
+        cp /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+        echo $TIMEZONE >  /etc/timezone
+fi
+
+#Enabling log enabled log4j properties
+echo $LOG4J_PROPERTIES | tr "," "\n" >>  $CARBON_HOME_PATH/repository/conf/log4j.properties
+
+#Set userdefined SO_TIMEOUT value in axis2 config
+if [ -n "$SO_TIMEOUT" ]; then
+	sed -i '/<transportSender name="http" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">/a <parameter name="SO_TIMEOUT">'$SO_TIMEOUT'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2_blocking_client.xml
+	sed -i '/<transportSender name="https" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">/a <parameter name="SO_TIMEOUT">'$SO_TIMEOUT'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2_blocking_client.xml
+fi
+
+#Set userdefined SO_TIMEOUT value in axis2_blocking_client config
+if [ -n "$SO_TIMEOUT" ]; then
+        sed -i '/<transportSender name="http" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">/a <parameter name="SO_TIMEOUT">'$SO_TIMEOUT'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2_blocking_client.xml
+        sed -i '/<transportSender name="https" class="org.apache.axis2.transport.http.CommonsHTTPTransportSender">/a <parameter name="SO_TIMEOUT">'$SO_TIMEOUT'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2_blocking_client.xml
+fi
+
+#set SMTP server information, check com.sun.mail.smtp package documentation for descriptions of properties
+if [ -n "$MAIL_SMTP_HOST" ]; then
+        sed -i '/<parameter name="mail.smtp.host">smtp.gmail.com/c <parameter name="mail.smtp.host">'$MAIL_SMTP_HOST'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_SMTP_PORT" ]; then
+        sed -i '/<parameter name="mail.smtp.port">587/c <parameter name="mail.smtp.port">'$MAIL_SMTP_PORT'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_STARTTLS_ENABLE" ]; then
+        sed -i '/<parameter name="mail.smtp.starttls.enable">true/c <parameter name="mail.smtp.starttls.enable">'$MAIL_STARTTLS_ENABLE'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_SMTP_AUTH" ]; then
+        sed -i '/<parameter name="mail.smtp.auth">true/c <parameter name="mail.smtp.auth">'$MAIL_SMTP_AUTH'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_SMTP_USER" ]; then
+        sed -i '/<parameter name="mail.smtp.user">synapse.demo.0/c <parameter name="mail.smtp.user">'$MAIL_SMTP_USER'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_SMTP_PASSWORD" ]; then
+        sed -i '/<parameter name="mail.smtp.password">mailpassword/c <parameter name="mail.smtp.password">'$MAIL_SMTP_PASSWORD'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
+
+if [ -n "$MAIL_SMTP_FROM" ]; then
+        sed -i '/<parameter name="mail.smtp.from">synapse.demo.0@gmail.com/c <parameter name="mail.smtp.from">'$MAIL_SMTP_FROM'</parameter>' $CARBON_HOME_PATH/repository/conf/axis2/axis2.xml
+fi
 
 #Check whether JAVA_OPTS env variable is defined and is not empty
 if [[ $JAVA_OPTS && ${JAVA_OPTS-_} ]]; then

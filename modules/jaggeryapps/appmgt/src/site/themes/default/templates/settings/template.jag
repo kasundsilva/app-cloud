@@ -132,7 +132,7 @@ jagg.template("settings", function (inputs, outputs, jagg) { %>
 
                         <div role="tabpanel" class="tab-pane" id="exposure-level">
                             <div class="from-group-margin">
-                                <p class="help-block">​​​By default, the applications you create in WSO2 App Cloud are public and accessible via the Internet. In order to secure and limit access to your applications, change your application's privacy using the following setting.</p>
+                                <p class="help-block">​​​By default, the applications you create in WSO2 Integration Cloud are public and accessible via the Internet. In order to secure and limit access to your applications, change your application's privacy using the following setting.</p>
                             </div>
                             <div class="from-group-margin">
                             <div class="form-group">
@@ -173,7 +173,7 @@ jagg.template("settings", function (inputs, outputs, jagg) { %>
                         <div role="tabpanel" class="tab-pane" id="scale-deployment-panel">
                         <% } %>
                             <div class="from-group-margin">
-                                <p class="help-block">By default WSO2 App Cloud will create your deployment in a single instance. But through the following settings you can horizontally scale your application to make it highly available.</p>
+                                <p class="help-block">By default WSO2 Integration Cloud will create your deployment in a single instance. But through the following settings you can horizontally scale your application to make it highly available.</p>
                             </div>
                             <div class="from-group-margin">
                                 <div class="form-group">

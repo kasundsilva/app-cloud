@@ -27,6 +27,7 @@ var context = carbon.multitenancy.getPrivilegedCarbonContext();
 var log = new Log("router");
 var action = request.getParameter("action");
 var audit = org.wso2.carbon.CarbonConstants.AUDIT_LOG;
+var applicationModule = jagg.module("application");
 
 if (uriMatcher.match(PAGE_URL)) {
     var args = uriMatcher.elements();
@@ -35,11 +36,54 @@ if (uriMatcher.match(PAGE_URL)) {
             context.startTenantFlow();
             context.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
             context.getThreadLocalCarbonContext().setUsername(jagg.getUser());
-            include(args.suffix);
             // filtered out get actions
             if (action != null && !(action.substring(0,3) == 'get')) {
                 audit.info("User : " + jagg.getUser() + ", Action : " + action);
             }
+            // check user requesting/passing valid data
+            var isUnauthorized = false;
+            if (action != "login") {
+                // check applicationName
+                var applicationName = request.getParameter("applicationName");
+                if ((action!= "uploadExistingArchive" && action != "createApplication" && action != "getApplicationHashIdOfMatchingAppName" && action != "generateApplicationHashId" && action != "getVersionHashId")
+                    && (applicationName != null && applicationName != 'null')) {
+                    var isApplicationNameValid = applicationModule.isApplicationNameValid(applicationName);
+                    if (!isApplicationNameValid) {
+                        response.status = 401;
+                        response.content = "Unauthorized Access. You are not allowed to access the given application";
+                        isUnauthorized = true;
+                    }
+                }
+                // check applicationKey
+                if (!isUnauthorized) {
+                    var applicationKey = request.getParameter("applicationKey");
+                    if (applicationKey != null && applicationKey != 'null') {
+                        var isApplicationKeyValid = applicationModule.isApplicationKeyValid(applicationKey);
+                        if (!isApplicationKeyValid) {
+                            response.status = 401;
+                            response.content = "Unauthorized Access. You are not allowed to access the given application";
+                            isUnauthorized = true;
+                        }
+                    }
+                }
+                // check application version hash id
+                if (!isUnauthorized) {
+                    var versionKey = request.getParameter("versionKey");
+                    if (versionKey != null && versionKey != 'null') {
+                        var isVersionKeyValid = applicationModule.isAplicationVersionExist(versionKey);
+                        if (!isVersionKeyValid) {
+                            response.status = 401;
+                            response.content = "Unauthorized Access. You are not allowed to access the given application version";
+                            isUnauthorized = true;
+                        }
+                    }
+                }
+            }
+
+            if (!isUnauthorized) {
+                include(args.suffix);
+            }
+
         } catch(e) {
             log.error('error occurred when starting tenant flow in router jag for uri:'+ request.getRequestURI());
             log.error(e);

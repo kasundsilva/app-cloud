@@ -27,8 +27,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var appTypeName = appType.type;
         var notAllowedEnvVariables = outputs.notAllowedEnvVariables;
         var isAppTypeBuildable = appType.buildable;
+        var isMultiArtifactsSupported = (appType.isMultiArtifactsSupported =='true');
         var applicationName = outputs.applicationName;
-        var subscriptionPlanBaseURL = outputs.subscriptionPlanBaseURL;
         var encodedLabels = request.getParameter("encodedLabels");
         var encodedEnvs = request.getParameter("encodedEnvs");
         var log = new Log();
@@ -36,7 +36,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var decodedEnvs = parse(decodeURIComponent(encodedEnvs, "UTF-8"));
         var newVersion = request.getParameter("newVersion");
         var data = null;
-        var allowedRuntimeContainerSpecJson = outputs.allowedContainerSpecs;
 		var maxApplications = outputs.maxAppCount;
         var defaultVersion = outputs.defaultVersion;
         var appTypeCount = outputs.appTypeCount;
@@ -47,10 +46,15 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var requestMoreAppseURL = outputs.requestMoreAppseURL;
         var allDBInfo = outputs.allDBInfo;
         var noOfDbs = outputs.noOfDbs;
+        var verifiedCustomImages = outputs.verifiedCustomImages;
+        var selectedImageId = outputs.selectedImageId;
+        var isThrottled = outputs.isThrottled;
+        var allowedRuntimeContainerSpecJson = outputs.throttledAllowedContainerSpecs;
+
     %>
 
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/bootstrap-3.2.0/bootstrap.min.css'))%>">
-      <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-wso2-1.0.0/css/font-wso2.css'))%>">
+      <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-wso2-1.2.1/css/font-wso2.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/font-awesome-4.2.0/font-awesome.min.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/web-fonts/Roboto.css'))%>">
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/styles.css'))%>">
@@ -72,6 +76,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
     var cloudSpecificApplicationRepresentation = "<%=cloudSpecificApplicationRepresentation%>";
     var runningApplicationCount = <%=runningApplicationCount%>;
     var maxApplications = <%=maxApplications%>;
+    var isThrottled = <%=isThrottled%>;
     var conSpecs = <%=conSpecs%>;
     var retryCount = 0;
     var iconErrorMsg = "Invalid Image";                // used to hold the validation error message of the app icon
@@ -82,6 +87,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
     var uploadURLErrorMsg = "";
     var uploadMethod = "file";
     var custom = "<%=CUSTOM%>";
+    var isMultiArtifactsSupported = <%=isMultiArtifactsSupported%>;
     if(appTypeName == custom){
         uploadMethod = "";
     }
@@ -98,27 +104,22 @@ jagg.template("application", function (inputs, outputs, jagg) {
     var envKeyRegex = new RegExp("<%=ENV_KEY_REGEX%>");
     var applicationList = <%=applications%>;
     var versionList = "<%=versionList%>";
-
     $(document).ready(function(){
             if (newVersion == "true") {
                 isNewVersion = true;
             }
-
             //Get allowed container specification names
             for (var i = 0; i < allowedRuntimeContainerSpecJson["data"].length; i++) {
                 containerSpecNamesJson.push(allowedRuntimeContainerSpecJson.data[i].conSpecName);
             }
-
             //Set container specifications in the select option
             if (containerSpecNamesJson.length > 0) {
                 var listItems = '<option selected="selected" onClick="maxApplicationCountValidate()">' +
                     containerSpecNamesJson[0] + '</option>';
-
                 for (var i = 1; i < containerSpecNamesJson.length; i++) {
                     listItems += '<option onClick="maxApplicationCountValidate()">' + containerSpecNamesJson[i] +
                         '</option>';
                 }
-
                 $("#container").html(listItems);
             }
 
@@ -129,13 +130,14 @@ jagg.template("application", function (inputs, outputs, jagg) {
             } else {
                 initSelect2(null, valueElem, "", allDBInfo);
             }
-            if (runningApplicationCount >= maxApplications) {
+
+            if (isThrottled){
                 $('#outerContainer').empty();
                 $('#outerContainer').html('<div class="container-fluid"><div class="row row-centered">' +
-                    '<div class="col-centered col-xs-10 col-sm-7  col-md-7 col-lg-6"><div class="cloud-new-content">' +
-                    '<h2>You can run only up to '+ maxApplications +' '+ cloudSpecificApplicationRepresentation.toLowerCase() + 's/versions simultaneously on a free subscription.</h2>' +
-                    '1. Stop an existing ' + cloudSpecificApplicationRepresentation.toLowerCase() + '/version to continue.<br>'+
-                    '2. <a href="<%=requestMoreAppseURL%>" target="_blank">Submit a request</a> to run more ' + cloudSpecificApplicationRepresentation.toLowerCase() + 's on free subscription.</div></div></div></div>');
+                  '<div class="col-centered col-xs-10 col-sm-7  col-md-7 col-lg-6"><div class="cloud-new-content">' +
+                  '<h2>Not enough resources to create new applications.</h2>' +
+                  '1. Stop an existing ' + cloudSpecificApplicationRepresentation.toLowerCase() + '/version to continue.<br>'+
+                  '2. <a href="<%=requestMoreAppseURL%>" target="_blank">Submit a request</a> to upgrade ' + cloudSpecificApplicationRepresentation.toLowerCase() + 's on your subscription.</div></div></div></div>');
                 return;
             }
 
@@ -256,13 +258,17 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     formData.append('conSpec', conSpecs[optionSpec]);
                     formData.append('runtime', optionRuntime);
                     if(appTypeName === custom) {
-                        formData.append('remoteImageUrl', $("#remoteImageUrl").val());
+                        formData.append('imageId', $("#verifiedImages option:selected").val());
                        // formData.append('userName', $("#userName").val());
                        // formData.append('password', $("#password").val());
                         formData.append('appCreationMethod', custom);
                     }
                     if(uploadMethod === "file"){
-                        formData.append('uploadedFileName', $("#uploadedFileName").val());
+                        if(isMultiArtifactsSupported){
+                             formData.append('uploadedFileName', getUploadedFileNames().join(" "));
+                        }else{
+                            formData.append('uploadedFileName', $("#uploadedFileName").val());
+                        }
                         formData.append('appCreationMethod', 'default');
                     } else if (uploadMethod === "url" ) {
                         formData.append('appCreationMethod', 'url');
@@ -288,7 +294,9 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     }
                     if (appTypeName === custom) {
                         var tagArray = new Array();
-                        var tagObj = { "key":"Base Image", "value":$("#remoteImageUrl").val() };
+                        // base image will be added as a tag, then user can later see the base image in app home UI.
+                        // otherwise there is no any other way to determine from which image this app has been created.
+                        var tagObj = { "key":"Base Image", "value":$("#verifiedImages option:selected").text() };
                         tagArray.push(tagObj);
                         formData.append('tags',JSON.stringify(tagArray));
                     } else {
@@ -327,12 +335,84 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     var status = jqXHR.status;
                     if (status == 200) {
                         fileMoved = true;
-                        $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
-                                "id=\"btn-artifact-upload\" disabled><input id=\"fileupload\" type=\"file\" " +
-                                "name=\"fileupload\">Uploaded &nbsp <i class=\"fw fw-check\"></i></span>");
-                        if (progress == 100) getVersionHashId();
+                        if (isMultiArtifactsSupported) {
+                            $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
+                                    "id=\"btn-artifact-upload\" ><input id=\"fileupload\" type=\"file\" " +
+                                    "name=\"fileupload\">Browse</span>");
+                            //Check whether the uploaded file is valid or not
+                            if (validateArtifact()) {
+                                if (!isFileAllReadyUploaded()) {
+                                     $('#artifactlist').append(
+                                                '<li class="list-group-item justify-content-between " style="background:#666;">'+
+                                                    '<span id="fileName" >'+$("#uploadedFileName").val()+'</span>'+
+                                                    '<a href="#">'+
+                                                    ' <span class="pull-right">'+
+                                                     '      <i class="fw fw-delete fw-inverse artifact-delete-btn"></i>'+
+                                                     ' </span>'+
+                                                     '</a>'+
+                                                 '</li>'
+                                     );
+
+                                     $(".artifact-delete-btn").on('click', function () {
+                                        $(this).parent().parent().parent().remove();
+                                     });
+                                }
+                                $("#uploadedFileName").val("");
+                           } else {
+                                //append "clear" button only if the uploaded file is wrong type
+
+                               if (!$("#clearArtifactFile").length) { //Check whether there is a Clear button
+                                   $("#file-upload-input-group").append(
+                                           '<span class="btn btn-primary btn-file" id="clearArtifactFile">'+
+                                                   'Clear'+
+                                           '</span>'
+
+                                   );
+
+                                   $("#clearArtifactFile").on('click', function () {
+                                      if ($("#uploadedFileName").val()) {
+
+                                           $('#progress .progress-bar').css('width', '0%');
+                                           $("#fileupload").find(".files").empty();
+                                           $("#uploadedFileName").find(".files").empty();
+                                           $("#uploadedFileName").val("");
+                                           $("#fileupload").val("");
+                                           $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
+                                                                  "id=\"btn-artifact-upload\" name=\"btn-artifact-upload\" disabled><input id=\"fileupload\" type=\"file\" " +
+                                                                  "name=\"fileupload\">Browse</span>");
+                                           activateUploadButton();
+                                           var validator = $( "#application-details" ).validate();
+                                           validator.element( "#uploadedFileName" );
+                                           $('#fileupload').fileupload({
+                                               submit: onSubmit,
+                                               progressall: onProgressAll,
+                                               change: onChangeFileUpload
+                                           });
+                                           $(this).remove();
+
+                                      }
+                                   });
+                               }
+                           }
+                         } else {
+                            $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
+                                                            "id=\"btn-artifact-upload\" disabled><input id=\"fileupload\" type=\"file\" " +
+                                                                  "name=\"fileupload\">Uploaded &nbsp <i class=\"fw fw-check\"></i></span>");
+                         }
+
+
+                        $('#fileupload').fileupload({
+                                        submit: onSubmit,
+                                        progressall: onProgressAll,
+                                        change: onChangeFileUpload
+                        });
+
+                        if (progress == 100) {
+                            getVersionHashId();
+                        }
                         var validator = $( "#application-details" ).validate();
                         validator.element( "#uploadedFileName" );
+
                     } else {
                         progress = 0;
                         $('#progress .progress-bar').css('width', progress + '%');
@@ -350,13 +430,30 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
                                         "id=\"btn-artifact-upload\" disabled>Uploading &nbsp <i class=\"fw fw-loader2 fw-spin\"></i></span>");
                 progress = parseInt(data.loaded / data.total * 100, 10);
-                $('#progress .progress-bar').css('width', progress + '%');
+                if (isMultiArtifactsSupported) {
+                     //Bring Progress bar from 0 to 100 and then from 100 to 0
+                     $('#progress .progress-bar').css('width', progress + '%')
+                                                 .delay(1000).queue(function (next) {
+                                                   $(this).replaceWith(
+                                                     '<div id="progress" class="progress">'+
+                                                         ' <div class="progress-bar progress-bar-success" style="width: 0%;"></div>'+
+                                                     ' </div>   '
+                                                   );
+                                                   next();
+                                                 });
+                } else {
+                    $('#progress .progress-bar').css('width', progress + '%');
+                }
+
                 if (progress == 100) {
                     $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
                         "id=\"btn-artifact-upload\" disabled>Processing &nbsp <i class=\"fw fw-loader2 fw-spin\"></i></span>");
                 }
                 if (progress == 100 && fileMoved) {
                     getVersionHashId();
+                    if(isMultiArtifactsSupported) {
+                        fileMoved = false;
+                    }
                 }
             }
 
@@ -364,9 +461,10 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 progress = 0;
                 activateCreateApplication();
                 $.each(data.files, function(index, file) {
-                    $("#uploadedFileName").val(file.name);
+                  $("#uploadedFileName").val(file.name);
                 });
                 $('#progress .progress-bar').replaceWith("<div class=\"progress-bar progress-bar-success\" style=\"width: 0%;\"></div>");
+
             }
 
             $('#fileupload').fileupload({
@@ -375,6 +473,9 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 change: onChangeFileUpload
             });
 
+        /**
+        * Method to get version hash id given the application name and application revision.
+        */
         function getVersionHashId() {
             jagg.post("../blocks/application/application.jag", {
                 action: "getVersionHashId",
@@ -765,44 +866,46 @@ jagg.template("application", function (inputs, outputs, jagg) {
         $('#remoteImageUrl').on('focusout keyup blur click', function () { // fires on every keyup & blur
             activateCreateApplication();
         });
-    
-        $("#clearArtifactFile").on('click', function () {
-            $('#progress .progress-bar').css('width', '0%');
-            $("#fileupload").find(".files").empty();
-            $("#uploadedFileName").find(".files").empty();
-            $("#uploadedFileName").val("");
-            $("#fileupload").val("");
-            $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
-                                   "id=\"btn-artifact-upload\" name=\"btn-artifact-upload\" disabled><input id=\"fileupload\" type=\"file\" " +
-                                   "name=\"fileupload\">Browse</span>");
-            activateUploadButton();
-            var validator = $( "#application-details" ).validate();
-            validator.element( "#uploadedFileName" );
-            $('#fileupload').fileupload({
-                submit: onSubmit,
-                progressall: onProgressAll,
-                change: onChangeFileUpload
-            });
-        });
+        if(!isMultiArtifactsSupported){
+             $("#clearArtifactFile").on('click', function () {
 
+                    $('#progress .progress-bar').css('width', '0%');
+                    $("#fileupload").find(".files").empty();
+                    $("#uploadedFileName").find(".files").empty();
+                    $("#uploadedFileName").val("");
+                    $("#fileupload").val("");
+                    $('#btn-artifact-upload').replaceWith("<span class=\"btn btn-primary btn-file\" " +
+                                           "id=\"btn-artifact-upload\" name=\"btn-artifact-upload\" disabled><input id=\"fileupload\" type=\"file\" " +
+                                           "name=\"fileupload\">Browse</span>");
+                    activateUploadButton();
+                    var validator = $( "#application-details" ).validate();
+                    validator.element( "#uploadedFileName" );
+                    $('#fileupload').fileupload({
+                        submit: onSubmit,
+                        progressall: onProgressAll,
+                        change: onChangeFileUpload
+                    });
+            });
+        }
         $('.radio-inline').hover(enableRadioButtons);
     });
 
     function activateCreateApplication() {
 
-        //first disable the button and then enable it only if condions are satisfied
+        //first disable the button and then enable it only if conditions are satisfied
         $("#add-application").prop("disabled", true);
 
         if ($('#applicationName').val() && $('#applicationRevision').val() && $('#container option:selected').val() &&
             $('#runtime').val() > 0 && checkApplicationVersionExistence($('#applicationRevision').val())) {// mandatory validations for all app types
             if (appTypeName == custom) { // validations for custom app type
-                if ($("#remoteImageUrl").val()) {
-                    $("#add-application").prop("disabled", false);
-                }
+                    $("#add-application").prop("disabled", false); // for the custm app type mandatory fields are enough.
             } else {
-                if ($("#uploadedFileName").val() || $("#artifactUrl").val() || ($("#gitRepoUrl").val()  && $("#gitRepoBranch").val())) { // validations for non custom app types
-                    if ($("#uploadedFileName").val() && progress == 100) {
-                        if (validateArtifactType($("#uploadedFileName").val())) {
+                var isFileUploaded = (isMultiArtifactsSupported ? isMultiArtifactsUploaded(): $("#uploadedFileName").val());
+
+                if (isFileUploaded || $("#artifactUrl").val() || ($("#gitRepoUrl").val()  && $("#gitRepoBranch").val())) { // validations for non custom app types
+                    if (isFileUploaded && progress == 100) {
+
+                        if (isMultiArtifactsSupported ? (validateMultiArtifactTypes() && (!$("#uploadedFileName").val()))  : validateArtifactType($("#uploadedFileName").val())) {
                             $("#add-application").prop("disabled", false);
                         }
                     } else if ($("#artifactUrl").val()) {
@@ -899,15 +1002,45 @@ jagg.template("application", function (inputs, outputs, jagg) {
             return true;
         }
     }
+    //Check whether multiple files are uploaded
+    function isMultiArtifactsUploaded(){
+        var fileElements = $("#artifactlist").children();
+        return fileElements.length != 0;
+    }
+    function validateMultiArtifactTypes(){
+        if(isMultiArtifactsSupported && isMultiArtifactsUploaded()){
+            var tmpFileNames = getUploadedFileNames();
+            for(var i = 0 ; i < tmpFileNames.length ; i++){
+                if(!validateArtifactType(tmpFileNames[i])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    function isFileAllReadyUploaded(){
+        var tmpFileNames = getUploadedFileNames();
+        if (tmpFileNames.length == 0 ) {
+            return false;
+        }
+        return [].some.call(tmpFileNames, function(val) {
+            return val ==  $("#uploadedFileName").val();
+        });
+    }
+    //Get all the uploaded File Names as an array
+    function getUploadedFileNames(){
+        var fileNames = [];
+        var fileElements = $("#artifactlist").children();
+        for(var i=0 ; i < fileElements.length ; i++){
+            fileNames[i] = $(fileElements[i]).children("#fileName").text();
+        }
+        return fileNames;
+    }
 
     // Return whether the artifact is validated or not
     function validateArtifact(value) {
         var file = $("#uploadedFileName");
-        if (file.val() != "") {
-            return validateArtifactType(file.val());
-        } else {
-            return true;
-        }
+        return ((file.val() != "") ? validateArtifactType(file.val()) : true);
     }
 
     function validateEnvironmentVariable(value){
@@ -1082,6 +1215,14 @@ jagg.template("application", function (inputs, outputs, jagg) {
             </a>
         <%
     }
+    if(appType.type == CUSTOM) { %>
+        <a href="<%=jagg.getAbsoluteUrl("/site/pages/custom-docker-images.jag")%>" class="btn-action">
+                <span class="fw-stack fw-lg btn-action-ico">
+                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                    <i class="fw fw-build fw-stack-1x"></i> <!-- put  fw-docker icon once font-wso2 package is updated -->
+                </span> Manage Images
+            </a>
+   <% }
     %>
 </div>
 <!-- EOF App Cloud menu actionbar-->
@@ -1103,6 +1244,33 @@ jagg.template("application", function (inputs, outputs, jagg) {
             <div class="col-md-5 forms">
 
       <form id="application-details" method="post" action='<%=jagg.getAbsoluteUrl("/site/blocks/application/application.jag")%>' enctype="multipart/form-data">
+            </br>
+            <% if(appType.type == CUSTOM) {%>
+                <div class="form-group" id="custom-docker-image-block">
+                    <div class="row">
+                        <label class="col-md-12" for="runtime">Custom Image: </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <select name="verifiedImages" id="verifiedImages" class="form-control">
+                                <%
+                                for(var i = 0; i < verifiedCustomImages.length; i++) {
+                                    var image = verifiedCustomImages[i];
+                                    if(image.imageId == selectedImageId) { // image is selected
+                                        print('<option selected value="' + image.imageId + '">' + image.remoteUrl + '</option>');
+                                    } else {
+                                        print('<option value="' + image.imageId + '">' + image.remoteUrl + '</option>');
+                                    }
+                                %>
+                                <%}%>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <a  href="custom-docker-images.jag" class="btn btn-primary" >Manage Images</a>
+                        </div>
+                    </div>
+                </div>
+            <%}%>
             <div class="form-group">
                 <label for="application-name"><%=cloudSpecificApplicationRepresentation%> Name: *</label>
                 <input id="applicationName" name="applicationName" type="text" class="form-control" placeholder="Enter <%=cloudSpecificApplicationRepresentation.toLowerCase()%> name" maxlength="100" />
@@ -1178,18 +1346,30 @@ jagg.template("application", function (inputs, outputs, jagg) {
             </div>
 
             <div class="form-group" id="file-upload-block">
-                <div>
-                    <label for="application-description" >Upload a <b>.<%=appType.extension.toUpperCase()%></b> file: *</label>
-                </div>
+                 <%if(isMultiArtifactsSupported){%>
+                  <div>
+                         <label for="application-description" >Upload  <b>.<%=appType.extension.toUpperCase()%></b> files: *</label>
+                  </div>
+                 <ul id = "artifactlist" class="list-group">
+
+                </ul>
+                <%}else{%>
+                  <div>
+                     <label for="application-description" >Upload a <b>.<%=appType.extension.toUpperCase()%></b> file: *</label>
+                 </div>
+
+                <%}%>
                 <div class="input-group">
                     <input id="uploadedFileName" name="uploadedFileName" type="text" class="form-control" readonly>
-                    <span class="input-group-btn">
+                    <span class="input-group-btn" id="file-upload-input-group">
                        <span class="btn btn-primary btn-file" id="btn-artifact-upload" disabled>
                            <input id="fileupload" type="file" name="fileupload">Browse</input>
                        </span>
-                       <span class="btn btn-primary btn-file" id="clearArtifactFile">
-                          Clear
-                       </span>
+                    <%if(!isMultiArtifactsSupported){%>
+                        <span class="btn btn-primary btn-file" id="clearArtifactFile">
+                            Clear
+                        </span>
+                    <%}%>
                     </span>
                 </div>
                 <div id="progress" class="progress">
@@ -1231,26 +1411,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     <input id="token" name="token" type="text" class="form-control" placeholder="Enter Personal access token" />
                 </div-->
             </div>
-            <%} else {%>
-             <div class="form-group" id="custom-docker-image-block">
-                <div class="input-group">
-                    <span class="input-group-addon">Image ID</span>
-                    <input id="remoteImageUrl" name="remoteImageUrl" type="text" class="form-control" placeholder="docker.io/testuser/testimage:testtag" />
-                </div>
-                </br>
-               <!-- <div class="input-group">
-                    <span class="input-group-addon">User name</span>
-                    <input id="userName" name="userName" type="text" class="form-control" placeholder="required only if repo is private" />
-                </div>
-                <br>
-                <div class="input-group">
-                    <span class="input-group-addon">Password</span>
-                    <input id="password" name="password" type="password" class="form-control" placeholder="required only if repo is private" />
-                </div> -->
-            </div>
-
              <%}%>
-            <div class="form-group <%if(appType.type == CUSTOM) { %>hidden <% } %>">
+            <div class="form-group">
                 <label for="runtime">Runtime: *
                     <i class="fa fa-question-circle help-tips" data-toggle="tooltip" data-placement="left" title="Select an appropriate runtime to run your <%=cloudSpecificApplicationRepresentation.toLowerCase()%>"></i>
                 </label>

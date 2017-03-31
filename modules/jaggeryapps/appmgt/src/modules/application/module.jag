@@ -202,14 +202,9 @@ jagg.module("application", {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").getNotAllowedEnvVariables.apply(this, arguments);
     },
 
-    getMaxInstanceCount: function () {
-        return jagg.require(jagg.getModulesDir() + "application/application.jag").getMaxInstanceCount.apply(this, arguments);
-    },
-
     stopOtherVersions: function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").stopOtherVersions.apply(this, arguments);
     },
-
     getApplicationRevisionStatus:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").getApplicationRevisionStatus.apply(this, arguments);
     },
@@ -263,15 +258,12 @@ jagg.module("application", {
     getAppTypeUtil:function () {
         return jagg.require(jagg.getModulesDir() + "application/appTypeUtil.jag").getAppTypeUtil.apply(this, arguments);
     },
-
     isEnvironmentVariableExist:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").isEnvironmentVariableExist.apply(this, arguments);
     },
-
     isTagExist:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").isTagExist.apply(this, arguments);
     },
-
     isVersionExist:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").isVersionExist.apply(this, arguments);
     },
@@ -303,8 +295,15 @@ jagg.module("application", {
     getReplicaCountForVersion:function () {
         return jagg.require(jagg.getModulesDir() + "application/application.jag").getReplicaCountForVersion.apply(this, arguments);
     },
-    getMaxReplicaCount:function () {
-        return jagg.require(jagg.getModulesDir() + "application/application.jag").getMaxReplicaCount.apply(this, arguments);
+    getVersionByHashId:function () {
+        return jagg.require(jagg.getModulesDir() + "application/application.jag").getVersionByHashId.apply(this, arguments);
+    },
+    isApplicationNameValid: function () {
+        return jagg.require(jagg.getModulesDir() + "application/application.jag").isApplicationNameValid.apply(this, arguments);
+    },
+    isApplicationKeyValid: function () {
+        return jagg.require(jagg.getModulesDir() + "application/application.jag").isApplicationKeyValid.apply(this, arguments);
     }
-});
+
+    });
 %>

@@ -34,8 +34,8 @@ function initSelect2(data, element, path, allDBInfo) {
         width: '350px',
         tags: true,
         selectOnBlur: true,
-        createSearchChoice: function(term, data) {
-            if ($(data).filter(function() {
+        createSearchChoice: function (term, data) {
+            if ($(data).filter(function () {
                     return this.text.localeCompare(term) === 0;
                 }).length === 0) {
                 return {
@@ -47,7 +47,7 @@ function initSelect2(data, element, path, allDBInfo) {
     });
 
     /* Display values based on selected value in dropdown */
-    $select.on("select2:select", function(e) {
+    $select.on("select2:select", function (e) {
         e.params.data.text = e.params.data.id;
         $select.val(e.params.data.id).trigger('change');
         if (e.params.data.isNew != undefined && e.params.data.isNew) {
@@ -83,8 +83,7 @@ function initSelect2(data, element, path, allDBInfo) {
         }
     });
 
-    $(".select2-search__field").on('input', function(e) {
-
+    $(".select2-search__field").on('input', function (e) {
         if ($(this).val() == "database:") {
             var dbs;
             if(allDBInfoForSelect2){
@@ -95,7 +94,7 @@ function initSelect2(data, element, path, allDBInfo) {
             } else {
                 jagg.post("../blocks/database/list/ajax/list.jag", {
                     action: "getAllDatabasesInfo"
-                }, function(result) {
+                }, function (result) {
                     dbs = JSON.parse(result);
                     $select.trigger('change');
                     $select = initSelect2(dbs, element, "database:");
@@ -105,9 +104,8 @@ function initSelect2(data, element, path, allDBInfo) {
         }
     });
 
-    $select.on("change", function(e) {
+    $select.on("change", function (e) {
         var text = e.target.value;
-
         if (text.length > 45) {
             var truncatedText = jQuery.trim(text).substring(0, 42).slice(0, -1) + "...";
             $('.select2-selection__choice').text(truncatedText);

@@ -77,8 +77,8 @@ public class EventsDAO {
 
             preparedStatement.execute();
         } catch (SQLException e) {
-            String msg = "Error while adding app creation event : " + event.getEventName() + ", status : "
-                    + event.getEventStatus() + ", timestamp : " + event.getTimestamp() + " for version: " +
+            String msg = "Error while adding application creation event : " + event.getEventName() + ", status : "
+                    + event.getEventStatus() + ", timestamp : " + event.getTimestamp() + " for version : " +
                     versionHashId + " in tenant : " + tenantId;
             throw new AppCloudException(msg, e);
         } finally {
@@ -106,8 +106,8 @@ public class EventsDAO {
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            String msg = "Error occurred while deleting all the events for application version hash id " +
-                    versionHashId + " in tenant " + tenantId;
+            String msg = "Error occurred while deleting all the events for application version hash id : " +
+                    versionHashId + " in tenant : " + tenantId;
             throw new AppCloudException(msg, e);
 
         } finally {
