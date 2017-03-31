@@ -65,6 +65,13 @@ var jagg = jagg || (function () {
     };
 
     var setUser = function (user) {
+        //if jaggery allows session reset - with patch0809
+        if (typeof request.getSession == "function") {
+            if (session && !session.isNew()) {
+                session.invalidate();
+            }
+            session = request.getSession(true);
+        }
         session.put("logged.user", user);
     };
 
