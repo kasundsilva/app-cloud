@@ -45,5 +45,8 @@ public class DockerClientConstants {
     public static final String DOCKER_PUSH_TIMEOUT = "Docker.Push.Timeout";
     public static final String DOCKER_BUILLD_TIMEOUT = "Docker.Build.Timeout";
     public static final String DOCKER_SEARCH_TIMEOUT = "Docker.Search.Timeout";
+    public static final String DOCKER_REGISTRY_USERNAME = "Docker.Registry.Username";
+    public static final String DOCKER_REGISTRY_PASSWORD = "Docker.Registry.Password";
+    public static final String DOCKER_REGISTRY_SERVER = "Docker.Registry.Server";
 }
 
