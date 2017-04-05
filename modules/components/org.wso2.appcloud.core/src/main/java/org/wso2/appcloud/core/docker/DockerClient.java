@@ -186,7 +186,8 @@ public class DockerClient {
 
                                      @Override
                                      public void onError(String message) {
-                                         log.error("Build Failure:" + message);
+                                         // log as a warning because docker build operation is retried by jaggery client
+                                         log.warn("Build Failure:" + message);
                                          buildDone.countDown();
                                      }
 
@@ -246,7 +247,8 @@ public class DockerClient {
 
                                      @Override
                                      public void onError(String message) {
-                                         log.error("Push Failure:" + message);
+                                         // log as warning because docker push operation is retried by jaggery client
+                                         log.warn("Push Failure:" + message);
                                          pushDone.countDown();
                                      }
 
