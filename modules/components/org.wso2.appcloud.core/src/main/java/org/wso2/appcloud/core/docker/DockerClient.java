@@ -16,13 +16,15 @@
 
 package org.wso2.appcloud.core.docker;
 
-import com.google.common.base.Strings;
+import io.fabric8.docker.api.model.AuthConfig;
 import io.fabric8.docker.client.Config;
 import io.fabric8.docker.client.ConfigBuilder;
 import io.fabric8.docker.client.DefaultDockerClient;
 import io.fabric8.docker.dsl.EventListener;
 import io.fabric8.docker.dsl.OutputHandle;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.appcloud.common.AppCloudException;
@@ -31,6 +33,7 @@ import org.wso2.appcloud.common.util.AppCloudUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -60,6 +63,20 @@ public class DockerClient {
     }
 
     public DockerClient(String uri) {
+        // if docker registry is secured, set auth configuration
+        Map<String, AuthConfig> authConfigMap = new HashMap<>();
+        String securedDockerRegistryServer = AppCloudUtil.getPropertyValue(DockerClientConstants.DOCKER_REGISTRY_SERVER);
+        if (StringUtils.isNotEmpty(securedDockerRegistryServer)) {
+            AuthConfig authConfig = new AuthConfig();
+            authConfig.setUsername(AppCloudUtil.getPropertyValue(DockerClientConstants.DOCKER_REGISTRY_USERNAME));
+            authConfig.setPassword(new String(Base64.decodeBase64(
+                    AppCloudUtil.getPropertyValue(DockerClientConstants.DOCKER_REGISTRY_PASSWORD))));
+            authConfig.setServeraddress(securedDockerRegistryServer);
+
+            authConfigMap.put(authConfig.getServeraddress(), authConfig);
+            log.debug("Auth configuration is successfully set for registry:" + securedDockerRegistryServer);
+        }
+
         Config config = new ConfigBuilder()
                 .withDockerUrl(uri)
                 .withConnectionTimeout(Integer.parseInt(AppCloudUtil.getPropertyValue(DockerClientConstants
@@ -72,6 +89,7 @@ public class DockerClient {
                         .DOCKER_BUILLD_TIMEOUT)))
                 .withImageSearchTimeout(Integer.parseInt(AppCloudUtil.getPropertyValue(DockerClientConstants
                         .DOCKER_SEARCH_TIMEOUT)))
+                .withAuthConfigs(authConfigMap)
                 .build();
         dockerClient = new DefaultDockerClient(config);
     }
@@ -168,7 +186,8 @@ public class DockerClient {
 
                                      @Override
                                      public void onError(String message) {
-                                         log.error("Build Failure:" + message);
+                                         // log as a warning because docker build operation is retried by jaggery client
+                                         log.warn("Build Failure:" + message);
                                          buildDone.countDown();
                                      }
 
@@ -228,7 +247,8 @@ public class DockerClient {
 
                                      @Override
                                      public void onError(String message) {
-                                         log.error("Push Failure:" + message);
+                                         // log as warning because docker push operation is retried by jaggery client
+                                         log.warn("Push Failure:" + message);
                                          pushDone.countDown();
                                      }
 
