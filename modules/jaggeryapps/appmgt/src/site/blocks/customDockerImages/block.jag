@@ -21,6 +21,7 @@ include('/jagg/constants.jag');
 include('/jagg/jagg.jag');
 var log = new Log();
 var modManager = jagg.module("manager");
+var mod = jagg.module("customDockerImages");
 jagg.block("customDockerImages", {
     initialize: function (data) {
 
@@ -33,8 +34,12 @@ jagg.block("customDockerImages", {
 
     getOutputs: function (inputs) {
         var testsJson = modManager.getPropertyValue("CustomDocker.SecurityTests");
+        var cloudTitle = modManager.getCloudTypeProperties().cloudTitle;
+        var imagesCount = mod.getAllImages().length;
         return {
-            "testsJson": testsJson
+            "testsJson": testsJson,
+            "imagesCount": imagesCount,
+            "cloudTitle" : cloudTitle
         };
     }
 });
