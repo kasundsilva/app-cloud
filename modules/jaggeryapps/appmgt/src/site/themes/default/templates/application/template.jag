@@ -108,6 +108,12 @@ jagg.template("application", function (inputs, outputs, jagg) {
             if (newVersion == "true") {
                 isNewVersion = true;
             }
+
+            $('#verifiedImages').change(function(){
+               if(this.value == 'add_new_image'){
+                   $("<a>").attr("href", "custom-docker-images.jag")[0].click();
+               }
+            });
             //Get allowed container specification names
             for (var i = 0; i < allowedRuntimeContainerSpecJson["data"].length; i++) {
                 containerSpecNamesJson.push(allowedRuntimeContainerSpecJson.data[i].conSpecName);
@@ -177,7 +183,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
             });
 
             // Adding a new runtime option for requesting missing runtimes through mails.
-            $("#runtime").append('<option value="requestNewRuntime">Request new runtime...</option>');
+            $("#runtime").append('<option class="option_link" value="requestNewRuntime">Request new runtime...</option>');
             $('#runtime').change(function(){
                if(this.value == 'requestNewRuntime'){
                     $("<a>").attr("href", '<%=requestNewAppTypeURL%>').attr("target", "_blank")[0].click();
@@ -1263,10 +1269,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                                     }
                                 %>
                                 <%}%>
+                                <option class="option_link" value="add_new_image">+ Add</option>
                             </select>
-                        </div>
-                        <div class="col-md-4">
-                            <a  href="custom-docker-images.jag" class="btn btn-primary" >Manage Images</a>
                         </div>
                     </div>
                 </div>
@@ -1275,7 +1279,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 <label for="application-name"><%=cloudSpecificApplicationRepresentation%> Name: *</label>
                 <input id="applicationName" name="applicationName" type="text" class="form-control" placeholder="Enter <%=cloudSpecificApplicationRepresentation.toLowerCase()%> name" maxlength="100" />
             </div>
-
         <% if(newVersion){ %>
             <div class="row">
                 <div class="col-md-7">
@@ -1311,14 +1314,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
             </label>
             <textarea name="applicationDescription" class="form-control" rows="3" placeholder="<%=cloudSpecificApplicationRepresentation%> description goes here. (Optional)"></textarea>
             </div>
-
-            <!--div class="form-group">
-            <label>No Of Replicas: </label>
-            <select name="replicas" id="replicas" class="form-control">
-                <option value="None" selected="Selected">Select replicas</option>
-                <option value="1" >1</option>
-            </select>
-            </div-->
 
             <%if(appType.type != CUSTOM) { %>
             <div class="form-group">

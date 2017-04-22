@@ -21,61 +21,94 @@ include("/jagg/jagg.jag");
 
 jagg.template("customDockerImages", function (inputs, outputs, jagg) {
     var testsJson = outputs.testsJson;
+    var imagesCount = outputs.imagesCount;
+    var cloudTitle = outputs.cloudTitle;
     var log = new Log();
     %>
 
     <script type="text/javascript">
         var testsJson = '<%=testsJson%>'; // This contains the json string value of the parameter CustomDocker.SecurityTests in appcloud.properties
         testsJson = JSON.parse(testsJson);
+        var imagesCount = <%=imagesCount%>;
     </script>
 
     <!-- BOF App factory menu actionbar -->
    <div class="action-bar">
-       <a href="/appmgt/site/pages/application.jag?appTypeName=custom" class="btn-action">
-               <span class="fw-stack fw-lg btn-action-ico">
-                   <i class="fw fw-circle-outline fw-stack-2x"></i>
-                   <i class="fw fw-left-arrow fw-stack-1x"></i>
-               </span> <span class="hidden-xs">Back to application creation</span>
+        <a href="<%=jagg.getAbsoluteUrl("/site/pages/select-apptype.jag")%>" class="btn-action">
+            <span class="fw-stack fw-lg btn-action-ico">
+                <i class="fw fw-circle-outline fw-stack-2x"></i>
+                <i class="fw fw-left-arrow fw-stack-1x"></i>
+            </span> Back to app type selection
         </a>
+        <a href="<%=jagg.getAbsoluteUrl("/site/pages/index.jag")%>" class="btn-action">
+            <span class="fw-stack fw-lg btn-action-ico">
+                <i class="fw fw-circle-outline fw-stack-2x"></i>
+                <i class="fa fa-mail-reply-all fa-stack-1x"></i>
+            </span> Cancel
+         </a>
    </div><!-- EOF App factory menu actionbar-->
 
    <div class="container-fluid cloud-container" id="outerContainer">
-        <div class="row">
-            <form name="addImageForm" id="addImageForm" enctype="multipart/form-data" method='post' action='#'>
-                <div class="col-md-5 col-lg-5 forms">
-                    <div class="form-group col-md-12 ">
+   <% if (imagesCount > 0 ) { %>
+       <div id="warning-block">
+       </div>
+        <form name="addImageForm" id="addImageForm" enctype="multipart/form-data" method='post' action='#'>
+            <div class="forms">
+                <div class="form-group clearfix">
+                     <div class="col-md-5 col-lg-5">
                         <label for="imageUrl">Image URL: * </label>
-                        <input type="text" title="Paste here what you usually type with 'docker pull' command" class="form-control" id="imageUrl"  name="imageUrl"  placeholder="registry_url/image_name:tag" value="">
-                    </div>
-                    <div class="clearfix"></div>
-                    <!-- This will be enabled once authentication is done-->
-                    <!--<div class="form-group col-md-6">-->
-                        <!--<label for="userName">User Name: <I>(only for private images)</I></label>-->
-                        <!--<input type="text" class="form-control" id="userName" name="userName" placeholder="Enter user name">-->
-                    <!--</div>-->
-                    <!--<div class="clearfix"></div>-->
-                     <!--<div class="form-group col-md-6">-->
-                        <!--<label for="password">Password: <I>(only for private images)</I></label>-->
-                        <!--<input type="password" class="form-control" id="password" name="password" placeholder="Enter password">-->
-                    <!--</div>-->
-                    <div class="clearfix"></div>
-                    <div class="form-group col-md-6">
-                        <button type="button" class="cu-btn cu-btn-sm cu-btn-blue" id="addImage" name="addImage" onclick="addNewImage()" disabled>
-                            <span class="fw-stack fw-lg btn-action-ico">
-                                <i class="fw fw-circle-outline fw-stack-2x"></i>
-                                <i class="fw fw-add fw-stack-1x"></i>
+                        <div class="input-group">
+                            <input type="text" title="Paste here what you usually type with 'docker pull' command" class="form-control" id="imageUrl"  name="imageUrl"  placeholder="registry_url/image_name:tag" value="">
+                            <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary" id="addImage" name="addImage" onclick="addNewImage(false)" disabled>
+                                Add
+                            </button>
                             </span>
-                            Add Image
-                        </button>
+                        </div>
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="row col-md-8" id="dockerImagesPanelDiv" hidden>
-            <div class="panel panel-default">
-                <table class="table image-panel" id="customImagesTable"></table>
+                <!-- This will be enabled once authentication is done-->
+                <!--<div class="form-group col-md-6">-->
+                    <!--<label for="userName">User Name: <I>(only for private images)</I></label>-->
+                    <!--<input type="text" class="form-control" id="userName" name="userName" placeholder="Enter user name">-->
+                <!--</div>-->
+                <!--<div class="clearfix"></div>-->
+                 <!--<div class="form-group col-md-6">-->
+                    <!--<label for="password">Password: <I>(only for private images)</I></label>-->
+                    <!--<input type="password" class="form-control" id="password" name="password" placeholder="Enter password">-->
+                <!--</div>-->
+            </div>
+        </form>
+        <div class="row">
+            <div class="col-md-8">
+                <ul class="custom-list-group" id="imageList">
+                </ul>
             </div>
         </div>
+        <% } else { %>
+        <div class="row row-centered">
+            <div class="col-centered col-xs-7 col-sm-5 col-md-7 col-lg-4">
+                <div class="cloud-new-content">
+                    <h1>Let's add a docker image</h1>
+                    <h4>Currently there are no docker images to manage</h4>
+                    <div class="form-group add-margin-top-50">
+                    <div class="help" for="application-icon">Docker image URL:
+                        <i class="fa fa-question-circle help-tips" data-toggle="tooltip" data-placement="left" title="Paste here what you usually type with 'docker pull' command"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="first_imageUrl"  name="first_imageUrl" class="form-control" placeholder="registry_url/image_name:tag">
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary" id="addFirstImage" name="addFirstImage" onclick="addNewImage(true)" disabled>
+                                Add
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
    </div><!-- /.container -->
 
 <!-- Modal -->
