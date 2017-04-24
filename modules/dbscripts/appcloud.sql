@@ -619,10 +619,10 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- --------------------------------------------------
 -- CUSTOM DOCKER IMAGE TABLE
 -- --------------------------------------------------
-CREATE TABLE IF NOT EXISTS `AppCloudDB`.`AC_CUSTOM_DOCKER_IMAGES` (
-  `image_id` VARCHAR(500) NOT NULL,
+CREATE TABLE IF NOT EXISTS AC_CUSTOM_DOCKER_IMAGES (
+  `image_id` VARCHAR(255) NOT NULL,
   `tenant_id` INT NOT NULL,
-  `remote_url` VARCHAR(500) NULL,
+  `remote_url` VARCHAR(255) NULL,
   `test_results_json` VARCHAR(500) NULL,
   `status` VARCHAR(10) NULL,
   `last_updated` DATETIME NULL,
