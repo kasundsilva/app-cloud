@@ -29,11 +29,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var isAppTypeBuildable = appType.buildable;
         var isMultiArtifactsSupported = (appType.isMultiArtifactsSupported =='true');
         var applicationName = outputs.applicationName;
-        var encodedLabels = request.getParameter("encodedLabels");
-        var encodedEnvs = request.getParameter("encodedEnvs");
-        var log = new Log();
-        var decodedLabels = parse(decodeURIComponent(encodedLabels, "UTF-8"));
-        var decodedEnvs = parse(decodeURIComponent(encodedEnvs, "UTF-8"));
+        var decodedLabels = parse(request.getParameter("encodedLabels"));
+        var decodedEnvs = parse(request.getParameter("encodedEnvs"));
         var newVersion = request.getParameter("newVersion");
         var data = null;
 		var maxApplications = outputs.maxAppCount;
