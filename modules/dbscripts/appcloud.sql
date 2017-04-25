@@ -89,7 +89,7 @@ INSERT INTO `AC_RUNTIME` (`id`, `name`, `image_name`, `tag`, `description`) VALU
 (8, 'OracleJDK 8 + WSO2 MSF4J 2.0.0', 'msf4j', '2.0.0', 'OS:alpine-java, Oracle JDK:8u102'),
 (9, 'WSO2 Enterprise Service Bus - 5.0.0', 'wso2esb', '5.0.0', 'OS:Debian, Oracle JDK:8u102'),
 (10, 'Apache Tomcat 8.0.36 / WSO2 Application Server 6.0.0-M3 - Deprecated', 'wso2as', '6.0.0-m3', 'OS:alpine-java, Oracle JDK:8u102'),
-(11, 'Custom Docker http-9443 https-9763', 'custom', 'customtag', 'OS:Custom, JAVA Version:custom'),
+(11, 'Custom Docker http-9763 https-9443', 'custom', 'customtag', 'OS:Custom, JAVA Version:custom'),
 (12, 'WSO2 Data Services Server - 3.5.1', 'wso2dataservice', '3.5.1', 'OS:alpine-java, Oracle JDK:8u102'),
 (13, 'Apache Tomcat 8.5.5 (Alpine 3.4/Oracle JDK 1.8.0_112)', 'tomcat', '8.5.5-alpine3.4-oracle-jdk1.8.0', 'OS:Alpine 3.4, Oracle JDK 1.8.0_112'),
 (14, 'Apache Tomcat 8.5.5 (Ubuntu 16.04/Oracle JDK 1.8.0_112)', 'tomcat', '8.5.5-ubuntu16.04-oracle-jdk1.8.0', 'OS:Ubuntu 16.04, Oracle JDK 1.8.0_112'),
@@ -574,7 +574,8 @@ INSERT INTO `AC_RUNTIME_CONTAINER_SPECIFICATIONS` (`id`, `CON_SPEC_ID`) VALUES
 (18, 4),
 (19, 5),
 (19, 7),
-(20, 3);
+(20, 3),
+(12 , 5);
 
 -- -----------------------------------------------------
 -- Table `AppCloudDB`.`AC_CLOUD_APP_TYPE`
