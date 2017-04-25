@@ -107,6 +107,7 @@ ESBAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
 
         var restEndpoints = [];
         var soapEndpoints = [];
+        var swaggerEndpoints = [];
 
         var data = endpoints.data;
         var proxies = data.urls.proxies;
@@ -115,13 +116,13 @@ ESBAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
                 for (var i = 0; i < proxies.length; i++) {
                     var proxy = proxies[i];
                     var wsdl1 = deploymentUrl + "/" + (proxy.wsdl[0]).substring((proxy.wsdl[0]).indexOf('services'));
-		     var wsdlWithoutTenant = wsdl1.replace(tenantPrefix, "");
+                    var wsdlWithoutTenant = wsdl1.replace(tenantPrefix, "");
                     soapEndpoints.push({name : proxy.name, wsdl :wsdlWithoutTenant});
                 }
             } else {
                 var proxy = proxies;
                 var wsdl1 = deploymentUrl + "/" + (proxy.wsdl[0]).substring((proxy.wsdl[0]).indexOf('services'));
-		 var wsdlWithoutTenant = wsdl1.replace(tenantPrefix, "");
+		var wsdlWithoutTenant = wsdl1.replace(tenantPrefix, "");
                 soapEndpoints.push({name : proxy.name, wsdl :wsdlWithoutTenant});
             }
         }
@@ -132,20 +133,23 @@ ESBAppTypeUtil.prototype.getEndpoints = function (deploymentUrl, versionId) {
                 for (var j = 0; j < apis.length; j++) {
                     var api = apis[j];
                     if (api.name != "ContainerAPI") {
-			 var url = deploymentUrl + "/" + api.name + "?swagger.json";
-                        restEndpoints.push({"name" : api.name, "url" : url});
+			var url = deploymentUrl + "/" + api.name + "?swagger.json";
+                        swaggerEndpoints.push({"name" : api.name, "url" : url});
+                        restEndpoints.push({"name" : api.name, "url" : api.context.replace(tenantPrefix,"")});
                     }
                 }
             } else {
                 var api = apis;
                 if (api.name != "ContainerAPI") {
-		     var url = deploymentUrl + "/" + api.name + "?swagger.json";
-                    restEndpoints.push({"name" : api.name, "url" : url});
+		    var url = deploymentUrl + "/" + api.name + "?swagger.json";
+                    swaggerEndpoints.push({"name" : api.name, "url" : url});
+                    restEndpoints.push({"name" : api.name, "url" : api.context.replace(tenantPrefix,"")});
+
                 }
             }
         }
 
-        endpoints = createJsonResponse(restEndpoints, soapEndpoints, null, null);
+        endpoints = createJsonResponse(restEndpoints, soapEndpoints, null, swaggerEndpoints);
     } catch(e) {
         return null;
     }
