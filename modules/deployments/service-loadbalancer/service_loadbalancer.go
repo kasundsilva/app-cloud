@@ -150,11 +150,17 @@ var (
 
 	appTenantDomain = flags.String("tenantDomain", "", `Relevant tenant domain of the service`)
 
-	serverUrl = flags.String("server-url", "", `define the governance server URL`)
-
-	authorizationHeaderValue = flags.String("authorization-header-value", "", `define the login credentials in Base64 encoding`)
+	serverUrl = flags.String("cloudmgt-server-url", "", `define the governance server URL`)
 
 	encodedKey = flags.String("encoded-key", "", `the private key that was used to encrypt the data, encoded in base64 utf-8 format`)
+
+	cloudmgtRestAPIUsername = flags.String("cloudmgt-rest-api-username", "", "username to invoke cloudmgt rest API")
+
+	cloudmgtRestAPIPassword = flags.String("cloudmgt-rest-api-password", "", "password to invoke cloudmgt rest API")
+
+	sendEmailTo = flags.String("send-email-to", "", "comma separated email addresses to send HAProxy error mails")
+
+	cloudmgtRestAPIRequestTimeout = flags.Int("cloudmgt-rest-api-request-timeout", 4, "request timeout when invoking cloudmgt rest API")
 )
 
 // service encapsulates a single backend entry in the load balancer config.
@@ -248,7 +254,6 @@ type loadBalancerConfig struct {
 	lbType                   string `json:"lbType" description:"Type of the load balancer public/private"`
 	CertificatesDir          string `json:"certificatesDir" description:"directory path of where all PEM files for custom domains will be added"`
 	serverUrl                string `description:"The server URL to access governance"`
-	authorizationHeaderValue string `description:"The login credentials for governance"`
 	encodedKey               string `description:"The private key used for encryption"`
 }
 
@@ -568,22 +573,30 @@ func (lbc *loadBalancerController) getServices() (httpSvc []service, httpsTermSv
 				newSvc.ExposureLevel = val
 			}
 
-			//Set the custom domain if the custom domain has been set
-			if val, ok := serviceLabels(s.ObjectMeta.Labels).getCustomDomain(); ok {
-				newSvc.CustomDomain = val
-				if !strings.Contains(val, applicationLaunchBaseUrl) {
-					if appName, ok := serviceLabels(s.ObjectMeta.Labels).getAppName(); ok {
-						// TODO: Handle certificate update
-						//If the SSL Pem file doesn't exists in the certificates directory query
-						//Governance REST api, obtain certs and add to certs directory
-						resourceFilePath := lbc.cfg.CertificatesDir + *appTenantDomain + hypenSeparator +
-							appName + pemFileExtension
-						if _, err := os.Stat(resourceFilePath); os.IsNotExist(err) {
-							resourcePath := lbc.cfg.serverUrl + registryPath + cloudType +
-								*appTenantDomain + securityCertificates + appName +
-								forwardSlashSeparator
-							addSecurityCertificate(resourcePath, appName, lbc.cfg.CertificatesDir,
-								lbc.cfg.authorizationHeaderValue, lbc.cfg.encodedKey)
+			if *lbType == "public" {
+				//Set the custom domain if the custom domain has been set
+				if val, ok := serviceLabels(s.ObjectMeta.Labels).getCustomDomain(); ok {
+					newSvc.CustomDomain = val
+					if !strings.Contains(val, applicationLaunchBaseUrl) {
+						if appName, ok := serviceLabels(s.ObjectMeta.Labels).getAppName(); ok {
+							// TODO: Handle certificate update
+							//If the SSL Pem file doesn't exists in the certificates
+							//directory query Governance REST api, obtain certs and add to
+							//certs directory
+							resourceFilePath := lbc.cfg.CertificatesDir + *appTenantDomain +
+								hypenSeparator + appName + pemFileExtension
+							resourceErrorFilePath := lbc.cfg.CertificatesDir + *appTenantDomain +
+								hypenSeparator + appName + hypenSeparator +
+								errorFileName + pemFileExtension
+							_, pemFileErr := os.Stat(resourceFilePath);
+							_, errorFileErr := os.Stat(resourceErrorFilePath);
+							if  os.IsNotExist(pemFileErr) && os.IsNotExist(errorFileErr) {
+								resourcePath := lbc.cfg.serverUrl + registryPath +
+								cloudType + *appTenantDomain + securityCertificates +
+								appName + forwardSlashSeparator
+								addSecurityCertificate(resourcePath, appName,
+									lbc.cfg.CertificatesDir, lbc.cfg.encodedKey)
+							}
 						}
 					}
 				}
@@ -702,8 +715,7 @@ func newLoadBalancerController(cfg *loadBalancerConfig, kubeClient *unversioned.
 
 // parseCfg parses the given configuration file.
 // cmd line params take precedence over config directives.
-func parseCfg(configPath string, defLbAlgorithm string, sslCert string, sslCaCert string, lbType string,
-	serverUrl string, authorizationHeaderValue string, encodedKey string) *loadBalancerConfig {
+func parseCfg(configPath, defLbAlgorithm, sslCert, sslCaCert, lbType, serverUrl, encodedKey string) *loadBalancerConfig {
 	jsonBlob, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		glog.Fatalf("Could not parse lb config: %v", err)
@@ -718,7 +730,6 @@ func parseCfg(configPath string, defLbAlgorithm string, sslCert string, sslCaCer
 	cfg.lbDefAlgorithm = defLbAlgorithm
 	cfg.lbType = lbType
 	cfg.serverUrl = serverUrl
-	cfg.authorizationHeaderValue = authorizationHeaderValue
 	cfg.encodedKey = encodedKey
 	glog.Infof("Creating new loadbalancer: %+v", cfg)
 	return &cfg
@@ -787,8 +798,7 @@ func dryRun(lbc *loadBalancerController) {
 func main() {
 	clientConfig := kubectl_util.DefaultClientConfig(flags)
 	flags.Parse(os.Args)
-	cfg := parseCfg(*config, *lbDefAlgorithm, *sslCert, *sslCaCert, *lbType, *serverUrl, *authorizationHeaderValue,
-		*encodedKey)
+	cfg := parseCfg(*config, *lbDefAlgorithm, *sslCert, *sslCaCert, *lbType, *serverUrl, *encodedKey)
 
 	var kubeClient *unversioned.Client
 	var err error

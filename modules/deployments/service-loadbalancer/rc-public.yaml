@@ -59,7 +59,10 @@ spec:
         - --ssl-ca-cert=/etc/haproxy/ca.crt
         - --syslog=true
         - --load-balancer-type=public
-        - --server-url=https://172.16.2.152:9444/resource/1.0.0/artifact/_system/governance/
-        - --authorization-header-value=YWRtaW46YWRtaW4=
+        - --cloudmgt-server-url=https://172.16.2.152:9444/
         - --encoded-key=ABCDEFGHIJ
+        - --cloudmgt-rest-api-username=admin
+        - --cloudmgt-rest-api-password=admin
+        - --send-email-to=dummy@gmail.com
+        - --cloudmgt-rest-api-request-timeout=5 # value is in seconds
 
