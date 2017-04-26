@@ -176,8 +176,8 @@ function as_cluster_setup(){
 }
 
 function as_non_cluster_setup(){
-#    unzip -q $PACK_DIR/$AS_VERSION.zip -d $SETUP_DIR
-    AS_HOME=$SETUP_DIR/$AS_NODE/
+    unzip -q $PACK_DIR/$AS_VERSION.zip -d $SETUP_DIR
+    AS_HOME=$SETUP_DIR/$AS_VERSION/
 
     as_setup $AS_HOME
     echo "AS non cluster setup successfully done!"
