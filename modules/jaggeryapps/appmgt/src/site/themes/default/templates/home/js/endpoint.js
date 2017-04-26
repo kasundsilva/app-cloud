@@ -147,7 +147,7 @@ function loadEndpoints(deploymentURL, applicationType, versionId) {
                 swagger_html += '</tbody></table>';
 
             }
-            $("#app-type-data").html('<div class="block-endpoints"><h3>Endpoints</h3>' + rest_html + soap_html + web_html + swagger_html + '</div>');
+            $("#app-type-data").html('<div class="block-endpoints"><h3>Endpoints</h3>' + swagger_html + rest_html + soap_html + web_html + '</div>');
             clearInterval(timerId);
         }
 
