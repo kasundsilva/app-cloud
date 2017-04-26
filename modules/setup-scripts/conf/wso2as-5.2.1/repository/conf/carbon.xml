@@ -45,12 +45,12 @@
        This is will become part of the End Point Reference of the
        services deployed on this server instance.
     -->
-    <HostName>localhost</HostName>
+    <HostName>integration.cloudlocal.wso2.com</HostName>
 
     <!--
     Host name to be used for the Carbon management console
     -->
-    <MgtHostName>localhost</MgtHostName>
+    <MgtHostName>integration.cloudlocal.wso2.com</MgtHostName>
 
     <!--
         The URL of the back end server. This is where the admin services are hosted and
@@ -111,7 +111,7 @@
          the define value + Offset.
          e.g. Offset=2 and HTTPS port=9443 will set the effective HTTPS port to 9445
          -->
-        <Offset>0</Offset>
+        <Offset>10</Offset>
 
         <!-- The JMX Ports -->
         <JMX>
