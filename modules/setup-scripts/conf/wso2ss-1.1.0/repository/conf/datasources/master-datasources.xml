@@ -22,26 +22,122 @@
     <datasources>
       
 <datasource>
-              <name>WSO2_CARBON_DB</name>
-              <description>The datasource used for user manager</description>
-              <jndiConfig>
-                  <name>jdbc/WSO2CarbonDB</name>
-              </jndiConfig>
-              <definition type="RDBMS">
-                  <configuration>
-                      <url>jdbc:mysql://localhost:3306/cloudUserstore?autoReconnect=true</url>
-                      <username>root</username>
-                      <password>root</password>
-                      <driverClassName>com.mysql.jdbc.Driver</driverClassName>
-                      <maxActive>150</maxActive>
-                      <maxWait>60000</maxWait>
-                     <testOnBorrow>true</testOnBorrow>
-                      <validationQuery>SELECT 1</validationQuery>
-                      <validationInterval>30000</validationInterval>
-                     <minIdle>5</minIdle>
-                  </configuration>
-              </definition>
-          </datasource>
+            <name>WSO2_CARBON_DB</name>
+            <description>The datasource used for registry and user manager</description>
+            <jndiConfig>
+                <name>jdbc/WSO2CarbonDB</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:h2:repository/database/WSO2CARBON_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000</url>
+                    <username>wso2carbon</username>
+                    <password>wso2carbon</password>
+                    <driverClassName>org.h2.Driver</driverClassName>
+                    <maxActive>50</maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <defaultAutoCommit>false</defaultAutoCommit>
+                </configuration>
+            </definition>
+        </datasource>
+
+        <datasource>
+            <name>SS_CONFIG_DB</name>
+            <description>The datasource used for registry and user manager</description>
+            <jndiConfig>
+                <name>jdbc/dbSSConfig</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:h2:repository/database/dbSSConfig;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000</url>
+                    <username>wso2carbon</username>
+                    <password>wso2carbon</password>
+                    <driverClassName>org.h2.Driver</driverClassName>
+                    <maxActive>50</maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <defaultAutoCommit>false</defaultAutoCommit>
+                </configuration>
+            </definition>
+        </datasource>
+
+	<datasource>
+            <name>WSO2_USERSTORE_DB</name>
+            <description>The datasource used for user manager</description>
+            <jndiConfig>
+                <name>jdbc/userstore</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:mysql://localhost:3306/dbCloudUserstore?autoReconnect=true</url>
+                    <username>root</username>
+                    <password>root</password>
+                    <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+                    <maxActive>150</maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <Property name="minIdle">5</Property>
+                </configuration>
+            </definition>
+        </datasource>
+
+        <datasource>
+            <name>WSO2_REGISTRY_DB</name>
+            <description>The datasource used for registry</description>
+            <jndiConfig>
+                <name>jdbc/governance</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:mysql://localhost:3306/dbCloudGovernance?autoReconnect=true</url>
+                    <username>root</username>
+                    <password>root</password>
+                    <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+                    <maxActive></maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <useDisposableConnectionFacade>true</useDisposableConnectionFacade>
+                    <minIdle>50</minIdle>
+                    <removeAbandoned>false</removeAbandoned>
+                    <logAbandoned>false</logAbandoned>
+                    <removeAbandonedTimeout>60</removeAbandonedTimeout>
+                </configuration>
+            </definition>
+        </datasource>
+
+       <datasource>
+            <name>WSO2_IDENTITY_DB</name>
+            <description>The datasource used for identity server</description>
+            <jndiConfig>
+                <name>jdbc/identity</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:mysql://localhost:3306/dbCloudIdentity?autoReconnect=true</url>
+                    <username>root</username>
+                    <password>root</password>
+                    <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+                    <maxActive>200</maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <minIdle>5</minIdle>
+                    <removeAbandoned>true</removeAbandoned>
+                    <logAbandoned>true</logAbandoned>
+                    <removeAbandonedTimeout>180</removeAbandonedTimeout>
+                </configuration>
+            </definition>
+        </datasource>
+
 <datasource>
     <name>MetadataRepo</name>
     <jndiConfig>

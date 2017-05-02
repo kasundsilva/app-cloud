@@ -15,10 +15,10 @@
   "ssoConfiguration" : {
     "issuer" : "appmgt",
     "integrationIssuer" : "integration-cloud",
-    "identityProviderURL" : "https://localhost:9444/samlsso",
+    "identityProviderURL" : "https://identity.cloudlocal.wso2.com:9443/samlsso",
     "keyStorePassword": "wso2carbon",
     "identityAlias" : "wso2carbon",
-    "keyStoreName" : "/home/vagrant/setup/setup/wso2as-5.2.1/repository/resources/security/wso2carbon.jks",
+    "keyStoreName" : "AS_HOME/repository/resources/security/wso2carbon.jks",
     "responseSigningEnabled":true,
     "assertionSigningEnabled":true,
     "audienceRestrictionsEnabled":true
