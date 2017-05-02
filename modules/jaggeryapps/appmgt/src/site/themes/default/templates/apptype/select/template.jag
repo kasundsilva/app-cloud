@@ -132,7 +132,7 @@ jagg.template("apptype/select", function(inputs, outputs, jagg) {
 <script type="text/javascript">
 $(document).on('click', '.cloud-app-type', function(){
 var appType = $(this).attr('app-type');
-location.href = '<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=' + appType;
+location.href = '<%=jagg.getAbsoluteUrl("/site/pages/options.jag")%>?appTypeName=' + appType;
     })
 </script>
 <%
