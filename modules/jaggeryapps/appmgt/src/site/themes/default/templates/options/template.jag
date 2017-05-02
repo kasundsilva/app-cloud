@@ -48,12 +48,11 @@ jagg.template("options", function(inputs, outputs, jagg) {
 
     <div class="container-fluid app-type-listing padding-bottom-xlg padding-top-xlg">
 
-<!-- ============================================================================================================================= -->
         <br><br><br>
 
         <div class="list-group">
         <% if (appTypeName == "ballerina") { %>
-          <a href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appTypeName%>&option=start-from-scrach" class="list-group-item list-group-item-action flex-column align-items-start">
+          <a href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appTypeName%>&option=start-from-scratch" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
               <h4 class="mb-1">Create new from scratch</h4>
             </div>
@@ -85,7 +84,6 @@ jagg.template("options", function(inputs, outputs, jagg) {
             <small class="text-muted">Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
           </a>
         </div>
-<!-- ============================================================================================================================= -->
     </div>
 <%
 });

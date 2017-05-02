@@ -104,22 +104,25 @@ jagg.template("application", function (inputs, outputs, jagg) {
     var applicationList = <%=applications%>;
     var versionList = "<%=versionList%>";
     var option = "<%=option%>";
+    var sampleArtifactURL;
 
     $(document).ready(function(){
             if (newVersion == "true") {
                 isNewVersion = true;
             }
 
-
             if(option == 'upload-from-file'){
                 uploadMethod = "file";
-            }else if(option == 'upload-from-url'){
+            } else if(option == 'upload-from-url'){
                 uploadMethod = "url";
-            }else if(option == 'github-repo-url'){
+            } else if(option == 'github-repo-url'){
                 uploadMethod = "github";
-            }else if (option == 'deploy-sample'){
+            } else if (option == 'deploy-sample'){
                 uploadMethod = "url";
                 getSampleArtifactUrl(appTypeName);
+            } else if (option == 'start-from-scratch'){
+                uploadMethod = "url";
+                getArtifactForCreateNew(appTypeName);
             }
 
             $('#verifiedImages').change(function(){
@@ -184,8 +187,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 }
             }
             activateUploadButton();
-/*            $("#url-upload-block").hide();
-            $("#github-block").hide();*/
 
             $.each(<%=runtimes%>,function(key,value){
                 $("#runtime").append($('<option></option>').val(value.id).html(value.runtimeName));
@@ -289,9 +290,13 @@ jagg.template("application", function (inputs, outputs, jagg) {
                             formData.append('uploadedFileName', $("#uploadedFileName").val());
                         }
                         formData.append('appCreationMethod', 'default');
+                    } else if (uploadMethod === "start-from-scratch" ) {
+                        formData.append('appCreationMethod', 'start-from-scratch');
+                        formData.append('artifactUrl', sampleArtifactURL);
+                        formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "url" ) {
                         formData.append('appCreationMethod', 'url');
-                        formData.append('artifactUrl', $("#artifactUrl").val());
+                        formData.append('artifactUrl', sampleArtifactURL);
                         formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "github" ) {
                         formData.append('appCreationMethod', 'github');
@@ -743,9 +748,21 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     $('#url-upload').click();
                     var validator = $("#application-details").validate();
                     validator.element("#artifactUrl");
+                    sampleArtifactURL = result;
 
                 },function (jqXHR, textStatus, errorThrown) {
                     jagg.message({content: "An error occurred while getting the sample artifact's URL."});
+                });
+        }
+
+        function getArtifactForCreateNew(appType) {
+           jagg.post("../blocks/application/application.jag", {
+                    action:"getSampleArtifactUrl",
+                    appType:appType
+                },function (result) {
+                    sampleArtifactURL = result;
+                },function (jqXHR, textStatus, errorThrown) {
+                    jagg.message({content: "An error occurred while getting the sample artifact."});
                 });
         }
 
@@ -887,6 +904,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
             $('#runtime').val() > 0 && checkApplicationVersionExistence($('#applicationRevision').val())) {// mandatory validations for all app types
             if (appTypeName == custom) { // validations for custom app type
                     $("#add-application").prop("disabled", false); // for the custm app type mandatory fields are enough.
+            } else if (appTypeName == 'ballerina' && option == 'start-from-scratch') {
+                $("#add-application").prop("disabled", false);
             } else {
                 var isFileUploaded = (isMultiArtifactsSupported ? isMultiArtifactsUploaded(): $("#uploadedFileName").val());
 
