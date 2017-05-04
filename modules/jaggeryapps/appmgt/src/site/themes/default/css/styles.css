@@ -197,6 +197,11 @@ button[disabled]{
 .cu-btn-gray {
     background-color: #555555;
 }
+
+.cu-btn-green {
+    background-color: #00c065
+}
+
 .wr-edit-button {
     border-radius: 0;
 }

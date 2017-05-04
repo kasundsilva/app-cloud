@@ -64,6 +64,7 @@ jagg.block("home", {
 
         var dashboardProperties = managerModule.getDashboardTypeProperties();
         var replicaCount = applicationModule.getReplicaCountForVersion(application.applicationName, selectedRevision);
+        //var sourceLocation =
 
         return {
             "application" : application,
