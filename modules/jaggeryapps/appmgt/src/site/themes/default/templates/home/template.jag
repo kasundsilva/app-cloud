@@ -163,14 +163,28 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                 %>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-red" id="stop-application-btn" onclick="stopApplicationPopUp();">Stop
-                                        <span id="stop-in-progress"><span>
+                                        <span id="stop-in-progress"></span>
                                       </a>
                                     </div>
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-gray" onclick="redeployApplicationPopUp();">Redeploy
-                                        <span id="redeploy-in-progress"><span>
+                                        <span id="redeploy-in-progress"></span>
                                       </a>
                                     </div>
+
+                                    <% if (application.applicationType == "ballerina") { %>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+                                    <% } %>
+
                           </div>
                          </div>
                                 <%
@@ -179,6 +193,20 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
+
+                                    <% if (application.applicationType == "ballerina") { %>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+                                    <% } %>
+
                           </div>
                          </div>
                                 <%
@@ -187,6 +215,18 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
+
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+                                    <div class="btn-group ctrl-edit-button btn-edit-code">
+                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
+                                        <span id=""></span>
+                                      </a>
+                                    </div>
+
                           </div>
                          </div>
                          <div class="btn-group row requestbox ctrl-edit-button btn-edit-code fullwidth">

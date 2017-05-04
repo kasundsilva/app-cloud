@@ -60,15 +60,15 @@ var subscription = subscriptionManager.getSubscription();
 var addApplication = function (applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
                                runtimePropertiesArray, tagArray, appIcon, uploadedFileName, isNewVersion, conSpecMemory,
                                conSpecCpu, artifactUrl, appCreationMethod, oldHashId, applicationContext, setDefaultVersion,
-                               imageId, exposureLevel) {
+                               imageId, exposureLevel, sourceLocation) {
 
     log.info("Started creating App => Name:" + applicationName + " Version:" + versionName + " Description:" + applicationDescription +
     " RuntimeId:" + runtimeId + " AppType:" + appTypeName + " Runtime Properties:" + stringify(runtimePropertiesArray) +
     " Tags:" + stringify(tagArray) + " Uploaded FileName:" + uploadedFileName + " New Version:" + isNewVersion +
     " Allocated Memory:" + conSpecMemory + " Allocated CPU:" + conSpecCpu + " Artifact Url:" + artifactUrl +
     " App Creation Method:" + appCreationMethod + " Previous HashId:" + oldHashId + " Context:" + applicationContext +
-    " DefaultVersion:" + setDefaultVersion + " Docker Image Id : " + imageId +
-    " DefaultVersion:" + setDefaultVersion + "Exposure Level:" + exposureLevel);
+    " DefaultVersion:" + setDefaultVersion + " Docker Image Id: " + imageId +
+    " DefaultVersion:" + setDefaultVersion + " Exposure Level:" + exposureLevel + " Source Location:" + sourceLocation);
 
     var tenantId = modManager.getTenantId();
     var applicationHashId = Util.getApplicationHashId(applicationName, tenantId);
@@ -77,10 +77,10 @@ var addApplication = function (applicationName, versionName, applicationDescript
         uploadedFileName = versionHashId + "." + uploadedFileName.split(".")[1];
     }
     if(isNewVersion == 'true'){
-        createAppVersionInDataBase(versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
+        createAppVersionInDataBase(versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation);
     }else{
         createAppInDataBase(applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
-                runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel);
+                runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation);
     }
 
     var applicationRuntime = ApplicationManager.getRuntimeById(runtimeId);
@@ -316,7 +316,7 @@ var buildDockerImage = function (applicationName, versionName, runtimeId, absFil
 }
 
 var createAppInDataBase = function(applicationName, versionName, applicationDescription, replicas, runtimeId,
-                                   appTypeName, runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel){
+                                   appTypeName, runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation){
 
     //================================= Adding application to Database =========================================
     var application = new Application();
@@ -351,6 +351,8 @@ var createAppInDataBase = function(applicationName, versionName, applicationDesc
         version.setConSpecCpu(conSpecCpu);
         version.setConSpecMemory(conSpecMemory);
         version.setExposureLevel(exposureLevel);
+        version.setSourceLocation(sourceLocation);
+
         if(runtimePropertiesArray.length > 0) {
             var runtimePropertyList = generateRuntimePropsList(runtimePropertiesArray);
             version.setRuntimeProperties(runtimePropertyList);
@@ -375,7 +377,7 @@ var createAppInDataBase = function(applicationName, versionName, applicationDesc
     return application;
 }
 
-var createAppVersionInDataBase = function( versionName,   runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel){
+var createAppVersionInDataBase = function( versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation){
 	var version = new Version();
     try {
         if (log.isDebugEnabled()) {
@@ -388,6 +390,8 @@ var createAppVersionInDataBase = function( versionName,   runtimeId, runtimeProp
         version.setConSpecCpu(conSpecCpu);
         version.setConSpecMemory(conSpecMemory);
         version.setExposureLevel(exposureLevel);
+        version.setSourceLocation(sourceLocation);
+
         if(runtimePropertiesArray.length > 0) {
             var runtimePropertyList = generateRuntimePropsList(runtimePropertiesArray);
             version.setRuntimeProperties(runtimePropertyList);

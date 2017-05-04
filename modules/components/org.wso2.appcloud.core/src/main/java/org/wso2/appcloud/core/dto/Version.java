@@ -34,6 +34,7 @@ public class Version {
     private String conSpecMemory;
     private int isWhiteListed;
     private String exposureLevel;
+    private  String sourceLocation;
 
     public String getVersionName() {
         return versionName;
@@ -137,5 +138,13 @@ public class Version {
 
     public void setExposureLevel(String exposureLevel) {
         this.exposureLevel = exposureLevel;
+    }
+
+    public String getSourceLocation() {
+        return sourceLocation;
+    }
+
+    public void setSourceLocation(String sourceLocation) {
+        this.sourceLocation = sourceLocation;
     }
 }
