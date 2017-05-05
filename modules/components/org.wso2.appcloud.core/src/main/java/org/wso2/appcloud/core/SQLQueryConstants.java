@@ -93,7 +93,8 @@ public class SQLQueryConstants {
             "(?, ?, ?, ?, ?, (SELECT id FROM AC_APP_TYPE WHERE name=?), ?)";
 
     public static final String ADD_VERSION =
-            "INSERT INTO AC_VERSION (name, hash_id, application_id, runtime_id, tenant_id, con_spec_cpu, con_spec_memory, exposure_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO AC_VERSION (name, hash_id, application_id, runtime_id, tenant_id, con_spec_cpu, con_spec_memory, " +
+                    "exposure_level, source_location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     public static final String ADD_TAG =
             "INSERT INTO AC_TAG (name, value, version_id, description, tenant_id) values (?, ?, (SELECT id FROM " +

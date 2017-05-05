@@ -169,6 +169,7 @@ public class ApplicationDAO {
             preparedStatement.setString(6, version.getConSpecCpu());
             preparedStatement.setString(7, version.getConSpecMemory());
             preparedStatement.setString(8, version.getExposureLevel());
+            preparedStatement.setString(9, version.getSourceLocation());
 
             preparedStatement.execute();
 
