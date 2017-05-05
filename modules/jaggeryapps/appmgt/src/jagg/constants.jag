@@ -137,4 +137,8 @@ var CLOUD_ADMIN_PASSWORD="Cloud.Admin.Password";
 
 var SET_COOKIE_HEADER="Set-Cookie";
 
+var MGT_APP_URL = "MgtAppURL";
+var MGT_APP_ADMIN_USERNAME="MgtAppAdminUsername";
+var MGT_APP_ADMIN_PASSWORD="MgtAppAdminPassword";
+
 %>

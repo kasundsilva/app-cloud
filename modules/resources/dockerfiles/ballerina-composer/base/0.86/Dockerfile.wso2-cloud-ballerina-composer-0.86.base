@@ -1,0 +1,26 @@
+FROM docker.wso2.com/wso2-cloud/java:alpine3.4-oracle-jdk1.8.0_112
+
+ENV COMPOSER_HOME /srv/ballerina-composer
+ENV APP_VERSION 0.86
+ENV RUNTIME_DISTRIBUTION_NAME ballerina-tools-$APP_VERSION.zip
+ENV RUNTIME_NAME ballerina-tools-$APP_VERSION
+
+ADD init.sh $COMPOSER_HOME/init.sh
+
+RUN chmod +x $COMPOSER_HOME/init.sh && \
+    mkdir -p "$COMPOSER_HOME" && \
+    mkdir -p "/srv/logs" && \
+    chown wso2user:wso2 "$COMPOSER_HOME" && \
+    chown wso2user:wso2 "/srv/logs"
+
+USER wso2user
+
+ADD $RUNTIME_DISTRIBUTION_NAME $COMPOSER_HOME/
+
+RUN unzip $COMPOSER_HOME/$RUNTIME_DISTRIBUTION_NAME -d "$COMPOSER_HOME/" && \
+    chmod +x $COMPOSER_HOME/$RUNTIME_NAME/bin/composer
+
+WORKDIR $COMPOSER_HOME
+EXPOSE 9090 9092 9091 8289
+
+CMD ["bash", "-c", "source $COMPOSER_HOME/init.sh"]
