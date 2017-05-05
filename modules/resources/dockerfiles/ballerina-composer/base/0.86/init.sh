@@ -1,0 +1,1 @@
+sh $COMPOSER_HOME/$RUNTIME_NAME/bin/composer
