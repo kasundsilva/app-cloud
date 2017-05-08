@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.client.AutoAdaptableKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PrettyLoggable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -471,7 +470,7 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
         //create a instance of kubernetes client to invoke service call
         AutoAdaptableKubernetesClient kubernetesClient = KubernetesProvisioningUtils.getFabric8KubernetesClient();
 
-        List<VolumeMount> volumeMounts = new ArrayList<>();
+        List<VolumeMountInfo> volumeMounts = new ArrayList<>();
 
         for (RuntimeProperty runtimeProperty : runtimeProperties) {
             switch (runtimeProperty.getPropertyType()) {
@@ -518,7 +517,12 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
                         .withReadOnly(true)
                         .build();
 
-                volumeMounts.add(volumeMount);
+                VolumeMountInfo volumeMountInfo = new VolumeMountInfo();
+                volumeMountInfo.setName(runtimeProperty.getName());
+                volumeMountInfo.setMountPath(KubernetesPovisioningConstants.VOLUME_MOUNT_PATH + runtimeProperty.getName());
+                volumeMountInfo.setReadOnly(true);
+
+                volumeMounts.add(volumeMountInfo);
 
                 break;
             case ENVIRONMENT:
