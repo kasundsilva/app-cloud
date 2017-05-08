@@ -149,6 +149,8 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
         String memoryLimit = memoryLimitInt.concat("Mi");
         String memoryRequest = resourceQuotaLimit.getMemoryRequest().concat("Mi");
 
+        List<Volume> volumes = new ArrayList<>();
+
         try {
             //Deployment creation
             for (Container container : containers) {
@@ -167,8 +169,25 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
                 kubContainer.setResources(resourceRequirement);
 
                 //Checking whether the container is including volume mounts
-                if(container.getVolumeMounts()!= null) {
-                    kubContainer.setVolumeMounts(container.getVolumeMounts());
+                if (container.getVolumeMounts() != null) {
+
+                    List<VolumeMountInfo> volumeMounts = container.getVolumeMounts();
+                    List<VolumeMount> containerVolumeMounts = new ArrayList<>();
+
+                    if (volumeMounts.size() > 0) {
+                        for (VolumeMountInfo volumeMountInfo : volumeMounts) {
+                            VolumeMount volumeMount = new VolumeMount(volumeMountInfo.getMountPath(),
+                                    volumeMountInfo.getName(), volumeMountInfo.isReadOnly());
+                            containerVolumeMounts.add(volumeMount);
+
+                            Volume volume = new Volume();
+                            volume.setName(volumeMount.getName());
+                            volume.setHostPath(new HostPathVolumeSource(volumeMountInfo.getHostPath()));
+                            volumes.add(volume);
+                        }
+                    }
+
+                    kubContainer.setVolumeMounts(containerVolumeMounts);
                 }
 
                 List<ContainerPort> containerPorts = new ArrayList<>();
@@ -198,7 +217,7 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
 
             PodSpec podSpec = new PodSpecBuilder()
                     .withContainers(kubContainerList)
-                    .withVolumes(config.getSecrets())
+                    .withVolumes(volumes)
                     .build();
 
             PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
