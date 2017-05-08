@@ -46,27 +46,22 @@ jagg.template("options", function(inputs, outputs, jagg) {
         </a>
     </div>
 
-    <div class="container-fluid app-type-listing padding-bottom-xlg padding-top-xlg">
-
-        <br><br><br>
+    <div class="container-fluid app-type-options padding-bottom-xlg padding-top-xlg">
 
         <div class="list-group">
         <% if (appTypeName == "ballerina") { %>
           <a href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appTypeName%>&option=start-from-scratch" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Create new from scratch</h4>
+              <h4 class="mb-1">Create new Ballerina Service on Cloud</h4>
             </div>
             <p class="mb-1">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
-            <small>Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
+            <small class="text-muted">Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
           </a>
         <% } %>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Start with what you have already developed</h4>
+              <h4 class="mb-1">Deploy Ballerina Service</h4>
             </div>
-           <% if (appTypeName == "ballerina") { %>
-            <input type="button" class="btn btn-default" value="WSO2 Cloud" onclick="loadCreateApp('<%=appTypeName%>', 'cloud');">
-           <% } %>
             <input type="button" class="btn btn-default" value="Local File System" onclick="loadCreateApp('<%=appTypeName%>', 'local');">
             <input type="button" class="btn btn-default" value="URL" onclick="loadCreateApp('<%=appTypeName%>','url');">
            <% if (appTypeName == "php" || appTypeName == "jaggery") { %>

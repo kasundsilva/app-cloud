@@ -79,6 +79,7 @@ public class SQLQueryConstants {
     public static final String CPU = "CPU";
     public static final String MEMORY = "MEMORY";
     public static final String COST_PER_HOUR = "COST_PER_HOUR";
+    public static final String SOURCE_LOCATION = "source_location";
 
 
     /*==============================

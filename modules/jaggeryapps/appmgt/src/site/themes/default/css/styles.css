@@ -3450,3 +3450,35 @@ select option.option_link {
     color: #1c00cc;
     text-decoration: underline;
 }
+
+.dropdown-menu>li>a.option_link {
+    color: #1c00cc;
+    text-decoration: underline;
+}
+
+.list-group-item {
+    border-radius: 0 !important;
+}
+
+.app-type-options {
+    margin-top: 125px;
+}
+
+.app-type-options .list-group {
+    border: none;
+}
+
+
+.app-type-options a.list-group-item {
+    color: #fff;
+    background: #555;
+    border: 2px solid #282828;
+}
+
+.app-type-options a.list-group-item > p {
+    margin-top: 10px;
+}
+
+.app-type-options a.list-group-item .text-muted {
+    color: #989898;
+}

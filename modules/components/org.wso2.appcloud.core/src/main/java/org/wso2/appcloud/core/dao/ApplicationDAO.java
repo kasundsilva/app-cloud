@@ -16,7 +16,6 @@
 
 package org.wso2.appcloud.core.dao;
 
-import com.google.common.base.Strings;
 import org.apache.commons.io.IOUtils;
 import org.wso2.appcloud.common.AppCloudException;
 import org.wso2.appcloud.core.DBUtil;
@@ -26,7 +25,6 @@ import org.wso2.appcloud.core.dto.ApplicationRuntime;
 import org.wso2.appcloud.core.dto.ApplicationType;
 import org.wso2.appcloud.core.dto.Container;
 import org.wso2.appcloud.core.dto.ContainerServiceProxy;
-import org.wso2.appcloud.core.dto.CustomImage;
 import org.wso2.appcloud.core.dto.Deployment;
 import org.wso2.appcloud.core.dto.RuntimeProperty;
 import org.wso2.appcloud.core.dto.Tag;
@@ -955,7 +953,7 @@ public class ApplicationDAO {
                 version.setTags(getAllTagsOfVersion(dbConnection, version.getHashId(), tenantId));
                 version.setRuntimeProperties(
                         getAllRuntimePropertiesOfVersion(dbConnection, version.getHashId(), tenantId));
-
+                version.setSourceLocation(resultSet.getString(SQLQueryConstants.SOURCE_LOCATION));
                 versions.add(version);
             }
 

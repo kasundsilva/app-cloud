@@ -32,6 +32,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     for (var x = 0; x < keyArray.length; x++) {
         versionArray.push(versions[keyArray[x]].versionName);
     }
+    var encodedVersionArray = encodeURIComponent(versionArray);
     var selectedApplicationRevision = versions[selectedRevision];
     var revisions = outputs.revision;
     var applicationName = application.applicationName;
@@ -140,10 +141,11 @@ jagg.template("home", function(inputs, outputs, jagg) {
                               <%
                                 for (var x = 0; x < versionArray.length; x++) {
                               %>
-                                  <li ><a href="#"><%=versionArray[x]%></a></li>
+                                  <li><a href="#"><%=versionArray[x]%></a></li>
                               <%
                               }
                               %>
+                              <li><a href="<%=appCreationPageBaseUrl%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">+ Add</a></li>
                               </ul>
                           </div>
                           <div id="version-url-link" class="version-url" title="<%=selectedApplicationRevision.deploymentURL%>">
@@ -171,20 +173,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                         <span id="redeploy-in-progress"></span>
                                       </a>
                                     </div>
-
-                                    <% if (application.applicationType == "ballerina") { %>
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-                                    <% } %>
-
                           </div>
                          </div>
                                 <%
@@ -194,19 +182,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
 
-                                    <% if (application.applicationType == "ballerina") { %>
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-                                    <% } %>
-
                           </div>
                          </div>
                                 <%
@@ -215,18 +190,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
-
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="">Edit Code
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-                                    <div class="btn-group ctrl-edit-button btn-edit-code">
-                                      <a type="button" class="btn cu-btn cu-btn-md cu-btn-green" onclick="">Update
-                                        <span id=""></span>
-                                      </a>
-                                    </div>
-
                           </div>
                          </div>
                          <div class="btn-group row requestbox ctrl-edit-button btn-edit-code fullwidth">
@@ -254,17 +217,27 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
                                     <i class="fw fw-delete fw-stack-1x"></i>
-                                  </span> Delete Version
+                                  </span> Delete
                               </div>
                           </a>
-                          <a id="upload-revision" href="<%=appCreationPageBaseUrl%>?appTypeName=<%=application.applicationType%>&applicationKey=<%=applicationKey%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>">
+                         <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
+                          <a id="update" onclick="">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
-                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
-                                     <i class="fw fw-add fw-stack-1x"></i>
-                                  </span> Upload Version
+                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                    <i class="fw fw-refresh fw-stack-1x"></i>
+                                  </span> Update
                               </div>
                           </a>
+                          <a id="edit-code" onclick="">
+                              <div class="btn-create-version">
+                                  <span class="fw-stack fw-lg btn-action-ico">
+                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                                    <i class="fw fw-edit fw-stack-1x"></i>
+                                  </span> Edit Code
+                              </div>
+                          </a>
+                          <% } %>
                       </div>
 
                       <div id="app-type-data" class="col-xs-12 col-md-12 col-lg-12">

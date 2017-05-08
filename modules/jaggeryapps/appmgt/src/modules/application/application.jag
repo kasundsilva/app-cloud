@@ -76,9 +76,14 @@ var addApplication = function (applicationName, versionName, applicationDescript
     if (artifactUrl) { // This is only applicable for url uploaded artifacts
         uploadedFileName = versionHashId + "." + uploadedFileName.split(".")[1];
     }
-    if(isNewVersion == 'true'){
+
+    if (sourceLocation == 'true') {
+        sourceLocation = KubernetesProvisioningUtils.getKubernetesValidAppName(applicationName);
+    }
+
+    if (isNewVersion == 'true') {
         createAppVersionInDataBase(versionName, runtimeId, runtimePropertiesArray, tagArray, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation);
-    }else{
+    } else {
         createAppInDataBase(applicationName, versionName, applicationDescription, replicas, runtimeId, appTypeName,
                 runtimePropertiesArray, tagArray, appIcon, applicationHashId, versionHashId, conSpecMemory, conSpecCpu, exposureLevel, sourceLocation);
     }
@@ -1063,6 +1068,7 @@ var generateVersionList = function (versions, applicationName, appType) {
             versionObject.runtimeProperties = generateRuntimePropsArray(version.runtimeProperties);
             versionObject.tags = generateTagsArray(version.tags);
             versionObject.versionId = versionID;
+            versionObject.sourceLocation = version.sourceLocation;
 
             versionList[version.versionName] = versionObject;
         }
