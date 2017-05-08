@@ -23,6 +23,7 @@ $(document).ready(function() {
     $("#change_app_icon").change(function(event) {
         submitChangeAppIcon(this);
     });
+    alert(selectedApplicationRevision.status);
     initPageView();
     var uploadRevisionUrl = appCreationPageBaseUrl+"?appTypeName="+application.applicationType +
                             "&applicationName="+applicationName + "&encodedLabels="+encodedLabels + "&encodedEnvs="
@@ -528,4 +529,56 @@ function redirectAppHome() {
 
 function getVersionCount(){
     return Object.keys(application.versions).length;
+
 }
+
+function checkApplicationExistence(applicationNameOfTool) {
+    jagg.post("../blocks/application/application.jag", {
+        action:"getApplicationHashIdOfMatchingAppName",
+        applicationName:applicationNameOfTool
+    },function (result) {
+        var appHashId = result.trim();
+        if (appHashId != "null") {
+            return true;
+        }
+    },function (jqXHR, textStatus, errorThrown) {
+
+    });
+    return false;
+}
+
+function checkApplicationVersionExistence(applicationNameOfTool, selectedVersion) {
+    jagg.post("../blocks/application/application.jag", {
+        action:"getVersionByHashId",
+        applicationName:applicationNameOfTool,
+        applicationRevision:selectedVersion
+    },function (result) {
+        var version = JSON.parse(result);
+        if(version != null && version.hashId != null) {
+            return version.hashId;
+        }
+    },function (jqXHR, textStatus, errorThrown) {
+
+    });
+    return null;
+}
+
+
+function createApplication(applicationNameOfTool, selectedVersion, isNewVersion) {
+    jagg.post("../blocks/application/application.jag", {
+        action:"createApplication",
+        applicationName:applicationNameOfTool,
+        runtime:21,
+        appTypeName:"ballerina-composer",
+        applicationRevision:selectedVersion,
+        conSpec:1,
+        isNewVersion:isNewVersion,
+        appCreationMethod:"custom",
+        imageId:"registry.182.docker.appfactory.private.wso2.com:5000/ballerina-composer:0.86"
+    },function (result) {
+
+    },function (jqXHR, textStatus, errorThrown) {
+
+    });
+}
+

@@ -50,7 +50,9 @@ jagg.template("index", function(inputs, outputs, jagg) {
 
         function drawApplicationList() {
             for (var i = 0; i < applicationList.length; i++){
-                addTableRow(applicationList[i]);
+                if (applicationList[i].category != "tools") {
+                    addTableRow(applicationList[i]);
+                }
             }
             applicationList.sort(NameComparator);
             $("#search-apps").bind("keyup", function () {
