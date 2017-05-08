@@ -1330,23 +1330,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 <br/>
                 <br/>
             </div-->
-         <% if (option == 'upload-from-cloud') { %>
-            <div class="form-group" id="url-upload-block">
-                <div>
-                    <label for="application-description" >Artifacts available in Cloud: *</label>
-                </div>
-                <select multiple class="form-control" id="sel1">
-                    <option>SimpleBallerinaService.bsz</option>
-                    <option>HelloWorld.bsz</option>
-                    <option>TestBallerina.bsz</option>
-                    <option>HelloService.bsz</option>
-                    <option>ServiceChain.bsz</option>
-                    <option>HackerMe.bsz</option>
-                    <option>SimpleBallerinaService.bsz</option>
-                    <option>HelloWorld.bsz</option>
-                </select>
-            </div>
-         <% } %>
          <% if (option == 'upload-from-file') { %>
             <div class="form-group" id="file-upload-block">
                  <%if(isMultiArtifactsSupported){%>
@@ -1416,6 +1399,10 @@ jagg.template("application", function (inputs, outputs, jagg) {
             </div>
          <% } %>
         <% } %>
+        <div class="text-right">
+        <a href="#" class="show-advance-settings">Advance Settings...</a>
+        </div>
+        <div class="advance-settings-section" style="display: none;">
             <div class="form-group">
                 <label for="runtime">Runtime: *
                     <i class="fa fa-question-circle help-tips" data-toggle="tooltip" data-placement="left" title="Select an appropriate runtime to run your <%=cloudSpecificApplicationRepresentation.toLowerCase()%>"></i>
@@ -1555,6 +1542,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                             </div>
                         </div>
                     </div-->
+            </div>
+
             </div>
             <div class="form-group">
                 <button class="cu-btn cu-btn-sm cu-btn-blue cu-btn-position" id="add-application">

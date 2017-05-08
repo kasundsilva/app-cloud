@@ -206,3 +206,8 @@ function getProperties(elementId){
     });
     return propArray;
 }
+
+$(".show-advance-settings").on("click", function (e) {
+    e.preventDefault();
+    $(".advance-settings-section").slideToggle();
+});

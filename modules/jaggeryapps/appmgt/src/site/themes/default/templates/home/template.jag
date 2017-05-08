@@ -28,7 +28,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var conSpecMemory = outputs.conSpecMemory;
     var versions = application.versions;
     var keyArray = Object.keys(versions);
-    var versionArray = []
+    var versionArray = [];
     for (var x = 0; x < keyArray.length; x++) {
         versionArray.push(versions[keyArray[x]].versionName);
     }
@@ -55,6 +55,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var dataAnalyticsServerUrl = outputs.dataAnalyticsServerUrl;
     var tenantDomain = outputs.tenantDomain;
     var replicaCount = outputs.replicaCount;
+    var sourcelocation = selectedApplicationRevision.sourceLocation;
 %>
 
 <script>

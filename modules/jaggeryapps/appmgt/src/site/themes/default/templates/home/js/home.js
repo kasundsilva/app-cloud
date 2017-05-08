@@ -23,6 +23,7 @@ $(document).ready(function() {
     $("#change_app_icon").change(function(event) {
         submitChangeAppIcon(this);
     });
+    alert(selectedApplicationRevision.status);
     initPageView();
     var uploadRevisionUrl = appCreationPageBaseUrl+"?appTypeName="+application.applicationType +
                             "&applicationName="+applicationName + "&encodedLabels="+encodedLabels + "&encodedEnvs="
@@ -528,8 +529,8 @@ function redirectAppHome() {
 
 function getVersionCount(){
     return Object.keys(application.versions).length;
-}
 
+}
 
 function checkApplicationExistence(applicationNameOfTool) {
     jagg.post("../blocks/application/application.jag", {
@@ -580,3 +581,4 @@ function createApplication(applicationNameOfTool, selectedVersion, isNewVersion)
 
     });
 }
+
