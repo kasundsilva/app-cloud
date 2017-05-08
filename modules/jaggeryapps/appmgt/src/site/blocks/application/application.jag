@@ -180,12 +180,13 @@ var log = new Log();
         var setDefaultVersion = request.getParameter("setDefaultVersion");
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
-        var sourceLocation = request.getParameter("sourceLocation");
-        log.info("############################ Source Location:" + sourceLocation);
 
-        if (sourceLocation != null) {
-            if (validateAlphaNumeric("sourceLocation", sourceLocation)) {return;}
+        // Setting source folder name similar to versionHashId
+        if (appCreationMethod == 'start-from-scratch') {
+            log.info("###################### Creating ballerina from scratch");
+            var sourceLocation = 'true';
         }
+        log.info("############################ Source Location:" + sourceLocation);
 
         if (applicationModule.isAplicationVersionExist(versionHashId)) {
             logMessage = "Bad request : Application with same name and version already exists!";

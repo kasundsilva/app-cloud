@@ -117,7 +117,9 @@ function initPageView() {
     $("#version-url-link").html(repoUrlHtml);
     $('#appVersionList li').click(function() {
         var newRevision = this.textContent;
-        changeSelectedRevision(newRevision);
+        if (newRevision != '+ Add') {
+            changeSelectedRevision(newRevision);
+        }
     });
 
     $('body').on('click', '#btn-launchApp', launchApp);
