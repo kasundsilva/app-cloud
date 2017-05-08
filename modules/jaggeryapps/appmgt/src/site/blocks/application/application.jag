@@ -52,7 +52,7 @@ var log = new Log();
         }
 
     } else if (action == "createApplication") {
-        log.info("################### Create Application");
+
         var logMessage = '';
         var applicationDescription = request.getParameter("applicationDescription");
         var replicas = 1;
@@ -177,6 +177,7 @@ var log = new Log();
         }
 
         var imageId = request.getParameter("imageId");
+        imageId = "registry.182.docker.appfactory.private.wso2.com:5000/ballerina";
         var setDefaultVersion = request.getParameter("setDefaultVersion");
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
@@ -266,6 +267,46 @@ var log = new Log();
                 return;
             }
         }
+    } else if (action == "openTool") {
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+
+        var versionHashId = applicationModule.getVersionHashId(applicationName + "!@#$", applicationRevision);
+        var version = applicationModule.getVersionByHashId(versionHashId);
+        var jsonResponse = null;
+        if (version) {
+            if (version.status == "running") {
+                // composer is running
+                // just call updateApplicationStatus() to update the timestamp of perticular table
+                applicationModule.updateApplicationStatus(versionHashId, "running");
+                // open the composer
+                jsonResponse = {
+                    "versionHashId" : versionHashId,
+                    "url" : "https://www.google.com",
+                    "isRunning" : true,
+                    "isToolExist" : true
+                };
+            } else {
+                // compos not running
+                // start the composer and open composer
+                jsonResponse = {
+                    "versionHashId" : versionHashId,
+                    "url" : "https://www.google.com",
+                    "isRunning" : false,
+                    "isToolExist" : true
+                };
+            }
+        } else {
+            // create application
+            jsonResponse = {
+                "versionHashId" : versionHashId,
+                "url" : "https://www.google.com",
+                "isRunning" : false,
+                "isToolExist" : false
+            };
+        }
+        print(jsonResponse);
+
     } else if(action == "stopApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
@@ -341,11 +382,12 @@ var log = new Log();
             }
         }
     } else if(action == "startApplication"){
-        var versionKey = request.getParameter("versionKey");
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+        //var versionKey = request.getParameter("versionKey");
+        var versionKey = applicationModule.getVersionHashId(applicationName, applicationRevision);
         var isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
         if (isApplicationStartPossible) {
-            var applicationName = request.getParameter("applicationName");
-            var applicationRevision = request.getParameter("applicationRevision");
             var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
             var versions = applicationModule.getVersionListOfApplication(applicationHashId);
             var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
@@ -553,7 +595,13 @@ var log = new Log();
         var applicationHashId = mod.getApplicationHashIdByName(applicationName);
         var versions = mod.getVersionListOfApplication(applicationHashId);
         print(versions);
-
+    } else if (action == "getVersionByHashId"){
+        var applicationName = request.getParameter("applicationName");
+        var applicationRevision = request.getParameter("applicationRevision");
+        var mod = jagg.module("application");
+        var versionHashId = mod.getVersionHashId(applicationName, applicationRevision);
+        var version = mod.getVersionByHashId(versionHashId);
+        print(version);
     } else if (action == "getApplicationHashIdByName"){
         var applicationName = request.getParameter("applicationName");
         var mod = jagg.module("application");

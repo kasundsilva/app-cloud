@@ -181,7 +181,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     <div class="btn-group ctrl-edit-button btn-edit-code">
                                       <a type="button" class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a>
                                     </div>
-
                           </div>
                          </div>
                                 <%
@@ -229,7 +228,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   </span> Update
                               </div>
                           </a>
-                          <a id="edit-code" onclick="">
+                          <a id="edit-code" onclick="openTool()">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
@@ -335,6 +334,33 @@ jagg.template("home", function(inputs, outputs, jagg) {
      </div><!-- /.modal -->
 <script>
 
+    function openTool() {
+        alert("Open composer");
+        var applicationNameOfTool = applicationName + "_tools1";
+        var isToolApplicationExist = checkApplicationExistence(applicationNameOfTool);
+        var toolURL = "https://www.google.com/";
+
+        if (isToolApplicationExist) {
+            var vershionHashIdOfTool = checkApplicationVersionExistence(applicationNameOfTool, selectedRevision);
+            if (vershionHashIdOfTool != null) {
+                alert("start application");
+                startApplication(applicationNameOfTool, selectedRevision);
+                window.location.replace(toolURL);
+
+            } else {
+                alert("create version");
+                // create version
+                createApplication(applicationNameOfTool, selectedRevision, true);
+                window.location.replace(toolURL);
+            }
+        } else {
+            alert("create application");
+            // create application
+            createApplication(applicationNameOfTool, selectedRevision, false);
+            window.location.replace(toolURL);
+        }
+    }
+
   // stop application
     function redeployApplication(){
         $("#redeploy-in-progress").html("<i class=\"fw fw-loader2 fw-spin\"></i>");
@@ -402,14 +428,19 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     // redeploy application
     function startApplication() {
-            executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
-            jagg.post("../blocks/application/application.jag", {
+        startApplication(applicationName, selectedRevision);
+    }
+
+    function startApplication(applicationName, selectedRevision) {
+        executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
+        jagg.post("../blocks/application/application.jag", {
                 action: "startApplication",
                 applicationName: applicationName,
-                applicationRevision: selectedRevision,
-                versionKey: selectedApplicationRevision.hashId,
-                conSpecCpu: conSpecCpu,
-                conSpecMemory: conSpecMemory
+                applicationRevision: selectedRevision
+                //,
+                //versionKey: selectedApplicationRevision.hashId,
+                //conSpecCpu: conSpecCpu,
+                //conSpecMemory: conSpecMemory
             }, function(result) {
 
             },function(jqXHR, data, errorThrown) {

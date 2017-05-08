@@ -1,5 +1,4 @@
 {
-
     "default":{"category":"services","type":"default", "icon":"fw-java", "color":"app-color-one", "displayName":"Default Application", "buildable":"false", "extension":"zip", "defaultContext":"/", "appContext" : "false", "appTypeUtilObject" : "new WarAppTypeUtil()", "isMultiArtifactsSupported": "false"},
     "war":{"category":"services","type":"war", "icon":"fw-java", "color":"app-color-one", "displayName":"Java Web Application", "buildable":"true", "extension":"war", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new WarAppTypeUtil()", "isMultiArtifactsSupported": "false"},
     "php":{"category":"services","type":"php", "icon":"fw-php", "color":"app-color-three", "displayName":"PHP Web Application", "buildable":"false", "extension":"zip", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new PHPAppTypeUtil()", "isMultiArtifactsSupported": "false"},
@@ -10,6 +9,6 @@
     "custom":{"category":"custom","type":"custom", "icon":"fw-docker", "color":"app-color-six", "displayName":"Custom Docker Images", "buildable":"true", "extension":"car", "defaultContext":"/", "appContext" : "false", "appTypeUtilObject" : "new ESBAppTypeUtil()", "isMultiArtifactsSupported": "false"},
     "jaggery":{"category":"services","type":"jaggery", "icon":"fw-jaggery", "color":"app-color-six", "displayName":"WSO2 Jaggery Application", "buildable":"false", "extension":"zip", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new JaggeryAppTypeUtil()", "isMultiArtifactsSupported": "false"},
     "wso2dataservice":{"category":"services","type":"wso2dataservice", "icon":"fw-dss", "color":"app-color-seven", "displayName":"WSO2 Data Service", "buildable":"true", "extension":"car", "defaultContext":"/services/<Service_Name>?wsdl", "appContext" : "false", "appTypeUtilObject" : "new DSSAppTypeUtil()", "isMultiArtifactsSupported": "true"},
-    "nodejs":{"category":"services","type":"nodejs", "icon":"fw-jaggery", "color":"app-color-six", "displayName":"NodeJs Application", "buildable":"false", "extension":"zip", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new NodeJSAppTypeUtil()", "isMultiArtifactsSupported": "false"}
-
+    "nodejs":{"category":"services","type":"nodejs", "icon":"fw-jaggery", "color":"app-color-six", "displayName":"NodeJs Application", "buildable":"false", "extension":"zip", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new NodeJSAppTypeUtil()", "isMultiArtifactsSupported": "false"},
+    "ballerina-composer":{"category":"tools","type":"ballerina-composer", "icon":"fw-service", "color":"app-color-six", "displayName":"Balerina Composer", "buildable":"true", "extension":"zip", "defaultContext":"/", "appContext" : "true", "appTypeUtilObject" : "new BallerinaComposerAppTypeUtil()", "isMultiArtifactsSupported": "false"}
 }
