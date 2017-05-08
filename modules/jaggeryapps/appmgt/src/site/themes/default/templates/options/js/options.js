@@ -22,7 +22,10 @@ $(document).ready(function () {
 });
 
 
- function loadCreateApp(appTypeName, fileFrom) {
+ function loadCreateApp(appTypeName) {
+
+     fileFrom = $(".radio-inline input[type='radio']:checked").val();
+
      if (fileFrom == 'cloud'){
         window.location.href ='application.jag?appTypeName=' + appTypeName + '&option=upload-from-cloud';
      } else if (fileFrom == 'local') {

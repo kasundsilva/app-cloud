@@ -54,29 +54,49 @@ jagg.template("options", function(inputs, outputs, jagg) {
             <div class="d-flex w-100 justify-content-between">
               <h4 class="mb-1">Create new Ballerina Service on Cloud</h4>
             </div>
-            <p class="mb-1">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
-            <small class="text-muted">Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
+            <p class="mb-1">This option will let you develop your Ballerina Service on cloud via Ballerina Composer. Initially this will start with Ballerina echo service and later on you can modify the code via Ballerina Composer in Cloud.</p>
+
+            <button type="button" class="btn btn-primary" id="continue-composer">
+            Continue &nbsp;
+                <i class="fw fw-right"></i>
+            </button>
+            <small class="text-muted"></small>
           </a>
         <% } %>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Deploy Ballerina Service</h4>
+              <h4 class="mb-1">Upload and deploy an existing application</h4>
             </div>
-            <input type="button" class="btn btn-default" value="Local File System" onclick="loadCreateApp('<%=appTypeName%>', 'local');">
-            <input type="button" class="btn btn-default" value="URL" onclick="loadCreateApp('<%=appTypeName%>','url');">
-           <% if (appTypeName == "php" || appTypeName == "jaggery") { %>
-            <input type="button" class="btn btn-default" value="Clone GITHUB Repository" onclick="loadCreateApp('<%=appTypeName%>', 'github');">
-           <% } %>
 
-            <p class="mb-1">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
-            <small class="text-muted">Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
+                <label class="radio-inline">
+                  <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions1" value="local" checked="checked"> Local File System
+                </label>
+                <label class="radio-inline">
+                  <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions2" value="url"> URL
+                </label>
+            <% if (appTypeName == "php" || appTypeName == "jaggery") { %>
+                <label class="radio-inline">
+                  <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions3" value="github"> Github Repository
+                </label>
+            <% } %>
+
+            <p class="mb-1">This option will let you upload an existing application that you have already developed via local file system or web.</p>
+            <button type="button" class="btn btn-primary" onclick="loadCreateApp('<%=appTypeName%>');">
+            Continue &nbsp;
+                <i class="fw fw-right"></i>
+            </button>
+            <small class="text-muted"></small>
           </a>
           <a href="<%=jagg.getAbsoluteUrl("/site/pages/application.jag")%>?appTypeName=<%=appTypeName%>&option=deploy-sample" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
               <h4 class="mb-1">Tryout Samples</h4>
             </div>
-            <p class="mb-1">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
-            <small class="text-muted">Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.</small>
+            <p class="mb-1">This option will create and deploy a sample application to the Cloud. You can use the launch url in application home page to try out the sample.</p>
+            <button type="button" class="btn btn-primary" id="continue-sample">
+            Continue &nbsp;
+                <i class="fw fw-right"></i>
+            </button>
+            <small class="text-muted"></small>
           </a>
         </div>
     </div>
