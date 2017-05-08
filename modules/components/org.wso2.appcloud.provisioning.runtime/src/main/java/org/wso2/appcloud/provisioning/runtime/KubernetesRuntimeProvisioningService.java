@@ -217,7 +217,6 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
             PodSpec podSpec = new PodSpecBuilder()
                     .withContainers(kubContainerList)
                     .withVolumes(volumes)
-                    //.withVolumes(config.getSecrets())
                     .build();
 
             PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()

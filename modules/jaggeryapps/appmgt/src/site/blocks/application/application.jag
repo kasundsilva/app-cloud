@@ -177,7 +177,6 @@ var log = new Log();
         }
 
         var imageId = request.getParameter("imageId");
-        imageId = "registry.182.docker.appfactory.private.wso2.com:5000/ballerina";
         var setDefaultVersion = request.getParameter("setDefaultVersion");
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
@@ -267,46 +266,6 @@ var log = new Log();
                 return;
             }
         }
-    } else if (action == "openTool") {
-        var applicationName = request.getParameter("applicationName");
-        var applicationRevision = request.getParameter("applicationRevision");
-
-        var versionHashId = applicationModule.getVersionHashId(applicationName + "!@#$", applicationRevision);
-        var version = applicationModule.getVersionByHashId(versionHashId);
-        var jsonResponse = null;
-        if (version) {
-            if (version.status == "running") {
-                // composer is running
-                // just call updateApplicationStatus() to update the timestamp of perticular table
-                applicationModule.updateApplicationStatus(versionHashId, "running");
-                // open the composer
-                jsonResponse = {
-                    "versionHashId" : versionHashId,
-                    "url" : "https://www.google.com",
-                    "isRunning" : true,
-                    "isToolExist" : true
-                };
-            } else {
-                // compos not running
-                // start the composer and open composer
-                jsonResponse = {
-                    "versionHashId" : versionHashId,
-                    "url" : "https://www.google.com",
-                    "isRunning" : false,
-                    "isToolExist" : true
-                };
-            }
-        } else {
-            // create application
-            jsonResponse = {
-                "versionHashId" : versionHashId,
-                "url" : "https://www.google.com",
-                "isRunning" : false,
-                "isToolExist" : false
-            };
-        }
-        print(jsonResponse);
-
     } else if(action == "stopApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");

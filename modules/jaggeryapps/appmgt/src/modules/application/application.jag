@@ -122,8 +122,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
         }
     } else { // for custom docker images
         if (appTypeName == "ballerina-composer") {
-            imageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + "/" + "ballerina-composer";
-            tagName = "0.86";
+            imageName = imageId;
+            tagName = imageId;
             log.info("image name : " + imageName + " tag name : " + tagName);
         } else {
             imageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + "/" + CUSTOM;
