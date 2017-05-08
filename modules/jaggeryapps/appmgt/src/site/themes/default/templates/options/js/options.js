@@ -36,3 +36,12 @@ $(document).ready(function () {
         window.location.href ='application.jag?appTypeName=' + appTypeName + '&option=github-repo-url';
      }
  }
+
+
+ function continueSample() {
+     window.location = "application.jag?appTypeName=" + appTypeName + "&option=deploy-sample";
+ }
+
+function continueCreateNew() {
+    window.location = "application.jag?appTypeName=" + appTypeName + "&option=start-from-scratch";
+}
