@@ -574,7 +574,7 @@ function createApplication(applicationNameOfTool, selectedVersion, isNewVersion)
         conSpec:1,
         isNewVersion:isNewVersion,
         appCreationMethod:"custom",
-        imageId:"registry.182.docker.appfactory.private.wso2.com:5000/ballerina-composer:0.86"
+        imageId:ballerinaComposerImage
     },function (result) {
 
     },function (jqXHR, textStatus, errorThrown) {

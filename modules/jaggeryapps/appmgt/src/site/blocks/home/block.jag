@@ -64,7 +64,8 @@ jagg.block("home", {
 
         var dashboardProperties = managerModule.getDashboardTypeProperties();
         var replicaCount = applicationModule.getReplicaCountForVersion(application.applicationName, selectedRevision);
-        //var sourceLocation =
+
+        var ballerinaComposerImage = managerModule.getPropertyValue(BALLERINA_COMPOSER_BASE_IMAGE);
 
         return {
             "application" : application,
@@ -80,7 +81,8 @@ jagg.block("home", {
             "dashboardProperties" : dashboardProperties,
             "dataAnalyticsServerUrl" : dataAnalyticsServerUrl,
             "tenantDomain" : tenantDomain,
-            "replicaCount" : replicaCount
+            "replicaCount" : replicaCount,
+            "ballerinaComposerImage" : ballerinaComposerImage
         };
     }
 

@@ -55,6 +55,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var dataAnalyticsServerUrl = outputs.dataAnalyticsServerUrl;
     var tenantDomain = outputs.tenantDomain;
     var replicaCount = outputs.replicaCount;
+    var ballerinaComposerImage = outputs.ballerinaComposerImage;
     var sourcelocation = selectedApplicationRevision.sourceLocation;
 %>
 
@@ -85,6 +86,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var dataAnalyticsServerUrl = "<%=dataAnalyticsServerUrl%>";
     var tenantDomain = "<%=tenantDomain%>";
     var replicaCount = <%=replicaCount%>;
+    var ballerinaComposerImage = "<%=ballerinaComposerImage%>";
 </script>
 
     <div class="right-pane visible">
