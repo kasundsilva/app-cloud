@@ -182,9 +182,10 @@ var log = new Log();
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
 
         // Setting source folder name similar to versionHashId
+        var sourceLocation = false;
         if (appCreationMethod == 'start-from-scratch') {
             log.info("###################### Creating ballerina from scratch");
-            var sourceLocation = 'true';
+            sourceLocation = 'true';
         }
         log.info("############################ Source Location:" + sourceLocation);
 
@@ -298,7 +299,7 @@ var log = new Log();
     } else if(action == "redeployApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
-        var versionKey = request.getParameter("versionKey");
+        var versionKey = applicationModule.getVersionHashId(applicationName, applicationRevision);
         var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
         var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
         var podDeleteTimeOut = modManager.getPropertyValue(POD_DELETE_TIMEOUT);
@@ -343,7 +344,6 @@ var log = new Log();
     } else if(action == "startApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
-        //var versionKey = request.getParameter("versionKey");
         var versionKey = applicationModule.getVersionHashId(applicationName, applicationRevision);
         var isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
         if (isApplicationStartPossible) {
@@ -554,12 +554,13 @@ var log = new Log();
         var applicationHashId = mod.getApplicationHashIdByName(applicationName);
         var versions = mod.getVersionListOfApplication(applicationHashId);
         print(versions);
-    } else if (action == "getVersionByHashId"){
+    } else if (action == "getVersionByHashId") {
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
         var mod = jagg.module("application");
         var versionHashId = mod.getVersionHashId(applicationName, applicationRevision);
         var version = mod.getVersionByHashId(versionHashId);
+
         print(version);
     } else if (action == "getApplicationHashIdByName"){
         var applicationName = request.getParameter("applicationName");

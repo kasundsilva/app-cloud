@@ -38,17 +38,18 @@ INSERT INTO `AC_APP_TYPE_RUNTIME` (`app_type_id`, `runtime_id`) VALUES
 (10, 21);
 
 INSERT INTO `AC_RUNTIME_CONTAINER_SPECIFICATIONS` (`id`, `CON_SPEC_ID`) VALUES
-(21, 1);
+(21, 3);
 
 INSERT INTO AC_TRANSPORT (`id`, `name`, `port`, `protocol`, `service_prefix`, `description`) VALUES
-(11, "http", 9091, "TCP", "bcr", "Ballerina composer - runtime Protocol"),
-(12, "http", 8289, "TCP", "bcb", "Ballerina composer - backend protocol"),
-(13, "ws", 5056, "TCP", "bcd", "Ballerina composer - debug protocol");
+(11, "http", 9091, "TCP", "bcu", "Ballerina composer UI"),
+(12, "http", 8289, "TCP", "bcb", "Ballerina composer - backend http protocol"),
+(13, "ws", 8290, "TCP", "bcw", "Ballerina composer - backend ws protocol"),
+(14, "ws", 5056, "TCP", "bcd", "Ballerina composer - debug ws protocol");
 
 INSERT INTO AC_RUNTIME_TRANSPORT (`transport_id`, `runtime_id`) VALUES
 (9, 21),
-(10, 21),
 (11, 21),
-(12, 21);
-(13, 21);
+(12, 21),
+(13, 21),
+(14, 21);
 
