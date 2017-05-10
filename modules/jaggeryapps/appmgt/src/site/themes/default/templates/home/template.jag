@@ -57,6 +57,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var replicaCount = outputs.replicaCount;
     var ballerinaComposerImage = outputs.ballerinaComposerImage;
     var sourcelocation = selectedApplicationRevision.sourceLocation;
+    var toolPrefix = TOOL_PREFIX;
+
 %>
 
 <script>
@@ -87,6 +89,9 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var tenantDomain = "<%=tenantDomain%>";
     var replicaCount = <%=replicaCount%>;
     var ballerinaComposerImage = "<%=ballerinaComposerImage%>";
+    var TOOL_PREFIX = "<%=toolPrefix%>";
+    var toolVersionHashId = null;
+
 </script>
 
     <div class="right-pane visible">
@@ -231,7 +236,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   </span> Update
                               </div>
                           </a>
-                          <a id="edit-code" onclick="openTool()">
+                          <a id="edit-code" onclick="openTool()" >
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
@@ -338,36 +343,102 @@ jagg.template("home", function(inputs, outputs, jagg) {
 <script>
 
     function openTool() {
-        alert("Open composer");
-        var applicationNameOfTool = applicationName + "_tools1";
-        var isToolApplicationExist = checkApplicationExistence(applicationNameOfTool);
-        var toolURL = "https://www.google.com/";
 
-        if (isToolApplicationExist) {
-            var vershionHashIdOfTool = checkApplicationVersionExistence(applicationNameOfTool, selectedRevision);
-            if (vershionHashIdOfTool != null) {
-                alert("start application");
-                startApplication(applicationNameOfTool, selectedRevision);
-                window.location.replace(toolURL);
+        // define name of tool
+        var applicationNameOfTool = applicationName + TOOL_PREFIX;
 
+        // check whether tool is already created
+        jagg.post("../blocks/application/application.jag", {
+            action:"getApplicationHashIdOfMatchingAppName",
+            applicationName:applicationNameOfTool
+        },function (result) {
+            var appHashId = result.trim();
+            if (appHashId != "null") {
+                // tool is exist
+                // get version info by version hash id
+                jagg.post("../blocks/application/application.jag", {
+                    action:"getVersionByHashId",
+                    applicationName:applicationNameOfTool,
+                    applicationRevision:selectedRevision
+                },function (result) {
+                    var version = JSON.parse(result);
+                    if (version != null && version.hashId != null) {
+                        toolVersionHashId = version.hashId;
+                        // specific version is existd;
+                        // check whether it is already start
+                        if (version.status == "running") {
+                            // open the tool
+                            window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                        } else {
+                            // throttle
+                            // start the tool
+                            // open in new tab
+                            executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
+                            jagg.post("../blocks/application/application.jag", {
+                                action: "startApplication",
+                                applicationName: applicationNameOfTool,
+                                applicationRevision: selectedRevision
+                            }, function(result) {
+
+                            },function(jqXHR, data, errorThrown) {
+                                alert("error: startApplication");
+                            });
+                        }
+                    } else {
+                        // specific version is not exist
+                        // create version
+                        executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
+                        jagg.post("../blocks/application/application.jag", {
+                            action:"createApplication",
+                            applicationName:applicationNameOfTool,
+                            runtime:21,
+                            appTypeName:"ballerina-composer",
+                            applicationRevision:selectedRevision,
+                            conSpec:3,
+                            isNewVersion:true,
+                            appCreationMethod:"custom",
+                            imageId:ballerinaComposerImage
+                        },function (result) {
+
+                        },function (jqXHR, textStatus, errorThrown) {
+
+                        });
+                    }
+                },function (jqXHR, textStatus, errorThrown) {
+                    alert("error: getVersionByHashId");
+                });
             } else {
-                alert("create version");
-                // create version
-                createApplication(applicationNameOfTool, selectedRevision, true);
-                window.location.replace(toolURL);
+                // tool is not exist
+                // create tool
+                executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
+                jagg.post("../blocks/application/application.jag", {
+                    action:"createApplication",
+                    applicationName:applicationNameOfTool,
+                    runtime:21,
+                    appTypeName:"ballerina-composer",
+                    applicationRevision:selectedRevision,
+                    conSpec:3,
+                    isNewVersion:false,
+                    appCreationMethod:"custom",
+                    imageId:ballerinaComposerImage
+                },function (result) {
+
+                },function (jqXHR, textStatus, errorThrown) {
+
+                });
+
+
+
             }
-        } else {
-            alert("create application");
-            // create application
-            createApplication(applicationNameOfTool, selectedRevision, false);
-            window.location.replace(toolURL);
-        }
+        },function (jqXHR, textStatus, errorThrown) {
+            alert("error: getApplicationHashIdOfMatchingAppName");
+        });
     }
 
   // stop application
     function redeployApplication(){
         $("#redeploy-in-progress").html("<i class=\"fw fw-loader2 fw-spin\"></i>");
-        executeAsync(drawProgressWindow("Redeploying the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
+        executeAsync(drawProgressWindow("Redeploying the " + cloudSpecificApplicationRepresentation.toLowerCase() + "...", applicationName, selectedRevision, false));
         jagg.post("../blocks/application/application.jag", {
             action: "redeployApplication",
             applicationName: applicationName,
@@ -431,44 +502,36 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     // redeploy application
     function startApplication() {
-        startApplication(applicationName, selectedRevision);
-    }
-
-    function startApplication(applicationName, selectedRevision) {
-        executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
+        executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "...", applicationName, selectedRevision, false));
         jagg.post("../blocks/application/application.jag", {
-                action: "startApplication",
-                applicationName: applicationName,
-                applicationRevision: selectedRevision
-                //,
-                //versionKey: selectedApplicationRevision.hashId,
-                //conSpecCpu: conSpecCpu,
-                //conSpecMemory: conSpecMemory
-            }, function(result) {
+            action: "startApplication",
+            applicationName: applicationName,
+            applicationRevision: selectedRevision
+        }, function(result) {
 
-            },function(jqXHR, data, errorThrown) {
-                setTimeout(reloadAppHome, 5000);
-                jagg.message({
-                    content: jqXHR.responseText,
-                    type: 'error',
-                    id: 'view_log',
-                    timeout: '5000'
-                });
+        },function(jqXHR, data, errorThrown) {
+            setTimeout(reloadAppHome, 5000);
+            jagg.message({
+                content: jqXHR.responseText,
+                type: 'error',
+                id: 'view_log',
+                timeout: '5000'
             });
+        });
     }
 
-    function drawProgressWindow(heading){
+    function drawProgressWindow(heading, applicationName, selectedRevision, isTool){
         $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
         $("#app_creation_progress_modal").show();
         $("#modal-title").text(heading);
-        setInterval(pollEvents, 5000);
+        setInterval(pollEvents(applicationName, selectedRevision, isTool), 5000);
     }
 
     function executeAsync(func) {
         setTimeout(func, 0);
     }
 
-    function pollEvents(){
+    function pollEvents(applicationName, selectedRevision, isTool){
         jagg.post("../blocks/application/application.jag", {
             action:"getApplicationCreationEvents",
             applicationName:applicationName,
@@ -522,6 +585,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 }
                 table = table + "</table>";
                 $("#progress_table").html(table);
+
                 for(var i = 0; i < result.length; i++){
                     var statusStyle;
                     var event = result[i];
@@ -529,6 +593,9 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
                             deleteAppCreationEvents();
+                            if (isTool) {
+                                window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                            }
                             window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                         }
                     } else if(event.status == "failed") {
@@ -546,6 +613,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         }
                     }
                 }
+
             }
         },function (jqXHR, textStatus, errorThrown) {
              jagg.message({content: "Error occurred while restarting " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});

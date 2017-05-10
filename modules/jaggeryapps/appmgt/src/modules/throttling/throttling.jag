@@ -78,8 +78,8 @@ var isApplicationStartPossible = function(versionHashId) {
     var versionInfo = applicationModule.getVersionByHashId(versionHashId);
     var tenantId = manager.getTenantId(true);
     var tenantTotalResourceUsage = getTenantTotalResourceUsage(tenantId);
-    var aggregateCpu = tenantTotalResourceUsage["totalCpu"] + parseInt(versionInfo.getConSpecCpu());
-    var aggregateMemory = tenantTotalResourceUsage["totalRam"] + parseInt(versionInfo.getConSpecMemory());
+    var aggregateCpu = tenantTotalResourceUsage["totalCpu"] + parseInt(versionInfo.conSpecMemory);
+    var aggregateMemory = tenantTotalResourceUsage["totalRam"] + parseInt(versionInfo.conSpecMemory);
     if (aggregateCpu > subscription.maxCpu || aggregateMemory > subscription.maxMemory) {
         return false;
     }

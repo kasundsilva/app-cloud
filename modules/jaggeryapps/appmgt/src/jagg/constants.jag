@@ -141,4 +141,5 @@ var MGT_APP_URL = "MgtAppURL";
 var MGT_APP_ADMIN_USERNAME="MgtAppAdminUsername";
 var MGT_APP_ADMIN_PASSWORD="MgtAppAdminPassword";
 var BALLERINA_COMPOSER_BASE_IMAGE="ballerina-composer_base_image";
+var TOOL_PREFIX = "_tools";
 %>
