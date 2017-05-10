@@ -77,8 +77,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
         uploadedFileName = versionHashId + "." + uploadedFileName.split(".")[1];
     }
 
-    if (sourceLocation == 'true') {
-        sourceLocation = KubernetesProvisioningUtils.getKubernetesValidAppName(applicationName.replace(TOOL_PREFIX, ""));
+    if (sourceLocation == 'true' || sourceLocation == true) {
+        sourceLocation = KubernetesProvisioningUtils.getKubernetesValidAppName(applicationName);
     }
 
     if (isNewVersion == 'true') {
@@ -122,9 +122,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
         }
     } else { // for custom docker images
         if (appTypeName == "ballerina-composer") {
-            var baseImage = modManager.getPropertyValue(BALLERINA_COMPOSER_BASE_IMAGE).split(":");
-            imageName = baseImage[0]; // "registry.182.docker.appfactory.private.wso2.com:5000/ballerina-composer";
-            tagName = baseImage[1]; //"0.87-SNAPSHOT-base";
+            imageName = modManager.getPropertyValue(BALLERINA_COMPOSER_BASE_IMAGE);
+            tagName = modManager.getPropertyValue(BALLERINA_COMPOSER_BASE_IMAGE_TAG);
             log.info("image name : " + imageName + " tag name : " + tagName);
         } else {
             imageName = modManager.getPropertyValue(PROPERTY_DOCKER_REGISTRY_URL) + "/" + CUSTOM;
@@ -1341,7 +1340,9 @@ var getVersionListOfApplication = function(applicationHashId){
     try {
         var revisions = ApplicationManager.getVersionListOfApplication(applicationHashId);
         for (var i = 0; i < revisions.size(); i++) {
-            revisionArray.push(revisions.get(i));
+            if (revisions.get(i).name != "ballerina-composer") {
+                revisionArray.push(revisions.get(i));
+            }
         }
     } catch(e){
         log.error("Error while getting the application list");
@@ -2031,10 +2032,12 @@ var getVersionByHashId = function (versionHashId) {
     var versionObject = {};
     try {
         var version = ApplicationManager.getVersionByHashId(versionHashId);
-        versionObject.hashId = version.hashId;
-        versionObject.status = version.status;
-        versionObject.conSpecCpu = version.conSpecCpu;
-        versionObject.conSpecMemory = version.conSpecMemory;
+        if (version != null) {
+            versionObject.hashId = version.hashId;
+            versionObject.status = version.status;
+            versionObject.conSpecCpu = version.conSpecCpu;
+            versionObject.conSpecMemory = version.conSpecMemory;
+        }
     } catch (e) {
         log.error("Error while getting version info by hash id : " + versionHashId);
         log.error(e);

@@ -187,6 +187,11 @@ var log = new Log();
             log.info("###################### Creating ballerina from scratch");
             sourceLocation = 'true';
         }
+
+        if (appTypeName == "ballerina-composer") {
+            sourceLocation = 'true';
+        }
+
         log.info("############################ Source Location:" + sourceLocation);
 
         if (applicationModule.isAplicationVersionExist(versionHashId)) {

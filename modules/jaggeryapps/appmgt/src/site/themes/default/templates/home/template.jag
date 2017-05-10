@@ -345,80 +345,55 @@ jagg.template("home", function(inputs, outputs, jagg) {
     function openTool() {
 
         // define name of tool
-        var applicationNameOfTool = applicationName + TOOL_PREFIX;
+        var applicationNameOfTool = applicationName;
+        var versionOfTool = "ballerina-composer";
 
-        // check whether tool is already created
+        $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
+        $("#app_creation_progress_modal").show();
+        $("#modal-title").text("Starting ...");
+        setInterval(pollEventsOfTool(applicationNameOfTool, versionOfTool), 5000);
+
         jagg.post("../blocks/application/application.jag", {
-            action:"getApplicationHashIdOfMatchingAppName",
-            applicationName:applicationNameOfTool
+            action:"getVersionByHashId",
+            applicationName:applicationNameOfTool,
+            applicationRevision:versionOfTool
         },function (result) {
-            var appHashId = result.trim();
-            if (appHashId != "null") {
-                // tool is exist
-                // get version info by version hash id
-                jagg.post("../blocks/application/application.jag", {
-                    action:"getVersionByHashId",
-                    applicationName:applicationNameOfTool,
-                    applicationRevision:selectedRevision
-                },function (result) {
-                    var version = JSON.parse(result);
-                    if (version != null && version.hashId != null) {
-                        toolVersionHashId = version.hashId;
-                        // specific version is existd;
-                        // check whether it is already start
-                        if (version.status == "running") {
-                            // open the tool
-                            window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
-                        } else {
-                            // throttle
-                            // start the tool
-                            // open in new tab
-                            executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
-                            jagg.post("../blocks/application/application.jag", {
-                                action: "startApplication",
-                                applicationName: applicationNameOfTool,
-                                applicationRevision: selectedRevision
-                            }, function(result) {
+            var version = JSON.parse(result);
+            if (version != null && version.hashId != null) {
+                toolVersionHashId = version.hashId;
+                // specific version is exist;
+                // check whether it is already started
+                if (version.status == "running") {
+                    // open the tool
+                    //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                } else if (version.status == "stopped" || version.status == "inactive") {
+                    // throttle
+                    // start the tool
+                    // open in new tab
+                    jagg.post("../blocks/application/application.jag", {
+                        action: "startApplication",
+                        applicationName: applicationNameOfTool,
+                        applicationRevision: versionOfTool
+                    }, function(result) {
 
-                            },function(jqXHR, data, errorThrown) {
-                                alert("error: startApplication");
-                            });
-                        }
-                    } else {
-                        // specific version is not exist
-                        // create version
-                        executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
-                        jagg.post("../blocks/application/application.jag", {
-                            action:"createApplication",
-                            applicationName:applicationNameOfTool,
-                            runtime:21,
-                            appTypeName:"ballerina-composer",
-                            applicationRevision:selectedRevision,
-                            conSpec:3,
-                            isNewVersion:true,
-                            appCreationMethod:"custom",
-                            imageId:ballerinaComposerImage
-                        },function (result) {
+                    },function(jqXHR, data, errorThrown) {
 
-                        },function (jqXHR, textStatus, errorThrown) {
-
-                        });
-                    }
-                },function (jqXHR, textStatus, errorThrown) {
-                    alert("error: getVersionByHashId");
-                });
+                    });
+                    //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                } else {
+                    // version.status == "error"
+                }
             } else {
-                // tool is not exist
-                // create tool
-                executeAsync(drawProgressWindow("Starting ...", applicationNameOfTool, selectedRevision, true));
+                // specific version is not exist
+                // create version
                 jagg.post("../blocks/application/application.jag", {
                     action:"createApplication",
                     applicationName:applicationNameOfTool,
                     runtime:21,
                     appTypeName:"ballerina-composer",
-                    applicationRevision:selectedRevision,
+                    applicationRevision:versionOfTool,
                     conSpec:3,
-                    isNewVersion:false,
+                    isNewVersion:true,
                     appCreationMethod:"custom",
                     imageId:ballerinaComposerImage
                 },function (result) {
@@ -426,19 +401,24 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 },function (jqXHR, textStatus, errorThrown) {
 
                 });
-
-
-
+                //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
             }
+
         },function (jqXHR, textStatus, errorThrown) {
-            alert("error: getApplicationHashIdOfMatchingAppName");
+            setTimeout(reloadAppHome, 5000);
+            jagg.message({
+                content: jqXHR.responseText,
+                type: 'error',
+                id: 'view_log',
+                timeout: '5000'
+            });
         });
     }
 
   // stop application
     function redeployApplication(){
         $("#redeploy-in-progress").html("<i class=\"fw fw-loader2 fw-spin\"></i>");
-        executeAsync(drawProgressWindow("Redeploying the " + cloudSpecificApplicationRepresentation.toLowerCase() + "...", applicationName, selectedRevision, false));
+        executeAsync(drawProgressWindow("Redeploying the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
         jagg.post("../blocks/application/application.jag", {
             action: "redeployApplication",
             applicationName: applicationName,
@@ -502,7 +482,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     // redeploy application
     function startApplication() {
-        executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "...", applicationName, selectedRevision, false));
+        executeAsync(drawProgressWindow("Starting the " + cloudSpecificApplicationRepresentation.toLowerCase() + "..."));
         jagg.post("../blocks/application/application.jag", {
             action: "startApplication",
             applicationName: applicationName,
@@ -520,22 +500,64 @@ jagg.template("home", function(inputs, outputs, jagg) {
         });
     }
 
-    function drawProgressWindow(heading, applicationName, selectedRevision, isTool){
+    function drawProgressWindow(heading){
         $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
         $("#app_creation_progress_modal").show();
         $("#modal-title").text(heading);
-        setInterval(pollEvents(applicationName, selectedRevision, isTool), 5000);
+        setInterval(pollEvents, 5000);
     }
 
     function executeAsync(func) {
         setTimeout(func, 0);
     }
 
-    function pollEvents(applicationName, selectedRevision, isTool){
+    function pollEventsOfTool(applicationName, selectedRevision){
         jagg.post("../blocks/application/application.jag", {
             action:"getApplicationCreationEvents",
             applicationName:applicationName,
-            applicationRevision:selectedRevision,
+            applicationRevision:selectedRevision
+
+        },function (result) {
+            var result = jQuery.parseJSON(result);
+            if (result.length > 0) {
+                for(var i = 0; i < result.length; i++){
+                    var statusStyle;
+                    var event = result[i];
+                    if (event.name === "Status" && event.status === "success") {
+                        setTimeout(redirectAppHome, 4250);
+                        function redirectAppHome(){
+                            deleteAppCreationEvents();
+                            window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                            window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+                        }
+                    } else if(event.status == "failed") {
+                        //When redeploying an application the associated pod is deleted and an event with the name
+                        //"Stopping Containers" is persisted in the database. Due to the pod not getting deleted within the
+                        //specified time period the "Stopping Containers" event gets a status of "failed". Since only
+                        //application deletion is involved with the "Stopping Containers" event if the event name is
+                        //"Stopping Containers" the following message is not displayed
+                        if (event.name !== "Stopping Containers") {
+                            jagg.message({content: "Error occurred while creating " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});
+                        }
+                        setTimeout(redirectAppListing, 5000);
+                        function redirectAppListing(){
+                            window.location.replace("index.jag");
+                        }
+                    }
+                }
+
+            }
+        },function (jqXHR, textStatus, errorThrown) {
+             jagg.message({content: "Error occurred while starting " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});
+        });
+    }
+
+
+    function pollEvents(){
+        jagg.post("../blocks/application/application.jag", {
+            action:"getApplicationCreationEvents",
+            applicationName:applicationName,
+            applicationRevision:selectedRevision
 
         },function (result) {
             var result = jQuery.parseJSON(result);
@@ -593,9 +615,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
                             deleteAppCreationEvents();
-                            if (isTool) {
-                                window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
-                            }
                             window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                         }
                     } else if(event.status == "failed") {
