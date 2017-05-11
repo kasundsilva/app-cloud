@@ -292,6 +292,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
                         formData.append('appCreationMethod', 'default');
                     } else if (uploadMethod === "start-from-scratch" ) {
                         formData.append('appCreationMethod', 'start-from-scratch');
+                        formData.append('sourceLocation', 'true');
                         formData.append('artifactUrl', sampleArtifactURL);
                         formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "url" ) {

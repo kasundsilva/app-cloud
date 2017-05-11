@@ -117,7 +117,7 @@ function initPageView() {
     var repoUrlHtml = generateLunchUrl(deploymentURL, selectedApplicationRevision.status);
     $("#version-url-link").html(repoUrlHtml);
     $('#appVersionList li').click(function() {
-        var newRevision = this.textContent;
+        var newRevision = this.textContent.trim();
         if (newRevision != '+ Add') {
             changeSelectedRevision(newRevision);
         }
@@ -322,6 +322,26 @@ function changeSelectedRevision(newRevision){
 
     // Change version status in UI
     if(selectedApplicationRevision.status == APPLICATION_RUNNING){
+        $(".overview-version-btn").empty();
+        if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
+            $(".overview-version-btn").html(
+                "<a id='update' onclick=''>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-refresh fw-stack-1x'></i>" +
+                "</span> Update" +
+                "</div>" +
+                "</a>" +
+                "<a id='edit-code' onclick='openTool();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-edit fw-stack-1x'></i>" +
+                "</span> Edit Code" +
+                "</div>" +
+                "</a>");
+        }
 
         $('#launch-default-url-block').empty();
         $('#launch-default-url-block').html('<a id="launch-default-url-a" target="_blank" href="' + defaultAppLaunchURL + '">' + defaultAppLaunchURL + '</a>' +
@@ -339,6 +359,42 @@ function changeSelectedRevision(newRevision){
                 'Redeploy<span id="redeploy-in-progress"><span></a></div>');
 
     } else if(selectedApplicationRevision.status == APPLICATION_STOPPED || selectedApplicationRevision.status == APPLICATION_INACTIVE){
+        $(".overview-version-btn").empty();
+        if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
+            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-delete fw-stack-1x'></i>" +
+                "</span> Delete" +
+                "</div>" +
+                "</a>" +
+                "<a id='update' onclick=''>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-refresh fw-stack-1x'></i>" +
+                "</span> Update" +
+                "</div>" +
+                "</a>" +
+                "<a id='edit-code' onclick='openTool();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-edit fw-stack-1x'></i>" +
+                "</span> Edit Code" +
+                "</div>" +
+                "</a>");
+        } else {
+            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-delete fw-stack-1x'></i>" +
+                "</span> Delete" +
+                "</div>" +
+                "</a>");
+        }
 
         $('#launch-default-url-block').empty();
         $('#launch-default-url-block').html('<a id="launch-default-url-a" target="_blank">' + defaultAppLaunchURL + '</a>');
@@ -351,6 +407,16 @@ function changeSelectedRevision(newRevision){
                 '<div class="btn-group ctrl-edit-button btn-edit-code"><a type="button" ' +
                 'class="btn cu-btn cu-btn-md cu-btn-blue" onclick="startApplication();">Start</a></div>');
     } else {
+
+        $(".overview-version-btn").empty();
+        $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
+            "<div class='btn-create-version'>" +
+            "<span class='fw-stack fw-lg btn-action-ico'>" +
+            "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+            "<i class='fw fw-delete fw-stack-1x'></i>" +
+            "</span> Delete" +
+            "</div>" +
+            "</a>");
 
         $('#launch-default-url-block').empty();
         $('#launch-default-url-block').html('<a id="launch-default-url-a" target="_blank">' + defaultAppLaunchURL + '</a>');

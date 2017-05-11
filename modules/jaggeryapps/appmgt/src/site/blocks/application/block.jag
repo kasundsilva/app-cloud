@@ -34,11 +34,17 @@ jagg.block("application", {
         var applicationModule = jagg.module("application");
         var databaseModule = jagg.module("databases");
         var modManager = jagg.module("manager");
+        log.info("\n############## apptypeName: " + inputs.appTypeName);
         var runtimes = applicationModule.getAllRuntimes(inputs.appTypeName);
         var appTypePropertyConfPath = jagg.getAppTypePropertyConfFilePath();
+
         var parsedObject = parse(appTypePropertyConfPath);
+        log.info("\n############## appTypePropertyConfPath: " + parsedObject);
         var appTypesProperties = require(parsedObject);
+        log.info("\n############## appTypesProperties: " + stringify(appTypesProperties));
         var appType = appTypesProperties[inputs.appTypeName];
+        log.info("\n############## appType: " + stringify(appType));
+        log.info("\n############## apptype.type: " + stringify(appType.type));
         var verifiedCustomImages = null;
         if (appType.type == CUSTOM) {
             var customModule = jagg.module("customDockerImages");
