@@ -153,7 +153,11 @@ jagg.template("home", function(inputs, outputs, jagg) {
                               <%
                               }
                               %>
-                              <li><a href="<%=appCreationPageBaseUrl%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">+ Add</a></li>
+                                <li>
+                                    <a href="<%=jagg.getAbsoluteUrl('/site/pages/options.jag')%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">
+                                        + Add
+                                    </a>
+                                </li>
                               </ul>
                           </div>
                           <div id="version-url-link" class="version-url" title="<%=selectedApplicationRevision.deploymentURL%>">
@@ -219,6 +223,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                %>
                       </div>
                       <div class="col-xs-12 col-md-12 col-lg-5 overview-version-btn">
+                      <% if(selectedApplicationRevision.status == APPLICATION_STOPPED || selectedApplicationRevision.status == APPLICATION_INACTIVE){ %>
                           <a id="delete-version" onclick="deleteApplicationPopUp();">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
@@ -227,6 +232,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   </span> Delete
                               </div>
                           </a>
+                       <% } %>
                          <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
                           <a id="update" onclick="">
                               <div class="btn-create-version">
@@ -313,7 +319,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         </div>
                       <div class="clearfix"></div>
                     </div>
-
                 </div>
         </div>
     </div><!-- /.container -->

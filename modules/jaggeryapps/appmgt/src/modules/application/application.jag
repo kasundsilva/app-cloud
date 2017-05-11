@@ -79,6 +79,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
 
     if (sourceLocation == 'true' || sourceLocation == true) {
         sourceLocation = KubernetesProvisioningUtils.getKubernetesValidAppName(applicationName);
+    } else {
+        sourceLocation = null;
     }
 
     if (isNewVersion == 'true') {
@@ -613,9 +615,15 @@ var getRestartCounts = function (applicationName, versionName, applicationType){
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
             applicationName, versionName, applicationType , modManager.getTenantId(true), modManager.getTenantDomain(true), versionHashId, exposureLevel);
 
-    var kubService = new KubernetesRuntime(applicationCtx);
-    var restartCounts = kubService.getPodRestartCounts();
-    return restartCounts;
+    try {
+        var kubService = new KubernetesRuntime(applicationCtx);
+        var restartCounts = kubService.getPodRestartCounts();
+        return restartCounts;
+    } catch (e) {
+        log.error("Error while getting restart counts for app:" + applicationName);
+        log.error(e);
+        //throw e;
+    }
 };
 
 var getReplicaInfo = function (applicationName, versionName, applicationType) {
@@ -624,9 +632,15 @@ var getReplicaInfo = function (applicationName, versionName, applicationType) {
     var applicationCtx = KubernetesProvisioningUtils.getApplicationContext(
             applicationName, versionName, applicationType , modManager.getTenantId(true), modManager.getTenantDomain(true), versionHashId, exposureLevel);
 
-    var kubService = new KubernetesRuntime(applicationCtx);
-    var replicaInfo = kubService.getReplicaInfo();
-    return replicaInfo;
+    try {
+        var kubService = new KubernetesRuntime(applicationCtx);
+        var replicaInfo = kubService.getReplicaInfo();
+        return replicaInfo;
+    } catch (e) {
+        log.error("Error while getting replica info for app:" + applicationName);
+        log.error(e);
+        //throw e;
+    }
 };
 
 var constructAppLaunchURL = function(applicationName, versionName){

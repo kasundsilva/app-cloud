@@ -22,10 +22,25 @@ include("/jagg/jagg.jag");
 jagg.template("options", function(inputs, outputs, jagg) {
 
     var appTypeName = request.getParameter("appTypeName");
+  var newVersion = request.getParameter("newVersion");
+   var conSpecCpu = request.getParameter("conSpecCpu");
+   var conSpecMemory = request.getParameter("conSpecMemory");
+    var versionArray = request.getParameter("versionArray");
+    var applicationName = request.getParameter("applicationName");
+    var encodedLabels = request.getParameter("encodedLabels");
+    var encodedEnvs = request.getParameter("encodedEnvs");
+
 %>
 
 <script type="text/javascript">
     var appTypeName = "<%=appTypeName%>";
+    var newVersion = "<%=newVersion%>";
+    var conSpecCpu = "<%=conSpecCpu%>";
+    var conSpecMemory = "<%=conSpecMemory%>";
+   var versionArray = "<%=versionArray%>";
+ var applicationName = "<%=applicationName%>";
+ var encodedLabels = "<%=encodedLabels%>";
+ var encodedEnvs = "<%=encodedEnvs%>";
 </script>
 
 <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -34,8 +49,6 @@ jagg.template("options", function(inputs, outputs, jagg) {
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/custom/custom.js'))%>"></script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/options/js/options.js'))%>"></script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/custom/loader.js'))%>"></script>
-
-
 
    <div class="action-bar">
        <a href="/appmgt/site/pages/select-apptype.jag" class="btn-action">

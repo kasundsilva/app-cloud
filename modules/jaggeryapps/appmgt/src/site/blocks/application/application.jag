@@ -181,17 +181,7 @@ var log = new Log();
         // checking whether an application with same name and same version, already exists or not
         var versionHashId = applicationModule.getVersionHashId(applicationName, applicationRevision);
 
-        // Setting source folder name similar to versionHashId
-        var sourceLocation = false;
-        if (appCreationMethod == 'start-from-scratch') {
-            log.info("###################### Creating ballerina from scratch");
-            sourceLocation = 'true';
-        }
-
-        if (appTypeName == "ballerina-composer") {
-            sourceLocation = 'true';
-        }
-
+        var sourceLocation = request.getParameter("sourceLocation");
         log.info("############################ Source Location:" + sourceLocation);
 
         if (applicationModule.isAplicationVersionExist(versionHashId)) {
