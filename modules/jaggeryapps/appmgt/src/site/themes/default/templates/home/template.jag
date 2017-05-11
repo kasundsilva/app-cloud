@@ -344,15 +344,11 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     function openTool() {
 
-        // define name of tool
         var applicationNameOfTool = applicationName;
         var versionOfTool = "ballerina-composer";
 
-        $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
-        $("#app_creation_progress_modal").show();
-        $("#modal-title").text("Starting ...");
-        setInterval(pollEventsOfTool(applicationNameOfTool, versionOfTool), 5000);
-
+        executeAsync(drawProgressWindowForTool("Starting ..."));
+        // check whether ballerina-composer version is created already
         jagg.post("../blocks/application/application.jag", {
             action:"getVersionByHashId",
             applicationName:applicationNameOfTool,
@@ -361,11 +357,9 @@ jagg.template("home", function(inputs, outputs, jagg) {
             var version = JSON.parse(result);
             if (version != null && version.hashId != null) {
                 toolVersionHashId = version.hashId;
-                // specific version is exist;
                 // check whether it is already started
                 if (version.status == "running") {
-                    // open the tool
-                    //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                    // open the tool by pollEventsOfTool()
                 } else if (version.status == "stopped" || version.status == "inactive") {
                     // throttle
                     // start the tool
@@ -377,11 +371,17 @@ jagg.template("home", function(inputs, outputs, jagg) {
                     }, function(result) {
 
                     },function(jqXHR, data, errorThrown) {
-
+                        setTimeout(reloadAppHome, 5000);
+                        jagg.message({
+                            content: "Error occurred while starting Ballerina Composer",
+                            type: 'error',
+                            id: 'view_log',
+                            timeout: '5000'
+                        });
                     });
-                    //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
                 } else {
                     // version.status == "error"
+                    // todo
                 }
             } else {
                 // specific version is not exist
@@ -399,15 +399,20 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 },function (result) {
 
                 },function (jqXHR, textStatus, errorThrown) {
-
+                    setTimeout(reloadAppHome, 5000);
+                    jagg.message({
+                        content: "No resources are available to start a Ballerina Composer ",
+                        type: 'error',
+                        id: 'view_log',
+                        timeout: '5000'
+                    });
                 });
-                //window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
             }
 
         },function (jqXHR, textStatus, errorThrown) {
             setTimeout(reloadAppHome, 5000);
             jagg.message({
-                content: jqXHR.responseText,
+                content: "Error occurred while starting Ballerina Composer",
                 type: 'error',
                 id: 'view_log',
                 timeout: '5000'
@@ -507,15 +512,22 @@ jagg.template("home", function(inputs, outputs, jagg) {
         setInterval(pollEvents, 5000);
     }
 
+    function drawProgressWindowForTool(heading){
+        $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
+        $("#app_creation_progress_modal").show();
+        $("#modal-title").text(heading);
+        setInterval(pollEventsOfTool, 5000);
+    }
+
     function executeAsync(func) {
         setTimeout(func, 0);
     }
 
-    function pollEventsOfTool(applicationName, selectedRevision){
+    function pollEventsOfTool(){
         jagg.post("../blocks/application/application.jag", {
             action:"getApplicationCreationEvents",
             applicationName:applicationName,
-            applicationRevision:selectedRevision
+            applicationRevision:"ballerina-composer"
 
         },function (result) {
             var result = jQuery.parseJSON(result);
@@ -527,8 +539,23 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
                             deleteAppCreationEvents();
-                            window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
-                            window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+
+                            jagg.post("../blocks/application/application.jag", {
+                                action:"getVersionHashId",
+                                applicationName:applicationName,
+                                applicationRevision:"ballerina-composer"
+                            },function (result) {
+                                if (result != null) {
+                                    toolVersionHashId = result;
+                                    setTimeout(function(){
+                                        console.log("Waiting until haproxy reloads");
+                                    }, 10000);
+                                    window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                                    window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+                                }
+                            }, function (jqXHR, textStatus, errorThrown) {
+
+                            });
                         }
                     } else if(event.status == "failed") {
                         //When redeploying an application the associated pod is deleted and an event with the name
