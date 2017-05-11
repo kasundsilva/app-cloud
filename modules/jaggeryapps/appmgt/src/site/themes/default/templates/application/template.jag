@@ -29,10 +29,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var isAppTypeBuildable = appType.buildable;
         var isMultiArtifactsSupported = (appType.isMultiArtifactsSupported =='true');
         var applicationName = outputs.applicationName;
-        var encodedLabels = request.getParameter("encodedLabels");
-        var encodedEnvs = request.getParameter("encodedEnvs");
-        var decodedLabels = parse(decodeURIComponent(encodedLabels, "UTF-8"));
-        var decodedEnvs = parse(decodeURIComponent(encodedEnvs, "UTF-8"));
         var newVersion = request.getParameter("newVersion");
         var data = null;
 		var maxApplications = outputs.maxAppCount;
@@ -49,7 +45,15 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var selectedImageId = outputs.selectedImageId;
         var isThrottled = outputs.isThrottled;
         var allowedRuntimeContainerSpecJson = outputs.throttledAllowedContainerSpecs;
+
         var option = request.getParameter("option");
+
+        var decodedLabels = request.getParameter("encodedLabels");
+        var decodedEnvs = request.getParameter("encodedEnvs");
+
+        decodedLabels = (decodedLabels == null) ? '{}' : decodedLabels;
+        decodedEnvs = (decodedEnvs == null) ? '{}' : decodedEnvs;
+
     %>
 
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/bootstrap-3.2.0/bootstrap.min.css'))%>">
