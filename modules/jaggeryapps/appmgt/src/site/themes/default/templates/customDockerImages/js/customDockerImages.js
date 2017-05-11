@@ -241,7 +241,7 @@ function fillImagesListTable() {
             }
 
             ulHtml += '<li class="row no-gutters" data-uid= "' + imagesJsonObject[i].imageId + '">' +
-                          '<div class="clearfix col-md-8">' +
+                          '<div class="clearfix col-md-7">' +
                               '<div class="custom-list-icon pull-left ' + statusBg +'">' +
                                 statusIcon +
                               '</div>' +
@@ -250,7 +250,7 @@ function fillImagesListTable() {
                                   '<div class="text-muted secondary">Last Updated: ' + imagesJsonObject[i].lastUpdated.split(".")[0] + '</div>' +
                               '</div>' +
                           '</div>'+
-                          '<div class="clearfix col-md-4">' +
+                          '<div class="clearfix col-md-5">' +
                               '<div class="pull-right custom-actions">' +
                                   '<a href="application.jag?appTypeName=custom&selectedImageId=bla" class="' + notActiveForCreateApplication + '"><i class="fw fw-application"></i> Create App</a>' +
                                   '<a href="#" class="' + notActiveForModifyImage + ' updateImage"><i class="fw fw-sync"></i> Update</a>' +

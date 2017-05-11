@@ -61,4 +61,6 @@ then
     #ballerina base image
     docker_push docker.wso2.com/wso2-cloud/ballerina:0.8.x-base
 
+    #nodejs base image
+    docker_push docker.wso2.com/wso2-cloud/nodejs:7.7.1-base
 fi

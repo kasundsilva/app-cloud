@@ -80,7 +80,7 @@ jagg.template("customDockerImages", function (inputs, outputs, jagg) {
             </div>
         </form>
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-9">
                 <ul class="custom-list-group" id="imageList">
                 </ul>
             </div>
