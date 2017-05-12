@@ -77,10 +77,8 @@ var addApplication = function (applicationName, versionName, applicationDescript
         uploadedFileName = versionHashId + "." + uploadedFileName.split(".")[1];
     }
 
-    if (sourceLocation == 'true' || sourceLocation == true) {
+    if (sourceLocation == 'true' || sourceLocation == true || appTypeName == "ballerina-composer") {
         sourceLocation = KubernetesProvisioningUtils.getKubernetesValidAppName(applicationName);
-    } else {
-        sourceLocation = null;
     }
 
     if (isNewVersion == 'true') {
