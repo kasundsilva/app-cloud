@@ -24,5 +24,6 @@ USER wso2user
 
 ENV MSF4J_JAR management-Service-3.0.0-SNAPSHOT.jar
 COPY mgt-app/target/management-Service-3.0.0-SNAPSHOT.jar "$MSF4J_HOME/"
+COPY sample "$MSF4J_HOME/sample"
 
 CMD ["bash", "-c", "source /init.sh"]
