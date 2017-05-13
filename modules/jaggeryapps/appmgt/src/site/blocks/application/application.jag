@@ -218,9 +218,12 @@ var log = new Log();
                 }
             }
             var isApplicationCreatePossible = false;
-            if (appTypeName != "ballerina-composer") {
+            if (appTypeName == "ballerina-composer") {
+                isApplicationCreatePossible = true;
+            } else {
                 isApplicationCreatePossible = jagg.module("throttling").isApplicationCreatePossible(conSpecCpu, conSpecMemory);
             }
+
             if (isApplicationCreatePossible) {
                 if (isFileAttached == 'true') {
                     for (var property in uploadedArtifacts) {
@@ -348,6 +351,8 @@ var log = new Log();
         var isApplicationStartPossible = false;
         log.info(stringify("start application----apptype ----: " + applicationType));
         if (applicationType != "ballerina-composer") {
+            isApplicationStartPossible = true;
+        } else {
             isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
         }
         if (isApplicationStartPossible) {
