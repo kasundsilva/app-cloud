@@ -55,6 +55,7 @@ while read in; do rm -rf "$PLUGINS_DIR_PATH""$in" && sed -i "/$in/d" "$DEFAULT_P
 rm -rf $CARBON_HOME_DIR/repository/deployment/server/axis2services/*
 rm -rf $CARBON_HOME_DIR/repository/deployment/server/webapps/*
 
+
 #Check whether JAVA_OPTS env variable is defined and not empty
 if [[ $JAVA_OPTS && ${JAVA_OPTS-_} ]]; then
 	export JAVA_OPTS=$JAVA_OPTS

@@ -30,7 +30,9 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var keyArray = Object.keys(versions);
     var versionArray = [];
     for (var x = 0; x < keyArray.length; x++) {
-        versionArray.push(versions[keyArray[x]].versionName);
+        if ("ballerina-composer" != versions[keyArray[x]].versionName) {
+            versionArray.push(versions[keyArray[x]].versionName);
+        }
     }
     var encodedVersionArray = encodeURIComponent(versionArray);
     var selectedApplicationRevision = versions[selectedRevision];
@@ -58,6 +60,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var ballerinaComposerImage = outputs.ballerinaComposerImage;
     var sourcelocation = selectedApplicationRevision.sourceLocation;
     var toolPrefix = TOOL_PREFIX;
+    var newTab = null;
+    var domainURL = outputs.domainURL;
 
 %>
 
@@ -91,6 +95,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var ballerinaComposerImage = "<%=ballerinaComposerImage%>";
     var TOOL_PREFIX = "<%=toolPrefix%>";
     var toolVersionHashId = null;
+    var domainURL = "<%=domainURL%>";
 
 </script>
 
@@ -223,7 +228,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                %>
                       </div>
                       <div class="col-xs-12 col-md-12 col-lg-5 overview-version-btn">
-                      <% if(selectedApplicationRevision.status == APPLICATION_STOPPED || selectedApplicationRevision.status == APPLICATION_INACTIVE){ %>
+
                           <a id="delete-version" onclick="deleteApplicationPopUp();">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
@@ -232,7 +237,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   </span> Delete
                               </div>
                           </a>
-                       <% } %>
+
                          <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
                           <a id="update" onclick="">
                               <div class="btn-create-version">
@@ -349,6 +354,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     function openTool() {
 
+        newTab = window.open('', '_blank');
+        newTab.document.write('Loading ...');
         var applicationNameOfTool = applicationName;
         var versionOfTool = "ballerina-composer";
 
@@ -406,7 +413,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 },function (jqXHR, textStatus, errorThrown) {
                     setTimeout(reloadAppHome, 5000);
                     jagg.message({
-                        content: "No resources are available to start a Ballerina Composer ",
+                        content: "Error occurred while starting Ballerina Composer",
                         type: 'error',
                         id: 'view_log',
                         timeout: '5000'
@@ -529,6 +536,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     }
 
     function pollEventsOfTool(){
+
         jagg.post("../blocks/application/application.jag", {
             action:"getApplicationCreationEvents",
             applicationName:applicationName,
@@ -555,7 +563,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     setTimeout(function(){
                                         console.log("Waiting until haproxy reloads");
                                     }, 10000);
-                                    window.open('http://' + toolVersionHashId + '.bcu.wso2localapps.com/', '_blank');
+                                    newTab.location.href = 'http://' + toolVersionHashId + '.bcu.' + domainURL + '/';
                                     window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                                 }
                             }, function (jqXHR, textStatus, errorThrown) {

@@ -217,7 +217,10 @@ var log = new Log();
                     return;
                 }
             }
-            var isApplicationCreatePossible = jagg.module("throttling").isApplicationCreatePossible(conSpecCpu, conSpecMemory);
+            var isApplicationCreatePossible = false;
+            if (appTypeName != "ballerina-composer") {
+                isApplicationCreatePossible = jagg.module("throttling").isApplicationCreatePossible(conSpecCpu, conSpecMemory);
+            }
             if (isApplicationCreatePossible) {
                 if (isFileAttached == 'true') {
                     for (var property in uploadedArtifacts) {
@@ -339,8 +342,14 @@ var log = new Log();
     } else if(action == "startApplication"){
         var applicationName = request.getParameter("applicationName");
         var applicationRevision = request.getParameter("applicationRevision");
+        var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
+        var applicationType = applicationModule.getApplication(applicationHashId).applicationType;
         var versionKey = applicationModule.getVersionHashId(applicationName, applicationRevision);
-        var isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
+        var isApplicationStartPossible = false;
+        log.info(stringify("start application----apptype ----: " + applicationType));
+        if (applicationType != "ballerina-composer") {
+            isApplicationStartPossible = jagg.module("throttling").isApplicationStartPossible(versionKey);
+        }
         if (isApplicationStartPossible) {
             var applicationHashId = applicationModule.getApplicationHashIdByName(applicationName);
             var versions = applicationModule.getVersionListOfApplication(applicationHashId);

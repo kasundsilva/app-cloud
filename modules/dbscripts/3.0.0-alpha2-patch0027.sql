@@ -32,7 +32,7 @@ INSERT INTO `AC_CLOUD_APP_TYPE` (`cloud_id`, `app_type_id`) VALUES
 ('integration_cloud', 10);
 
 INSERT INTO `AC_RUNTIME` (`id`, `name`, `image_name`, `tag`, `description`) VALUES
-(21, 'Ballrina Composer - 0.86', 'ballerina-composer', '0.86', 'OS:Alpine, Java Version: Oracle JDK 1.8.0_112');
+(21, 'Ballrina Composer - 0.8.x', 'ballerina-composer', '0.8.x', 'OS:Alpine, Java Version: Oracle JDK 1.8.0_112');
 
 INSERT INTO `AC_APP_TYPE_RUNTIME` (`app_type_id`, `runtime_id`) VALUES
 (10, 21);

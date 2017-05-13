@@ -34,10 +34,12 @@ jagg.template("settings", function (inputs, outputs, jagg) { %>
     var versionString = "";
     for (var version in versions) {
         var versionName = versions[version].versionName;
-        if (defaultVersion == versionName) {
-            versionString += "<option" + ' value="' + versionName + '" ' + " selected>" + versionName + "</option>";
-        } else {
-            versionString += "<option" + ' value="' + versionName + '" ' + ">" + versionName + "</option>";
+        if ("ballerina-composer" != versionName) {
+            if (defaultVersion == versionName) {
+                versionString += "<option" + ' value="' + versionName + '" ' + " selected>" + versionName + "</option>";
+            } else {
+                versionString += "<option" + ' value="' + versionName + '" ' + ">" + versionName + "</option>";
+            }
         }
     }
     var cloudSpecificApplicationRepresentation = outputs.cloudSpecificApplicationRepresentation;
