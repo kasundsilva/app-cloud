@@ -731,7 +731,7 @@ var redeployApplication = function(applicationName, versionName, versionHashId, 
     if (log.isDebugEnabled()) {
         log.debug("Redeployment started for version:" + versionHashId);
     }
-    var deploymentConfig = buildDeploymentConfigFromDB(versionHashId, applicationName, versionName);
+    var deploymentConfig = buildDeploymentConfigFromDB(versionHashId, applicationName, versionName, appTypeName);
     deployApplication(applicationName, versionName, appTypeName, deploymentConfig, true, versionHashId, "redeploy", null, null, exposureLevel);
     if (getDefaultVersion(applicationName) == versionName) {
         redeployMappedDomain(applicationName, versionName);
@@ -778,7 +778,7 @@ var persistDeploymentConfig = function(deploymentConfig, versionHashId){
     ApplicationManager.addDeployment(versionHashId, deployment );
 };
 
-var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versionName){
+var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versionName, appTypeName){
     var deployment = ApplicationManager.getDeployment(versionHashId);
 
     var deploymentConfig = new Packages.org.wso2.appcloud.provisioning.runtime.beans.DeploymentConfig();
@@ -802,6 +802,11 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
         //Adding runtime properties to k8 container
         var runtimeProperties = deploymentContainer.getRuntimeProperties();
         var envs = getRuntimeProperties(runtimeProperties);
+        if (appTypeName == "ballerina-composer") {
+
+            envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+            envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        }
         provisioningContainer.setEnvVariables(envs);
 
         var deploymentProxies = deploymentContainer.getServiceProxies();
@@ -813,7 +818,11 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
             var deploymentProxy = proxyIterator.next();
             var provisioningProxy = new Packages.org.wso2.appcloud.provisioning.runtime.beans.ServiceProxy();
             provisioningProxy.setServiceName(deploymentProxy.getServiceName());
-            provisioningProxy.setAppHostURL(hostURL);
+            if (appTypeName == "ballerina-composer") {
+                provisioningProxy.setAppHostURL(versionHashId + "." + deploymentProxy.getServiceNamePrefix() + "." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public") );
+            } else {
+                provisioningProxy.setAppHostURL(hostURL);
+            }
             provisioningProxy.setServiceName(deploymentProxy.getServiceName());
             provisioningProxy.setServiceProtocol(deploymentProxy.getServiceProtocol());
             provisioningProxy.setServicePort(deploymentProxy.getServicePort());

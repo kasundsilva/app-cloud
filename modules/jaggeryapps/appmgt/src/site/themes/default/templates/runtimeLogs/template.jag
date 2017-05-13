@@ -100,7 +100,9 @@ jagg.template("runtimeLogs", function (inputs, outputs, jagg) {
                             <div class="col-md-4">
                                 <select class="form-control" id="revision" disabled>
                                     <% for(var i = 0; i < revisionsList.length; i++){
+                                       if("ballerina-composer" != revisionsList[i]){
                                         if(selectedRevision == revisionsList[i]){
+
                                     %>
                                         <option selected><%=revisionsList[i]%></option>
                                     <%
@@ -108,7 +110,7 @@ jagg.template("runtimeLogs", function (inputs, outputs, jagg) {
                                         }
                                     %>
                                     <option><%=revisionsList[i]%></option>
-                                    <% }%>
+                                    <% }}%>
                                 </select>
                             </div>
                             <label for="log-search" class="col-md-2 control-label">Replica : </label>

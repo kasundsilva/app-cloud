@@ -66,6 +66,7 @@ jagg.block("home", {
         var replicaCount = applicationModule.getReplicaCountForVersion(application.applicationName, selectedRevision);
 
         var ballerinaComposerImage = managerModule.getPropertyValue(BALLERINA_COMPOSER_BASE_IMAGE);
+        var domainURL = modManager.getPropertyValue("ApplicationLaunchBaseURL.Public");
 
         return {
             "application" : application,
@@ -82,7 +83,8 @@ jagg.block("home", {
             "dataAnalyticsServerUrl" : dataAnalyticsServerUrl,
             "tenantDomain" : tenantDomain,
             "replicaCount" : replicaCount,
-            "ballerinaComposerImage" : ballerinaComposerImage
+            "ballerinaComposerImage" : ballerinaComposerImage,
+            "domainURL" : domainURL
         };
     }
 
