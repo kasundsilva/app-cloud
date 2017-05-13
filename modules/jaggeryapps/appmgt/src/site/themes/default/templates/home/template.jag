@@ -355,7 +355,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     function openTool() {
 
         newTab = window.open('', '_blank');
-        newTab.document.write('Loading ...');
+        newTab.document.write('Loading Ballerina Composer ...');
         var applicationNameOfTool = applicationName;
         var versionOfTool = "ballerina-composer";
 
