@@ -31,18 +31,18 @@ spec:
           - name: MGT_APP_ADMIN_PASSWORD
             value: admin
           - name: MGT_APP_SOURCE_LOCATION
-            value: /home/wso2user/source
+            value: /home/wso2user/org
           - name: MGT_APP_SAMPLE_LOCATION
             value: /home/wso2user/sample
         volumeMounts:
-        - mountPath: /home/wso2user/source
+        - mountPath: /home/wso2user/org
           name: app-cloud-source
         - mountPath: /home/wso2user/sample
           name: app-cloud-sample
       volumes:
       - name: app-cloud-source
         hostPath:
-          path: /mnt/data/source
+          path: /mnt/app-cloud/data/org
       - name: app-cloud-sample
         hostPath:
-          path: /mnt/data/sample
+          path: /mnt/app-cloud/data/sample

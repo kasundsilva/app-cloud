@@ -25,9 +25,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("/")
 public class ManagementService {
@@ -45,14 +48,28 @@ public class ManagementService {
         File file = new File(sourceLocation);
 
         if (file.mkdirs()) {
-            log.info("source location created : " + sourceDir);
+            log.info("Source location created: " + sourceDir);
 
             // copy source structure
             File source = new File(System.getenv(Constants.SAMPLE_LOCATION) + "/" + appType + "/" + sample);
             File dest = new File(sourceLocation);
             FileUtils.copyDirectory(source, dest);
-            log.info("sample copied");
+            log.info("Sample copied for: " + sourceDir);
         }
+
+        //Adding package name for initial sample.
+        String dirPath = System.getenv(Constants.SOURCE_LOCATION) + "/" + tenantDomain + "/" + appType + "/" + sourceDir;
+        String pkgName = "org." + tenantDomain + "." + appType + "." + sourceDir;
+        List<String> newLines = new ArrayList<>();
+        for (String line : Files.readAllLines(Paths.get(dirPath + "/echoService.bal"), StandardCharsets.UTF_8)) {
+            if (line.contains("_pkgName")) {
+                log.info("Adding package to the source file: " + pkgName);
+                newLines.add(line.replace("_pkgName", pkgName));
+            } else {
+                newLines.add(line);
+            }
+        }
+        Files.write(Paths.get(dirPath + "/echoService.bal"), newLines, StandardCharsets.UTF_8);
 
         return true;
     }
@@ -94,4 +111,45 @@ public class ManagementService {
         return file.list();
     }
 
+    @GET
+    @Path("/buildService/{tenantDomain}/{appType}/{sourceDir}")
+    @Produces("text/plain")
+    public boolean buildService(
+            @PathParam("tenantDomain") String tenantDomain,
+            @PathParam("appType") String appType,
+            @PathParam("sourceDir") String sourceDir) {
+
+        String dirPath = System.getenv(Constants.SOURCE_LOCATION) + "/" + tenantDomain + "/" + appType + "/" + sourceDir;
+
+        String cleanCommand = "rm -rf " + dirPath + "/target/";
+        String createTargetCommand = "mkdir " + dirPath + "/target";
+        String ballerinaRuntime = System.getenv(Constants.BALLERINA_HOME) + "/" + System.getenv(Constants.BALLERINA_RUNTIME) + "/" + "bin/ballerina";
+
+        String ballerinaBuildCommand = "build service " + dirPath +  "/ -o " + dirPath + "/target/" + sourceDir;
+        String command = ballerinaRuntime + " " + ballerinaBuildCommand;
+
+        log.info("-------------------------------------");
+        log.info("BUILDING: " + sourceDir);
+        log.info("-------------------------------------");
+        Process p;
+        try {
+            log.info("Executing: " + cleanCommand);
+            p = Runtime.getRuntime().exec(cleanCommand);
+            p.waitFor();
+            log.info("Executing: " + createTargetCommand);
+            p = Runtime.getRuntime().exec(createTargetCommand);
+            p.waitFor();
+            log.info("Executing: " + command);
+            p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+            log.info("-------------------------------------");
+            log.info("BUILD SUCCESS: " + sourceDir);
+            log.info("-------------------------------------");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+        }
+        return true;
+    }
 }

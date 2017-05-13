@@ -23,6 +23,9 @@ jagg.module("mgtapp", {
     },
     createSourceLocation: function () {
         return jagg.require(jagg.getModulesDir() + "mgtapp/mgtapp.jag").createSourceLocation.apply(this, arguments);
+    },
+    buildSource: function () {
+        return jagg.require(jagg.getModulesDir() + "mgtapp/mgtapp.jag").buildSource.apply(this, arguments);
     }
 });
 %>

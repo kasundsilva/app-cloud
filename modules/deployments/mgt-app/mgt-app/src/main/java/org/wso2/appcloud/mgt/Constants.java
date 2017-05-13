@@ -22,5 +22,7 @@ public class Constants {
     public static final String PASSWORD = "MGT_APP_ADMIN_PASSWORD";
     public static final String SOURCE_LOCATION = "MGT_APP_SOURCE_LOCATION";
     public static final String SAMPLE_LOCATION = "MGT_APP_SAMPLE_LOCATION";
+    public static final String BALLERINA_HOME = "BALLERINA_HOME";
+    public static final String BALLERINA_RUNTIME = "BALLERINA_RUNTIME";
 
 }

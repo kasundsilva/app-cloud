@@ -889,12 +889,12 @@ function getContainers(imageName, tag, versionHashId, appServiceName, runtimePro
     if (appTypeName == "ballerina-composer") {
 
         // invoke mgtapp and create source location
-        jagg.module("mgtapp").createSourceLocation(appTypeName, sourceLocation, "echoService");
+        jagg.module("mgtapp").createSourceLocation("ballerina", sourceLocation, "echoService");
 
         var volumnMount = new Packages.org.wso2.appcloud.provisioning.runtime.beans.VolumeMountInfo();
         volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path"));
         volumnMount.setName("source-location");
-        volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/" + appTypeName + "/" + sourceLocation);
+        volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/ballerina/" + sourceLocation);
         volumnMount.setReadOnly(false);
 
         var volumnMounts = new java.util.ArrayList();
