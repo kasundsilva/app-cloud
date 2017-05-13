@@ -48,4 +48,11 @@ var createSourceLocation = function (appType, sourceDir, sample) {
     var result = get(url, null, headers, type);
 };
 
+// build the source via mgtapp
+var buildSource = function (appType, sourceDir, sample) {
+    var tanantDomain = modManager.getTenantDomain();
+    var url = mgtAppUrl + "/buildService/" + tanantDomain + "/" + appType + "/" + sourceDir;
+    var result = get(url, null, headers, type);
+};
+
 %>
