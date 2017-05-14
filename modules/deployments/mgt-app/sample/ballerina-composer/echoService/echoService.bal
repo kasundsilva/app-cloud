@@ -1,3 +1,5 @@
+package _pkgName;
+
 import ballerina.net.http;
 
 @http:BasePath {value:"/echo"}
