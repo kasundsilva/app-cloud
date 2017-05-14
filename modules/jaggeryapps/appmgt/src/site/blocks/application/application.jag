@@ -723,11 +723,23 @@ var log = new Log();
         var applicationName = request.getParameter("applicationName");
         var appType = request.getParameter("appType");
         var versionKey = request.getParameter("versionKey");
+        var runtimeId = request.getParameter("runtimeId");
+        var versionName = request.getParameter("versionName");
+        var runtimeProperties = request.getParameter("runtimeProperties");
+        var conSpecCpu = request.getParameter("conSpecCpu");
+        var conSpecMemory = request.getParameter("conSpecMemory");
+        var sourceLocation = request.getParameter("sourceLocation");
+        var replicas = request.getParameter("replicas");
+        var applicationHashId = request.getParameter("applicationHashId");
         var mgtAppMod = jagg.module("mgtapp");
         try {
             var buildStatus = mgtAppMod.buildSource(appType, applicationName, versionKey);
-            log.info("buildStatus:" + buildStatus);
-            print(buildStatus);
+            if (buildStatus) {
+                applicationModule.updateDeployment(appType, applicationName, versionName, runtimeId,
+                        runtimeProperties, conSpecMemory, replicas, conSpecCpu, sourceLocation, applicationHashId,
+                        versionKey, START_FROM_SCRATCH);
+            }
+            print(true);
         } catch (e) {
             var msg = "Error while building application : " + applicationKey;
             log.error(msg);

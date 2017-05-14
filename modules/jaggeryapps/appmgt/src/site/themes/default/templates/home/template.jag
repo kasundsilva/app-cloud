@@ -62,6 +62,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var toolPrefix = TOOL_PREFIX;
     var newTab = null;
     var domainURL = outputs.domainURL;
+    var runtimeProperties = selectedApplicationRevision.runtimeProperties;
 
 %>
 
@@ -98,6 +99,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var domainURL = "<%=domainURL%>";
     var pollEventsOfToolKey = null;
     var pollEventsKey = null;
+    var sourceLocation = "<%=sourcelocation%>";
+    var runtimeProperties = "<%=runtimeProperties%>";
 
 </script>
 
@@ -760,12 +763,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         setTimeout(redirectAppListing, 5000);
                         function redirectAppListing(){
                             window.location.replace("index.jag");
-                        }
-                    } else if (event.name === "Building Ballerina source" && event.status === "success") {
-                        setTimeout(redirectAppHome, 4250);
-                        function redirectAppHome(){
-                            deleteAppCreationEvents();
-                            window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                         }
                     }
                 }

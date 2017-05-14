@@ -144,4 +144,9 @@ var MGT_APP_ADMIN_PASSWORD="MgtAppAdminPassword";
 var BALLERINA_COMPOSER_BASE_IMAGE="ballerina-composer_base_image";
 var BALLERINA_COMPOSER_BASE_IMAGE_TAG="ballerina-composer_base_image_tag";
 var TOOL_PREFIX = "_tools";
+var FILE_SERVER_URL = "FileServerURL";
+var FILE_SERVER_ADMIN_USERNAME = "FileServerAdminUsername";
+var FILE_SERVER_ADMIN_PASSWORD = "FileServerAdminPassword";
+var TARGET_DIRECTORY = "/target/";
+var START_FROM_SCRATCH = "start-from-scratch";
 %>
