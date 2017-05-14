@@ -615,8 +615,15 @@ function buildAndDeploy(){
         action:"buildAndDeploy",
         appType:application.applicationType,
         applicationName:applicationName,
-        versionKey:selectedApplicationRevision.hashId
-
+        versionKey:selectedApplicationRevision.hashId,
+        applicationHashId:applicationKey,
+        versionName:selectedRevision,
+        conSpecCpu:conSpecCpu,
+        conSpecMemory:conSpecMemory,
+        replicas:replicaCount,
+        sourceLocation:sourceLocation,
+        runtimeProperties:runtimeProperties,
+        runtimeId:selectedApplicationRevision.runtimeId
     },function (result) {
         var buildStatus = JSON.parse(result);
         if (buildStatus) {
