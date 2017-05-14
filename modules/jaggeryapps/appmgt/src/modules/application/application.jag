@@ -178,7 +178,7 @@ var updateDeployment = function (appType, applicationName, versionName, runtimeI
     var uploadedFileName = versionHashId + "." + appTypeExtension;
     var imageName;
     var readyToTriggerDeployment = true;
-    if (appType != CUSTOM && appType != "ballerina-composer") { //for custom images uploadedFIleName=null
+    if (appType != CUSTOM && appType != "ballerina-composer") { //for custom images uploadedFileName=null
         var absFileUploadedPath = createDockerFile(applicationName, versionName, appType, runtimeId,
                 uploadedFileName, versionHashId, dockerClient, artifactUrl, hostName, appCreationMethod,
                 runtimeProperties, conSpecMemory);
