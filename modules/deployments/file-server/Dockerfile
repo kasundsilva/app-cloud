@@ -29,6 +29,4 @@ RUN mkdir -p "$FS_SOURCE_LOCATION"
 
 EXPOSE 8000
 
-RUN wget --user=admin --password=admin http://localhost:8081/org/wso27878/ballerina/BalTest/target/hello.bsz
-
 CMD ["bash", "-c", "source /init.sh"]
