@@ -1138,7 +1138,6 @@ var generateVersionList = function (versions, applicationName, appType) {
             versionObject.tags = generateTagsArray(version.tags);
             versionObject.versionId = versionID;
             versionObject.sourceLocation = version.sourceLocation;
-
             versionList[version.versionName] = versionObject;
         }
     } catch(e){

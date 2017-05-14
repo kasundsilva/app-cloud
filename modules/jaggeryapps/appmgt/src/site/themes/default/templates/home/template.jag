@@ -96,6 +96,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var TOOL_PREFIX = "<%=toolPrefix%>";
     var toolVersionHashId = null;
     var domainURL = "<%=domainURL%>";
+    var pollEventsOfToolKey = null;
+    var pollEventsKey = null;
 
 </script>
 
@@ -354,8 +356,9 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
     function openTool() {
 
-        newTab = window.open('', '_blank');
-        newTab.document.write('Loading Ballerina Composer ...');
+
+
+
         var applicationNameOfTool = applicationName;
         var versionOfTool = "ballerina-composer";
 
@@ -521,14 +524,14 @@ jagg.template("home", function(inputs, outputs, jagg) {
         $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
         $("#app_creation_progress_modal").show();
         $("#modal-title").text(heading);
-        setInterval(pollEvents, 5000);
+        pollEventsKey = setInterval(pollEvents, 5000);
     }
 
     function drawProgressWindowForTool(heading){
         $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
         $("#app_creation_progress_modal").show();
         $("#modal-title").text(heading);
-        setInterval(pollEventsOfTool, 5000);
+        pollEventsOfToolKey = setInterval(pollEventsOfTool, 5000);
     }
 
     function executeAsync(func) {
@@ -545,10 +548,98 @@ jagg.template("home", function(inputs, outputs, jagg) {
         },function (result) {
             var result = jQuery.parseJSON(result);
             if (result.length > 0) {
+                $("#progress_table").html("");
+                $("#app-creation-header-loader").html("");
+                var table = "<table class='table' style='width:100%; color:black'>" ;
+                for(var i = 0; i < result.length; i++){
+                    var statusStyle;
+                    var event = result[i];
+
+                    if(event.status == "success"){
+                        statusStyle = "success";
+                        if (event.name === "Status") {
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-check\"></i></td></tr>";
+                        } else {
+                            table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
+                                            "<td></td>" +
+                                            "<td><i class=\"fw fw-check\"></i></td></tr>";
+                        }
+                    } else if (event.status == "failed") {
+                        statusStyle = "danger";
+                        if (event.name === "Status") {
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-error\"></i></td></tr>";
+                        } else {
+                            table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
+                                            "<td></td>" +
+                                            "<td><i class=\"fw fw-error\"></i></td></tr>";
+                        }
+                    } else if (event.status == "pending"){
+                        if (event.name === "Status") {
+                            statusStyle = "active";
+                            table = table + "<tr class='" + statusStyle + "'><td>Container status</td>" +
+                                            "<td>" + event.description + "</td>" +
+                                            "<td><i class=\"fw fw-loader2 fw-spin\"></i></td></tr>";
+                        } else {
+                            statusStyle = "active";
+                            table = table + "<tr class='" + statusStyle + "'><td>" + event.name + "</td>" +
+                                            "<td></td>" +
+                                            "<td><i class=\"fw fw-loader2 fw-spin\"></i></td></tr>";
+                        }
+                    }
+                }
+                table = table + "</table>";
+                $("#progress_table").html(table);
+            }
+            if (result.length > 0) {
                 for(var i = 0; i < result.length; i++){
                     var statusStyle;
                     var event = result[i];
                     if (event.name === "Status" && event.status === "success") {
+                        var toolLoadingPage = "" +
+                            "<html>" +
+                            "<head>" +
+                            "<style>" +
+                            "#loader {" +
+                              "position: absolute;" +
+                              "left: 50%;" +
+                              "top: 50%;" +
+                              "z-index: 1;" +
+                              "width: 150px;" +
+                              "height: 150px;" +
+                              "margin: -75px 0 0 -75px;" +
+                              "border: 6px solid #f5f5f5;" +
+                              "border-radius: 50%;" +
+
+                             "border-top: 6px solid #f17b31;" +
+                              "width: 120px;" +
+                              "height: 120px;" +
+                              "-webkit-animation: spin 1s linear infinite;" +
+                              "animation: spin 1s linear infinite;" +
+                            "}" +
+
+                            "@-webkit-keyframes spin {" +
+                              "0% { -webkit-transform: rotate(0deg); }" +
+                              "100% { -webkit-transform: rotate(360deg); }" +
+                            "}" +
+
+                            "@keyframes spin {" +
+                              "0% { transform: rotate(0deg); }" +
+                              "100% { transform: rotate(360deg); }" +
+                            "}" +
+                            "</style>" +
+                            "</head>" +
+                            "<body>" +
+                            "<div id='loader'></div>" +
+                            "</body>" +
+                            "</html>";
+
+                        newTab = window.open('', '_blank');
+                        newTab.document.write(toolLoadingPage);
+                        clearInterval(pollEventsOfToolKey);
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
                             deleteAppCreationEvents();
@@ -564,7 +655,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                         console.log("Waiting until haproxy reloads");
                                     }, 10000);
                                     newTab.location.href = 'http://' + toolVersionHashId + '.bcu.' + domainURL + '/';
-                                    window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+                                    $("#app_creation_progress_modal").modal('hide');
                                 }
                             }, function (jqXHR, textStatus, errorThrown) {
 
@@ -587,7 +678,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 }
 
             }
-        },function (jqXHR, textStatus, errorThrown) {
+        }, function (jqXHR, textStatus, errorThrown) {
              jagg.message({content: "Error occurred while starting " + cloudSpecificApplicationRepresentation.toLowerCase() + ".", type: 'error'});
         });
     }

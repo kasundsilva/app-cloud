@@ -341,6 +341,15 @@ function changeSelectedRevision(newRevision){
                 "</span> Edit Code" +
                 "</div>" +
                 "</a>");
+        } else {
+            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-delete fw-stack-1x'></i>" +
+                "</span> Delete" +
+                "</div>" +
+                "</a>");
         }
 
         $('#launch-default-url-block').empty();
@@ -546,8 +555,9 @@ function deleteApplication(){
 }
 
 function deleteApplicationPopUp(){
-    var versionCount = getVersionCount();
-    if(versionCount == 1){
+    alert(versionArray.length);
+    var versionCount = versionArray.length;
+    if(versionCount == 1 ){
         jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'You are about to delete the only available version of your ' + cloudSpecificApplicationRepresentation.toLowerCase() + ', are you sure you want to delete this "' + selectedRevision + '" version ?',
             yesCallback:function(){
                 deleteApplication();
@@ -612,6 +622,7 @@ function buildAndDeploy(){
 
     },function (jqXHR, textStatus, errorThrown) {
         jagg.message({content: "Error occurred while updating runtime", type: 'error', id:'view_log'});
+        clearInterval(pollEventsKey);
         $("#app_creation_progress_modal").modal('hide');
 
     });
