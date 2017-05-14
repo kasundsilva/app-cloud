@@ -28,6 +28,8 @@ var modManager = jagg.module("manager");
 var mgtAppUrl = modManager.getPropertyValue(MGT_APP_URL);
 var mgtAppUsername = modManager.getPropertyValue(MGT_APP_ADMIN_USERNAME);
 var mgtAppPassword = modManager.getPropertyValue(MGT_APP_ADMIN_PASSWORD);
+var EventsManager = Packages.org.wso2.appcloud.core.EventsManager;
+var Event = Packages.org.wso2.appcloud.core.dto.Event;
 var headers = {
     "Authorization": "Basic " + Base64.encode(mgtAppUsername + ":" + mgtAppPassword)
 };
@@ -49,10 +51,41 @@ var createSourceLocation = function (appType, sourceDir, sample) {
 };
 
 // build the source via mgtapp
-var buildSource = function (appType, sourceDir, sample) {
+var buildSource = function (appType, sourceDir, versionKey) {
+
+    var msg = "Stariting Ballerina source build";
+    addEvent(BALLERINA_SOURCE_BUILD, EVENT_PENDING, msg, versionKey);
+
     var tanantDomain = modManager.getTenantDomain();
     var url = mgtAppUrl + "/buildService/" + tanantDomain + "/" + appType + "/" + sourceDir;
     var result = get(url, null, headers, type);
+
+    if (result.data) {
+        var msg = "Completed Ballerina source completed";
+        addEvent(BALLERINA_SOURCE_BUILD, EVENT_SUCCEEDED, msg, versionKey);
+    } else {
+        var msg = "Ballerina source build failed";
+        addEvent(BALLERINA_SOURCE_BUILD, EVENT_FAILED, msg, versionKey);
+    }
+};
+
+
+var addEvent = function(name, status, description, versionHashId) {
+    try {
+        var eventsManager = new EventsManager();
+        var event = new Event();
+
+        event.setEventName(name);
+        event.setEventStatus(status);
+        event.setTimestamp(new Packages.java.sql.Timestamp(new Date().getTime()));
+        event.setEventDescription(description);
+        eventsManager.addAppCreationEvent(versionHashId, event);
+    } catch (e) {
+        log.error("Error while adding event for application with version hash id : "+versionHashId + " with version hash Id :"
+            + versionHashId+" event name:"+name+" ,event status:"+status+" ,event description:"+description);
+        log.error(e);
+        // not throwing error, because it will affect the application creation process
+    }
 };
 
 %>

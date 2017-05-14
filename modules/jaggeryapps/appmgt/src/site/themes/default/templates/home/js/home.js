@@ -598,4 +598,21 @@ function getVersionCount(){
 
 }
 
+function buildAndDeploy(){
 
+    executeAsync(drawProgressWindow("Updating Runtime..."));
+    jagg.post("../blocks/application/application.jag", {
+        action:"buildAndDeploy",
+        appType:application.applicationType,
+        applicationName:applicationName,
+        versionKey:selectedApplicationRevision.hashId
+    },function (result) {
+        jagg.message({content: "Application successfully built", type: 'success', id:'view_log'});
+        //$("#app_creation_progress_modal").modal('hide');
+
+    },function (jqXHR, textStatus, errorThrown) {
+        jagg.message({content: "Error occurred while updating runtime", type: 'error', id:'view_log'});
+        $("#app_creation_progress_modal").modal('hide');
+
+    });
+}
