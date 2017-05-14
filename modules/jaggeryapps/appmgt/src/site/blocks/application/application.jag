@@ -725,8 +725,9 @@ var log = new Log();
         var versionKey = request.getParameter("versionKey");
         var mgtAppMod = jagg.module("mgtapp");
         try {
-            mgtAppMod.buildSource(appType, applicationName, versionKey);
-            print(true);
+            var buildStatus = mgtAppMod.buildSource(appType, applicationName, versionKey);
+            log.info("buildStatus:" + buildStatus);
+            print(buildStatus);
         } catch (e) {
             var msg = "Error while building application : " + applicationKey;
             log.error(msg);

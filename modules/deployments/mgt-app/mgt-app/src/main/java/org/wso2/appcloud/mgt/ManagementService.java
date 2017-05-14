@@ -142,14 +142,25 @@ public class ManagementService {
             log.info("Executing: " + command);
             p = Runtime.getRuntime().exec(command);
             p.waitFor();
-            log.info("-------------------------------------");
-            log.info("BUILD SUCCESS: " + sourceDir);
-            log.info("-------------------------------------");
+
+            File f = new File(dirPath + "/target/" + sourceDir + ".bsz");
+            if(f.exists() && !f.isDirectory()) {
+                log.info("-------------------------------------");
+                log.info("BUILD SUCCESS: " + sourceDir);
+                log.info("-------------------------------------");
+                return true;
+            } else {
+                log.info("-------------------------------------");
+                log.info("BUILD FAILED: " + sourceDir);
+                log.info("-------------------------------------");
+                return false;
+            }
         } catch (IOException e) {
             log.error(e.getMessage());
+            return false;
         } catch (InterruptedException e) {
             log.error(e.getMessage());
+            return false;
         }
-        return true;
     }
 }
