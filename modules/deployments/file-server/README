@@ -1,0 +1,8 @@
+1. build the fileserver
+2. create the docker image
+docker build -t registry.local.wso2.com:5000/wso2_appcloud_file_server:v1 .
+3. push to the docker registry
+docker push registry.local.wso2.com:5000/wso2_appcloud_file_server:v1
+4. create k8s container
+kubectl create -f fileserver-controller.yaml
+kubectl create -f fileserver-service.yaml
