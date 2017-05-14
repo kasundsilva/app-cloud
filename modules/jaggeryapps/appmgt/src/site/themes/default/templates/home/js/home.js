@@ -325,7 +325,7 @@ function changeSelectedRevision(newRevision){
         $(".overview-version-btn").empty();
         if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
             $(".overview-version-btn").html(
-                "<a id='update' onclick=''>" +
+                "<a id='update' onclick='buildAndDeploy();'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
@@ -378,7 +378,7 @@ function changeSelectedRevision(newRevision){
                 "</span> Delete" +
                 "</div>" +
                 "</a>" +
-                "<a id='update' onclick=''>" +
+                "<a id='update' onclick='buildAndDeploy()'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
@@ -555,7 +555,6 @@ function deleteApplication(){
 }
 
 function deleteApplicationPopUp(){
-    alert(versionArray.length);
     var versionCount = versionArray.length;
     if(versionCount == 1 ){
         jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'You are about to delete the only available version of your ' + cloudSpecificApplicationRepresentation.toLowerCase() + ', are you sure you want to delete this "' + selectedRevision + '" version ?',

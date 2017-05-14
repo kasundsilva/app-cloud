@@ -550,7 +550,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
         },function (result) {
             var result = jQuery.parseJSON(result);
-            if (result.length > 0) {
+            /*if (result.length > 0) {
                 $("#progress_table").html("");
                 $("#app-creation-header-loader").html("");
                 var table = "<table class='table' style='width:100%; color:black'>" ;
@@ -596,7 +596,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 }
                 table = table + "</table>";
                 $("#progress_table").html(table);
-            }
+            }*/
             if (result.length > 0) {
                 for(var i = 0; i < result.length; i++){
                     var statusStyle;
