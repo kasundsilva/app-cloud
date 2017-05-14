@@ -693,7 +693,6 @@ var log = new Log();
         print(""+replicaInfo);
 
     } else if (action == "getExposureLevel") {
-
         var applicationName = request.getParameter("applicationName");
         var versionName = request.getParameter("versionName");
         var mod = jagg.module("application");
@@ -701,19 +700,35 @@ var log = new Log();
         print(exposureLevel);
 
     } else if (action == "updateVersionExposureLevel") {
-
         var exposureLevel = request.getParameter("exposureLevel");
         var versionName = request.getParameter("versionName");
         var applicationName = request.getParameter("applicationName");
         var versionHashId = applicationModule.getVersionHashId(applicationName, versionName);
         var mod = jagg.module("application");
         mod.updateVersionExposureLevel(exposureLevel, versionHashId, applicationName, versionName);
+
     } else if (action == "getCustomDomainDetailsForTenant") {
         try {
             var customDomainDetailList = applicationModule.getCustomDomainDetailsForTenant();
             print(customDomainDetailList);
         } catch (e) {
             var msg = "Error while getting custom domain details for tenant domain: " + modManager.getTenantDomain();
+            log.error(msg);
+            log.error(e);
+            response.status = 500;
+            response.content = msg;
+        }
+
+    } else if (action == "buildAndDeploy"){
+        var applicationName = request.getParameter("applicationName");
+        var appType = request.getParameter("appType");
+        var versionKey = request.getParameter("versionKey");
+        var mgtAppMod = jagg.module("mgtapp");
+        try {
+            mgtAppMod.buildSource(appType, applicationName, versionKey);
+            print(true);
+        } catch (e) {
+            var msg = "Error while building application : " + applicationKey;
             log.error(msg);
             log.error(e);
             response.status = 500;

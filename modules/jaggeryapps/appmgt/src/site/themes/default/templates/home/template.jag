@@ -239,7 +239,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                           </a>
 
                          <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
-                          <a id="update" onclick="">
+                          <a id="update" onclick="buildAndDeploy();">
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
@@ -247,7 +247,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                   </span> Update
                               </div>
                           </a>
-                          <a id="edit-code" onclick="openTool()" >
+                          <a id="edit-code" onclick="openTool();" >
                               <div class="btn-create-version">
                                   <span class="fw-stack fw-lg btn-action-ico">
                                     <i class="fw fw-circle-outline fw-stack-2x"></i>
@@ -669,6 +669,12 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         setTimeout(redirectAppListing, 5000);
                         function redirectAppListing(){
                             window.location.replace("index.jag");
+                        }
+                    } else if (event.name === "Building Ballerina source" && event.status === "success") {
+                        setTimeout(redirectAppHome, 4250);
+                        function redirectAppHome(){
+                            deleteAppCreationEvents();
+                            window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                         }
                     }
                 }

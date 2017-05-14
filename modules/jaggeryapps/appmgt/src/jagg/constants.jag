@@ -67,6 +67,7 @@ var KUBE_DEPLOY = "Initializing deployment";
 var STOP_CONTAINERS = "Stopping Containers";
 var INGRESS = "Creating ingress";
 var POD_STATUS = "Status";
+var BALLERINA_SOURCE_BUILD = "Building Ballerina source";
 
 var DEFAULT_TEMPLATE = 'DEFAULT_ALL_PERMISSIONS';
 
