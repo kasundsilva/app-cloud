@@ -19,5 +19,6 @@
 #
 # ------------------------------------------------------------------------
 
+mkdir -p $FS_SOURCE_LOCATION
 cd $FS_SOURCE_LOCATION
 python /usr/lib/python2.7/SimpleAuthServer.py 8000 $FS_USERNAME:$FS_PASSWORD

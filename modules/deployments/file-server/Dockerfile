@@ -25,8 +25,6 @@ RUN set -x && apk update && apk add --no-cache bash
 COPY SimpleAuthServer.py /usr/lib/python2.7/
 COPY init.sh /init.sh
 
-RUN mkdir -p "$FS_SOURCE_LOCATION"
-
 EXPOSE 8000
 
 CMD ["bash", "-c", "source /init.sh"]
