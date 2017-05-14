@@ -67,6 +67,7 @@ var buildSource = function (appType, sourceDir, versionKey) {
         var msg = "Ballerina source build failed";
         addEvent(BALLERINA_SOURCE_BUILD, EVENT_FAILED, msg, versionKey);
     }
+    return result.data;
 };
 
 

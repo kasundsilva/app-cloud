@@ -616,9 +616,16 @@ function buildAndDeploy(){
         appType:application.applicationType,
         applicationName:applicationName,
         versionKey:selectedApplicationRevision.hashId
+
     },function (result) {
-        jagg.message({content: "Application successfully built", type: 'success', id:'view_log'});
-        //$("#app_creation_progress_modal").modal('hide');
+        var buildStatus = JSON.parse(result);
+        if (buildStatus) {
+            jagg.message({content: "Application successfully built", type: 'success', id:'view_log'});
+        } else  {
+            jagg.message({content: "Error occurred while updating runtime", type: 'error', id:'view_log'});
+            clearInterval(pollEventsKey);
+            $("#app_creation_progress_modal").modal('hide');
+        }
 
     },function (jqXHR, textStatus, errorThrown) {
         jagg.message({content: "Error occurred while updating runtime", type: 'error', id:'view_log'});
