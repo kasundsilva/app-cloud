@@ -22,9 +22,7 @@ $(document).ready(function () {
 });
 
  function loadCreateApp(appTypeName) {
-     alert("continue");
      fileFrom = $(".option-group input[type='radio']:checked").val();
-     alert(fileFrom);
      if (newVersion == 'true') {
          if (fileFrom == 'local') {
              window.location.href = "application.jag?option=upload-from-file&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
