@@ -73,14 +73,15 @@ var messageTimer;
         });
     };
 
-    jagg.syncPost = function(url, data, callback, type) {
+    jagg.syncPost = function(url, data, callback, error) {
         return jQuery.ajax({
                                type: "POST",
                                url: url,
                                data: data,
                                async:false,
                                success: callback,
-                               dataType:"json"
+                               dataType:"json",
+                               error:error
         });
     };
 
