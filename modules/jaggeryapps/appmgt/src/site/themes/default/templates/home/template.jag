@@ -63,6 +63,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var newTab = null;
     var domainURL = outputs.domainURL;
     var runtimeProperties = selectedApplicationRevision.runtimeProperties;
+    var isBallerinaComposerAvailable = versions[BALLERINA_COMPOSER];
 
 %>
 
@@ -101,6 +102,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var pollEventsKey = null;
     var sourceLocation = "<%=sourcelocation%>";
     var runtimeProperties = "<%=runtimeProperties%>";
+    var isBallerinaComposerAvailable = <%=isBallerinaComposerAvailable%>
 
 </script>
 

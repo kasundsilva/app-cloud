@@ -38,7 +38,6 @@ $(document).ready(function() {
     loadDashboards();
     loadReplicas();
     rcCount = replicaCount;
-
 });
 
 function loadReplicas() {
@@ -530,13 +529,12 @@ function getFileExtension(filename) {
     return parts[parts.length - 1];
 }
 
-// Delete Application
+// Delete version
 function deleteApplication(){
 
     $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
     $("#app_creation_progress_modal").show();
     $("#modal-title").text("Deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " version...");
-
     jagg.post("../blocks/application/application.jag", {
         action:"deleteVersion",
         versionKey:selectedApplicationRevision.hashId,
@@ -554,12 +552,33 @@ function deleteApplication(){
     });
 }
 
+function deleteAllVersions() {
+
+    $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
+    $("#app_creation_progress_modal").show();
+    $("#modal-title").text("Deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " version...");
+
+    jagg.post("../blocks/application/application.jag", {
+        action:"deleteApplication",
+        applicationKey:applicationKey
+    },function (result) {
+        jagg.message({content: cloudSpecificApplicationRepresentation + ': ' + applicationName + ' was deleted successfully.', type: 'success', id:'view_log'});
+        setTimeout(redirectAppListing, 2000);
+    },function (jqXHR, textStatus, errorThrown) {
+        jagg.message({content: "An error occurred while deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " : " + applicationName, type: 'error', id:'view_log'});
+    });
+}
+
 function deleteApplicationPopUp(){
     var versionCount = versionArray.length;
     if(versionCount == 1 ){
         jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'You are about to delete the only available version of your ' + cloudSpecificApplicationRepresentation.toLowerCase() + ', are you sure you want to delete this "' + selectedRevision + '" version ?',
             yesCallback:function(){
-                deleteApplication();
+                if(isBallerinaComposerAvailable != null) {
+                    deleteAllVersions();
+                } else {
+                    deleteApplication();
+                }
             }
         });
     } else if (versionCount > 1 && (selectedRevision == application.defaultVersion)) {

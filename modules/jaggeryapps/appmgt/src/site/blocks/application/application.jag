@@ -592,7 +592,9 @@ var log = new Log();
             var defaultVersionHashId = mod.getVersionHashId(applicationName, defaultVersion);
             var applicationHashId = mod.getApplicationHashIdByName(applicationName);
             var versions = mod.getVersionListOfApplication(applicationHashId);
-            if (versions.length > 1 && (defaultVersionHashId == versionKey)) {
+            var versionsString = stringify(versions);
+
+            if (versions.length > 1 && (defaultVersionHashId == versionKey) && !(versionsString.indexOf("ballerina-composer") > -1)) {
                 var msg = "You are trying to delete the default version, if you want to delete this particular version, " +
                           "please select some other version as the default version and try again";
                 response.status = 400;
