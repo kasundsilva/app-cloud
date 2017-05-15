@@ -46,31 +46,43 @@ public class ManagementService {
 
         String sourceLocation = System.getenv(Constants.SOURCE_LOCATION) + "/" + tenantDomain + "/" + appType + "/" + sourceDir;
         File file = new File(sourceLocation);
+        log.info("Source location : " + sourceLocation);
 
-        if (file.mkdirs()) {
-            log.info("Source location created: " + sourceDir);
+        try {
+            boolean isFolderCreated = file.mkdirs();
+            log.info("isFolderCreated : " + isFolderCreated);
+            if (isFolderCreated) {
+                log.info("Source location created: " + sourceDir);
 
-            // copy source structure
-            File source = new File(System.getenv(Constants.SAMPLE_LOCATION) + "/" + appType + "/" + sample);
-            File dest = new File(sourceLocation);
-            FileUtils.copyDirectory(source, dest);
-            log.info("Sample copied for: " + sourceDir);
-        }
-
-        //Adding package name for initial sample.
-        String dirPath = System.getenv(Constants.SOURCE_LOCATION) + "/" + tenantDomain + "/" + appType + "/" + sourceDir;
-        String pkgName = "org." + tenantDomain + "." + appType + "." + sourceDir;
-        List<String> newLines = new ArrayList<>();
-        for (String line : Files.readAllLines(Paths.get(dirPath + "/echoService.bal"), StandardCharsets.UTF_8)) {
-            if (line.contains("_pkgName")) {
-                log.info("Adding package to the source file: " + pkgName);
-                newLines.add(line.replace("_pkgName", pkgName));
-            } else {
-                newLines.add(line);
+                // copy source structure
+                File source = new File(System.getenv(Constants.SAMPLE_LOCATION) + "/" + appType + "/" + sample);
+                log.info("sample location : " + System.getenv(Constants.SAMPLE_LOCATION) + "/" + appType + "/" + sample);
+                File dest = new File(sourceLocation);
+                FileUtils.copyDirectory(source, dest);
+                log.info("Sample copied for: " + sourceDir);
             }
-        }
-        Files.write(Paths.get(dirPath + "/echoService.bal"), newLines, StandardCharsets.UTF_8);
 
+            //Adding package name for initial sample.
+            if(file.exists()) {
+                String dirPath =
+                        System.getenv(Constants.SOURCE_LOCATION) + "/" + tenantDomain + "/" + appType + "/" + sourceDir;
+                String pkgName = "org." + tenantDomain + "." + appType + "." + sourceDir;
+                List<String> newLines = new ArrayList<>();
+                for (String line : Files
+                        .readAllLines(Paths.get(dirPath + "/echoService.bal"), StandardCharsets.UTF_8)) {
+                    if (line.contains("_pkgName")) {
+                        log.info("Adding package to the source file: " + pkgName);
+                        newLines.add(line.replace("_pkgName", pkgName));
+                    } else {
+                        newLines.add(line);
+                    }
+                }
+                Files.write(Paths.get(dirPath + "/echoService.bal"), newLines, StandardCharsets.UTF_8);
+            }
+        } catch (IOException ex) {
+            log.error(ex);
+            return false;
+        }
         return true;
     }
 

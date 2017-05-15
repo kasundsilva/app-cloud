@@ -21,7 +21,7 @@
 FROM docker.wso2.com/wso2-cloud/msf4j:2.0.0-alpine3.4-oracle-jdk1.8.0
 
 ENV BALLERINA_HOME /home/wso2user/ballerina
-ENV BALLERINA_VERSION 0.85
+ENV BALLERINA_VERSION 0.86
 ENV BALLERINA_RUNTIME_DISTRIBUTION ballerina-$BALLERINA_VERSION.zip
 ENV BALLERINA_RUNTIME ballerina-$BALLERINA_VERSION
 
@@ -34,10 +34,9 @@ RUN unzip $BALLERINA_HOME/$BALLERINA_RUNTIME_DISTRIBUTION -d "$BALLERINA_HOME/" 
     rm $BALLERINA_HOME/$BALLERINA_RUNTIME_DISTRIBUTION && \
     chmod +x $BALLERINA_HOME/$BALLERINA_RUNTIME/bin/ballerina
 
-USER wso2user
+#USER wso2user
 
 ENV MSF4J_JAR management-Service-3.0.0-SNAPSHOT.jar
 COPY mgt-app/target/management-Service-3.0.0-SNAPSHOT.jar "$MSF4J_HOME/"
-COPY sample "$MSF4J_HOME/sample"
 
 CMD ["bash", "-c", "source /init.sh"]

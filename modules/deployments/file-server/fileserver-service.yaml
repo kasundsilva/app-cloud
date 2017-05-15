@@ -5,7 +5,7 @@ metadata:
    serviceloadbalancer/lb.host: "fileserver.wso2localapps.com"
   labels:
     kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: mgt-app
+    kubernetes.io/name: file-server
     exposure-level: public
   name: file-server
   namespace: kube-system

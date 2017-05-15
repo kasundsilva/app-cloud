@@ -47,7 +47,19 @@ var downloadArtifact = function(appType, sourceDir, fileType) {
 var createSourceLocation = function (appType, sourceDir, sample) {
     var tanantDomain = modManager.getTenantDomain();
     var url = mgtAppUrl + "/createSource/" + tanantDomain + "/" + appType + "/" + sourceDir + "/" + sample;
-    var result = get(url, null, headers, type);
+    var retryCount = 5;
+    for (var i = 0; i < retryCount; i++) {
+        try {
+            var result = get(url, null, headers, type);
+            if (result) {
+                break;
+            }
+        } catch (e) {
+            log.info("create source failed");
+            setTimeout(function(){}, 2000);
+        }
+        i++;
+    }
 };
 
 // build the source via mgtapp
