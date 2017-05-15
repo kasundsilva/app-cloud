@@ -22,9 +22,9 @@ include("/jagg/jagg.jag");
 jagg.template("options", function(inputs, outputs, jagg) {
 
     var appTypeName = request.getParameter("appTypeName");
-  var newVersion = request.getParameter("newVersion");
-   var conSpecCpu = request.getParameter("conSpecCpu");
-   var conSpecMemory = request.getParameter("conSpecMemory");
+    var newVersion = request.getParameter("newVersion");
+    var conSpecCpu = request.getParameter("conSpecCpu");
+    var conSpecMemory = request.getParameter("conSpecMemory");
     var versionArray = request.getParameter("versionArray");
     var applicationName = request.getParameter("applicationName");
     var encodedLabels = request.getParameter("encodedLabels");
@@ -37,10 +37,10 @@ jagg.template("options", function(inputs, outputs, jagg) {
     var newVersion = "<%=newVersion%>";
     var conSpecCpu = "<%=conSpecCpu%>";
     var conSpecMemory = "<%=conSpecMemory%>";
-   var versionArray = "<%=versionArray%>";
- var applicationName = "<%=applicationName%>";
- var encodedLabels = "<%=encodedLabels%>";
- var encodedEnvs = "<%=encodedEnvs%>";
+    var versionArray = "<%=versionArray%>";
+    var applicationName = "<%=applicationName%>";
+    var encodedLabels = "<%=encodedLabels%>";
+    var encodedEnvs = "<%=encodedEnvs%>";
 </script>
 
 <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -80,15 +80,15 @@ jagg.template("options", function(inputs, outputs, jagg) {
               <h4 class="mb-1">Upload and deploy an existing application</h4>
             </div>
 
-                <div class="mb-1">
-                    <label class="radio-inline">
+                <div class="mb-1 margin-left-30">
+                    <label class="radio option-group">
                       <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions1" value="local" checked="checked"> Local File System
                     </label>
-                    <label class="radio-inline">
+                    <label class="radio option-group">
                       <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions2" value="url"> URL
                     </label>
                 <% if (appTypeName == "php" || appTypeName == "jaggery") { %>
-                    <label class="radio-inline">
+                    <label class="radio option-group">
                       <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions3" value="github"> Github Repository
                     </label>
             <% } %>
