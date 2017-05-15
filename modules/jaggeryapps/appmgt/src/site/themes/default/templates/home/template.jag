@@ -247,7 +247,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
                          <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
                              <% if (versions[BALLERINA_COMPOSER] != null) { %>
-                              <a id="update" onclick="buildAndDeploy();">
+                              <a id="update" onclick="updateVersionPopUp();">
                                   <div class="btn-create-version">
                                       <span class="fw-stack fw-lg btn-action-ico">
                                         <i class="fw fw-circle-outline fw-stack-2x"></i>
@@ -498,7 +498,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
     }
 
     //deleting redeploying events
-    function deleteAppCreationEvents() {
+    function deleteAppCreationEvents(selectedRevision) {
         jagg.post("../blocks/application/application.jag", {
             action:"deleteAppCreationEvents",
             applicationName: applicationName,
@@ -589,7 +589,25 @@ jagg.template("home", function(inputs, outputs, jagg) {
 
         },function (result) {
             var result = jQuery.parseJSON(result);
-            /*if (result.length > 0) {
+            if (result.length == 0 && isBallerinaComposerAvailable) {
+                jagg.post("../blocks/application/application.jag", {
+                    action: "getVersionHashId",
+                    applicationName: applicationName,
+                    applicationRevision: "ballerina-composer"
+                }, function(result) {
+                    if (result != null) {
+                        toolVersionHashId = result;
+                        newTab = window.open('', '_blank');
+                        newTab.document.write(toolLoadingPage);
+                        newTab.location.href = 'http://' + toolVersionHashId + '.bcu.' + domainURL + '/';
+                        $("#app_creation_progress_modal").modal('hide');
+                        window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
+                    }
+                }, function(jqXHR, textStatus, errorThrown) {
+
+                });
+            }
+            if (result.length > 0) {
                 $("#progress_table").html("");
                 $("#app-creation-header-loader").html("");
                 var table = "<table class='table' style='width:100%; color:black'>" ;
@@ -635,7 +653,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 }
                 table = table + "</table>";
                 $("#progress_table").html(table);
-            }*/
+            }
             if (result.length > 0) {
                 for(var i = 0; i < result.length; i++){
                     var statusStyle;
@@ -644,7 +662,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         clearInterval(pollEventsOfToolKey);
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
-                            deleteAppCreationEvents();
+                            deleteAppCreationEvents("ballerina-composer");
 
                             jagg.post("../blocks/application/application.jag", {
                                 action:"getVersionHashId",
@@ -658,6 +676,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                     }, 10000);
                                     newTab.location.href = 'http://' + toolVersionHashId + '.bcu.' + domainURL + '/';
                                     $("#app_creation_progress_modal").modal('hide');
+                                    window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                                 }
                             }, function (jqXHR, textStatus, errorThrown) {
 
@@ -747,7 +766,7 @@ jagg.template("home", function(inputs, outputs, jagg) {
                     if (event.name === "Status" && event.status === "success") {
                         setTimeout(redirectAppHome, 4250);
                         function redirectAppHome(){
-                            deleteAppCreationEvents();
+                            deleteAppCreationEvents(selectedRevision);
                             window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
                         }
                     } else if(event.status == "failed") {

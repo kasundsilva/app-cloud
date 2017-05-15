@@ -324,7 +324,15 @@ function changeSelectedRevision(newRevision){
         $(".overview-version-btn").empty();
         if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
             $(".overview-version-btn").html(
-                "<a id='update' onclick='buildAndDeploy();'>" +
+                "<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
+                "<div class='btn-create-version'>" +
+                "<span class='fw-stack fw-lg btn-action-ico'>" +
+                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
+                "<i class='fw fw-delete fw-stack-1x'></i>" +
+                "</span> Delete" +
+                "</div>" +
+                "</a>" +
+                "<a id='update' onclick='updateVersionPopUp();'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
@@ -377,7 +385,7 @@ function changeSelectedRevision(newRevision){
                 "</span> Delete" +
                 "</div>" +
                 "</a>" +
-                "<a id='update' onclick='buildAndDeploy()'>" +
+                "<a id='update' onclick='updateVersionPopUp()'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
@@ -595,6 +603,19 @@ function deleteApplicationPopUp(){
             }, noCallback:function(){}
         });
     }
+}
+
+function updateVersionPopUp() {
+    jagg.popMessage({
+        type: 'confirm',
+        modalStatus: true,
+        title: 'Update ' + cloudSpecificApplicationRepresentation + ' Version',
+        content: 'Are you sure you want to update ' + selectedRevision + ' version of this ' +
+        cloudSpecificApplicationRepresentation.toLowerCase() + ' ?',
+        yesCallback: function() {
+            buildAndDeploy();
+        }
+    });
 }
 
 function stopApplicationPopUp(){
