@@ -325,7 +325,7 @@ var log = new Log();
             response.content = "Application is successfully started.";
         } else {
             try {
-                if (applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, applicationType, exposureLevel)) {
+                if (applicationModule.redeployVersion(applicationName, applicationRevision, versionKey, applicationType, exposureLevel, false)) {
                     response.status = 200;
                     response.message = "Application is successfully redeployed.";
                 } else {

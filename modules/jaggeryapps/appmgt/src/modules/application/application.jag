@@ -192,8 +192,12 @@ var updateDeployment = function (appType, applicationName, versionName, runtimeI
         }
     }
     log.info("Successfully created docker image with new artifact.");
+    //Adding deployment pending event
+    var msg = "Application deployment successfully triggered in Kubernetes";
+    addEvent(KUBE_DEPLOY, EVENT_PENDING, msg, versionHashId);
+
     if(readyToTriggerDeployment) {
-        redeployVersion(applicationName, versionName, versionHashId, appType, exposureLevel);
+        redeployVersion(applicationName, versionName, versionHashId, appType, exposureLevel, true);
     }
     log.info("Successfully created deployment with new artifact.");
 };
@@ -742,16 +746,25 @@ var updateVersionExposureLevel = function(newExposureLevel, versionHashId, appli
     }
 };
 
-var redeployVersion = function(applicationName, versionName, versionHashId, appTypeName, exposureLevel){
+var redeployVersion = function(applicationName, versionName, versionHashId, appTypeName, exposureLevel, isPreviouseEventsValid){
     var isDeleted = deleteApplicationFromKubernetes(versionHashId);
-    deleteEventsOfAppVersions(versionHashId);
-    var msg = "Successfully triggered stopping container";
-    addEvent(STOP_CONTAINERS, EVENT_PENDING, msg, versionHashId);
+    if (!isPreviouseEventsValid) {
+        deleteEventsOfAppVersions(versionHashId);
+        var msg = "Successfully triggered stopping container";
+        addEvent(STOP_CONTAINERS, EVENT_PENDING, msg, versionHashId);
+    } else {
+        //Adding deployment pending event
+        var msg = "Application deployment successfully triggered in Kubernetes";
+        addEvent(KUBE_DEPLOY, EVENT_PENDING, msg, versionHashId);
+    }
+
     if (isDeleted) {
         //updateVersionExposureLevel(exposureLevel, versionHashId, applicationName, versionName);
         updateApplicationStatus(versionHashId, APPLICATION_STOPPED);
-        msg = "Successfully completed stopping container";
-        addEvent(STOP_CONTAINERS, EVENT_SUCCEEDED, msg, versionHashId);
+        if (!isPreviouseEventsValid) {
+            msg = "Successfully completed stopping container";
+            addEvent(STOP_CONTAINERS, EVENT_SUCCEEDED, msg, versionHashId);
+        }
         redeployApplication(applicationName, versionName, versionHashId, appTypeName, exposureLevel);
         return true;
     } else {
