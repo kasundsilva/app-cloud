@@ -3,7 +3,7 @@ kind: ReplicationController
 metadata:
   labels:
     name: file-server
-  name: mgt-app
+  name: file-server
   namespace: kube-system
 spec:
   replicas: 1
@@ -31,9 +31,9 @@ spec:
           - name: FS_PASSWORD
             value: admin
           - name: FS_SOURCE_LOCATION
-            value: /home/wso2user/org
+            value: /mnt/data
         volumeMounts:
-        - mountPath: /home/wso2user/org
+        - mountPath: /mnt/data
           name: app-cloud-source
       volumes:
       - name: app-cloud-source
