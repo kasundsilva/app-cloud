@@ -649,7 +649,7 @@ function getVersionCount(){
 
 function buildAndDeploy(){
 
-    executeAsync(drawProgressWindow("Updating Runtime..."));
+    executeAsync(drawProgressWindow("Updating Application..."));
     jagg.post("../blocks/application/application.jag", {
         action:"buildAndDeploy",
         appType:application.applicationType,
@@ -664,11 +664,11 @@ function buildAndDeploy(){
         runtimeProperties:runtimeProperties,
         runtimeId:selectedApplicationRevision.runtimeId
     },function (result) {
-        var buildStatus = JSON.parse(result);
-        if (buildStatus) {
-            jagg.message({content: "Application successfully built", type: 'success', id:'view_log'});
+        var status = JSON.parse(result);
+        if (status) {
+            jagg.message({content: "Application successfully updated", type: 'success', id:'view_log'});
         } else  {
-            jagg.message({content: "Error occurred while updating runtime", type: 'error', id:'view_log'});
+            jagg.message({content: "Error occurred while updating the application", type: 'error', id:'view_log'});
             clearInterval(pollEventsKey);
             $("#app_creation_progress_modal").modal('hide');
         }
