@@ -861,7 +861,6 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
 
         //Adding runtime properties to k8 container
         var runtimeProperties = deploymentContainer.getRuntimeProperties();
-
         var envs = getRuntimeProperties(runtimeProperties);
         buildEnvironmentVariable(appTypeName, envs, versionHashId);
         provisioningContainer.setEnvVariables(envs);
@@ -924,6 +923,7 @@ function buildEnvironmentVariable(appTypeName, envs, versionHashId) {
 
         envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
         envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
         envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
     }
 
@@ -942,7 +942,6 @@ function getContainers(imageName, tag, versionHashId, appServiceName, runtimePro
     var envs = getRuntimeProperties(runtimeProperties);
     buildEnvironmentVariable(appTypeName, envs, versionHashId);
     container.setEnvVariables(envs);
-
     var serviceProxyList = new java.util.ArrayList();
     var services = ApplicationManager.getTransportsForRuntime(runtimeId);
 
