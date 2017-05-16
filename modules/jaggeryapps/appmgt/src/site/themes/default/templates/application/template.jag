@@ -782,7 +782,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
         function validationApplicationRevisionChar(value) {
             var versionValidation = validateApplicationVersion(value);
             if (!versionValidation.status) {
-                envVariableErrorMsg = versionValidation.msg;
+                validationFailErrorMsg = versionValidation.msg;
                 return false;
             } else {
                 return true;
