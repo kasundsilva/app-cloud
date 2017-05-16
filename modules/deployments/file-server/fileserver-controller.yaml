@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: file-server
+  name: file-server
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    name: file-server
+  template:
+    metadata:
+      labels:
+        name: file-server
+    spec:
+      containers:
+      - name: file-server
+        image: registry.local.wso2.com:5000/wso2_appcloud_file_server:v1
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: FS_USERNAME
+            value: admin
+          - name: FS_PASSWORD
+            value: admin
+          - name: FS_SOURCE_LOCATION
+            value: /mnt/data
+        volumeMounts:
+        - mountPath: /mnt/data
+          name: app-cloud-source
+      volumes:
+      - name: app-cloud-source
+        hostPath:
+          path: /mnt/app-cloud/data/org

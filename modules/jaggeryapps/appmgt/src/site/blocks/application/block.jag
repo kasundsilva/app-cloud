@@ -30,7 +30,6 @@ jagg.block("application", {
 
     getOutputs:function (inputs) {
         var log = new Log();
-
         var applicationModule = jagg.module("application");
         var databaseModule = jagg.module("databases");
         var modManager = jagg.module("manager");

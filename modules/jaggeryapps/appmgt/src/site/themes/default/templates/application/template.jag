@@ -45,11 +45,15 @@ jagg.template("application", function (inputs, outputs, jagg) {
         var selectedImageId = outputs.selectedImageId;
         var isThrottled = outputs.isThrottled;
         var allowedRuntimeContainerSpecJson = outputs.throttledAllowedContainerSpecs;
+
+        var option = request.getParameter("option");
+
         var decodedLabels = request.getParameter("encodedLabels");
         var decodedEnvs = request.getParameter("encodedEnvs");
 
         decodedLabels = (decodedLabels == null) ? '{}' : decodedLabels;
         decodedEnvs = (decodedEnvs == null) ? '{}' : decodedEnvs;
+
     %>
 
       <link rel="stylesheet" href="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('css/bootstrap-3.2.0/bootstrap.min.css'))%>">
@@ -103,9 +107,26 @@ jagg.template("application", function (inputs, outputs, jagg) {
     var envKeyRegex = new RegExp("<%=ENV_KEY_REGEX%>");
     var applicationList = <%=applications%>;
     var versionList = "<%=versionList%>";
+    var option = "<%=option%>";
+    var sampleArtifactURL;
+
     $(document).ready(function(){
             if (newVersion == "true") {
                 isNewVersion = true;
+            }
+
+            if(option == 'upload-from-file'){
+                uploadMethod = "file";
+            } else if(option == 'upload-from-url'){
+                uploadMethod = "url";
+            } else if(option == 'github-repo-url'){
+                uploadMethod = "github";
+            } else if (option == 'deploy-sample'){
+                uploadMethod = "url";
+                getSampleArtifactUrl(appTypeName);
+            } else if (option == 'start-from-scratch'){
+                uploadMethod = "start-from-scratch";
+                getArtifactForCreateNew(appTypeName);
             }
 
             $('#verifiedImages').change(function(){
@@ -170,8 +191,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 }
             }
             activateUploadButton();
-            $("#url-upload-block").hide();
-            $("#github-block").hide();
 
             $.each(<%=runtimes%>,function(key,value){
                 $("#runtime").append($('<option></option>').val(value.id).html(value.runtimeName));
@@ -275,6 +294,11 @@ jagg.template("application", function (inputs, outputs, jagg) {
                             formData.append('uploadedFileName', $("#uploadedFileName").val());
                         }
                         formData.append('appCreationMethod', 'default');
+                    } else if (uploadMethod === "start-from-scratch" ) {
+                        formData.append('appCreationMethod', 'start-from-scratch');
+                        formData.append('sourceLocation', 'true');
+                        formData.append('artifactUrl', sampleArtifactURL);
+                        formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "url" ) {
                         formData.append('appCreationMethod', 'url');
                         formData.append('artifactUrl', $("#artifactUrl").val());
@@ -720,37 +744,6 @@ jagg.template("application", function (inputs, outputs, jagg) {
              validateIconImage(file.val(), this.files[0].size);
         });
 
-        $('.radio-inline input:radio').click(function() {
-
-            var selection = $(this);
-            if(selection.val() == 'upload-from-file'){
-                $('#file-upload-block').fadeIn();
-                $('#url-upload-block').hide();
-                $('#github-block').hide();
-                uploadMethod = "file";
-            }else if(selection.val() == 'upload-from-url'){
-                $('#artifactUrl').val("");
-                $("#artifactUrl").prop("disabled", false);
-                $("#url-upload-progress").html("");
-                $('#file-upload-block').hide();
-                $('#github-block').hide();
-                $('#url-upload-block').fadeIn();
-                uploadMethod = "url";
-            }else if(selection.val() == 'github-repo-url'){
-                $('#file-upload-block').hide();
-                $('#url-upload-block').hide();
-                $('#github-block').fadeIn();
-                uploadMethod = "github";
-            }else if ( selection.val() == 'deploy-sample'){
- 		        $('#github-block').hide();
-                $('#file-upload-block').hide();
-                $('#url-upload-block').fadeIn();
-                $("#artifactUrl").prop("disabled", true);
-                uploadMethod = "url";
-                getSampleArtifactUrl(appTypeName);
-            }
-        });
-
         function getSampleArtifactUrl(appType) {
            jagg.post("../blocks/application/application.jag", {
                     action:"getSampleArtifactUrl",
@@ -760,9 +753,21 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     $('#url-upload').click();
                     var validator = $("#application-details").validate();
                     validator.element("#artifactUrl");
+                    sampleArtifactURL = result;
 
                 },function (jqXHR, textStatus, errorThrown) {
                     jagg.message({content: "An error occurred while getting the sample artifact's URL."});
+                });
+        }
+
+        function getArtifactForCreateNew(appType) {
+           jagg.post("../blocks/application/application.jag", {
+                    action:"getSampleArtifactUrl",
+                    appType:appType
+                },function (result) {
+                    sampleArtifactURL = result;
+                },function (jqXHR, textStatus, errorThrown) {
+                    jagg.message({content: "An error occurred while getting the sample artifact."});
                 });
         }
 
@@ -777,7 +782,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
         function validationApplicationRevisionChar(value) {
             var versionValidation = validateApplicationVersion(value);
             if (!versionValidation.status) {
-                envVariableErrorMsg = versionValidation.msg;
+                validationFailErrorMsg = versionValidation.msg;
                 return false;
             } else {
                 return true;
@@ -904,6 +909,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
             $('#runtime').val() > 0 && checkApplicationVersionExistence($('#applicationRevision').val())) {// mandatory validations for all app types
             if (appTypeName == custom) { // validations for custom app type
                     $("#add-application").prop("disabled", false); // for the custm app type mandatory fields are enough.
+            } else if (appTypeName == 'ballerina' && option == 'start-from-scratch') {
+                $("#add-application").prop("disabled", false);
             } else {
                 var isFileUploaded = (isMultiArtifactsSupported ? isMultiArtifactsUploaded(): $("#uploadedFileName").val());
 
@@ -1204,11 +1211,11 @@ jagg.template("application", function (inputs, outputs, jagg) {
                 </span> Back to Listing
             </a>
         <%  } else { %>
-            <a href="<%=jagg.getAbsoluteUrl("/site/pages/select-apptype.jag")%>" class="btn-action">
+            <a href="<%=jagg.getAbsoluteUrl("/site/pages/options.jag")%>?appTypeName=<%=appTypeName%>" class="btn-action">
                 <span class="fw-stack fw-lg btn-action-ico">
                     <i class="fw fw-circle-outline fw-stack-2x"></i>
                     <i class="fw fw-left-arrow fw-stack-1x"></i>
-                </span> Back to app type selection
+                </span> Back to Options
             </a>
         <%  } %>
 
@@ -1311,11 +1318,11 @@ jagg.template("application", function (inputs, outputs, jagg) {
             <label for="application-description" >Description:
                 <i class="fa fa-question-circle help-tips" data-toggle="tooltip" data-placement="left" title="Enter upto 1000 characters"></i>
             </label>
-            <textarea name="applicationDescription" class="form-control" rows="3" placeholder="<%=cloudSpecificApplicationRepresentation%> description goes here. (Optional)"></textarea>
+            <textarea name="applicationDescription" class="form-control" rows="3" placeholder="Enter <%=cloudSpecificApplicationRepresentation.toLowerCase()%> description. (Optional)"></textarea>
             </div>
 
-            <%if(appType.type != CUSTOM) { %>
-            <div class="form-group">
+        <%if(appType.type != CUSTOM) { %>
+            <!--div class="form-group">
                 <label class="radio-inline">
                     <input type="radio" name="fileUploadRadioOptions" id="inlineRadio1" value="upload-from-file"
                            checked="checked" class="custom-radio"> Upload from file system
@@ -1326,32 +1333,20 @@ jagg.template("application", function (inputs, outputs, jagg) {
                            class="custom-radio"> Upload from URL
                 </label>
                 <br/>
-		        <label class="radio-inline">
-                    <input type="radio" name="fileUploadRadioOptions" id="inlineRadioSample" value="deploy-sample"
-                           class="custom-radio"> Deploy sample <%=cloudSpecificApplicationRepresentation.toLowerCase()%>
-                </label>
                 <br/>
-                <%  if(isAppTypeBuildable == 'false'){ %>
-                    <label class="radio-inline">
-                        <input type="radio" name="fileUploadRadioOptions" id="inlineRadio3" value="github-repo-url"
-                               class="custom-radio"> Clone GitHub repository
-                    </label>
-                <% } %>
-            </div>
-
+            </div-->
+         <% if (option == 'upload-from-file') { %>
             <div class="form-group" id="file-upload-block">
                  <%if(isMultiArtifactsSupported){%>
                   <div>
                          <label for="application-description" >Upload  <b>.<%=appType.extension.toUpperCase()%></b> files: *</label>
                   </div>
                  <ul id = "artifactlist" class="list-group">
-
-                </ul>
+                 </ul>
                 <%}else{%>
                   <div>
                      <label for="application-description" >Upload a <b>.<%=appType.extension.toUpperCase()%></b> file: *</label>
                  </div>
-
                 <%}%>
                 <div class="input-group">
                     <input id="uploadedFileName" name="uploadedFileName" type="text" class="form-control" readonly>
@@ -1370,7 +1365,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     <div class="progress-bar progress-bar-success" style="width: 0%;"></div>
                 </div>
             </div>
-
+         <% } %>
+         <% if (option == 'upload-from-url' || option == 'deploy-sample') { %>
             <div class="form-group" id="url-upload-block">
                 <div>
                     <label for="application-description" >Upload a <b>.<%=appType.extension.toUpperCase()%></b> file: *</label>
@@ -1383,7 +1379,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     </span>
                 </div>
             </div>
-
+         <% } %>
+         <% if (option == 'github-repo-url') { %>
             <div class="form-group" id="github-block">
                 <div class="input-group">
                      <span class="input-group-addon">URL</span>
@@ -1405,7 +1402,12 @@ jagg.template("application", function (inputs, outputs, jagg) {
                     <input id="token" name="token" type="text" class="form-control" placeholder="Enter Personal access token" />
                 </div-->
             </div>
-             <%}%>
+         <% } %>
+        <% } %>
+        <div class="text-right">
+        <a href="#" class="show-advance-settings">Advance Settings...</a>
+        </div>
+        <div class="advance-settings-section" style="display: none;">
             <div class="form-group">
                 <label for="runtime">Runtime: *
                     <i class="fa fa-question-circle help-tips" data-toggle="tooltip" data-placement="left" title="Select an appropriate runtime to run your <%=cloudSpecificApplicationRepresentation.toLowerCase()%>"></i>
@@ -1545,6 +1547,8 @@ jagg.template("application", function (inputs, outputs, jagg) {
                             </div>
                         </div>
                     </div-->
+            </div>
+
             </div>
             <div class="form-group">
                 <button class="cu-btn cu-btn-sm cu-btn-blue cu-btn-position" id="add-application">

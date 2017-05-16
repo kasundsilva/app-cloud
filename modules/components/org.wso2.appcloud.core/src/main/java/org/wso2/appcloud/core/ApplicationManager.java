@@ -996,6 +996,31 @@ public class ApplicationManager {
     }
 
     /**
+     * Method for getting tool apps version by running time period.
+     *
+     * @param numberOfHours number of hours the version has been running
+     * @param toolName      name of the tool
+     * @return array of version objects
+     * @throws AppCloudException
+     */
+    public static Version[] getRunningToolAppsByRunningTimePeriod(int numberOfHours, String toolName)
+            throws AppCloudException {
+        Connection dbConnection = DBUtil.getDBConnection();
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            return ApplicationDAO.getInstance().
+                    getRunningToolAppsByRunningTimePeriod(dbConnection, numberOfHours, tenantId, toolName);
+        } catch (AppCloudException e) {
+            String msg = "Error while getting application version by running time period for " + numberOfHours +
+                    " numberOfHours for tenant id : " + tenantId;
+            log.error(msg, e);
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeConnection(dbConnection);
+        }
+    }
+
+    /**
      * Get running applications of all tenants
      *
      * @return map of running applications

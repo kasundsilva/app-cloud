@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.client.AutoAdaptableKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PrettyLoggable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -149,6 +148,8 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
         String memoryLimit = memoryLimitInt.concat("Mi");
         String memoryRequest = resourceQuotaLimit.getMemoryRequest().concat("Mi");
 
+        List<Volume> volumes = new ArrayList<>();
+
         try {
             //Deployment creation
             for (Container container : containers) {
@@ -167,8 +168,25 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
                 kubContainer.setResources(resourceRequirement);
 
                 //Checking whether the container is including volume mounts
-                if(container.getVolumeMounts()!= null) {
-                    kubContainer.setVolumeMounts(container.getVolumeMounts());
+                if (container.getVolumeMounts() != null) {
+
+                    List<VolumeMountInfo> volumeMounts = container.getVolumeMounts();
+                    List<VolumeMount> containerVolumeMounts = new ArrayList<>();
+
+                    if (volumeMounts.size() > 0) {
+                        for (VolumeMountInfo volumeMountInfo : volumeMounts) {
+                            VolumeMount volumeMount = new VolumeMount(volumeMountInfo.getMountPath(),
+                                    volumeMountInfo.getName(), volumeMountInfo.isReadOnly());
+                            containerVolumeMounts.add(volumeMount);
+
+                            Volume volume = new Volume();
+                            volume.setName(volumeMount.getName());
+                            volume.setHostPath(new HostPathVolumeSource(volumeMountInfo.getHostPath()));
+                            volumes.add(volume);
+                        }
+                    }
+
+                    kubContainer.setVolumeMounts(containerVolumeMounts);
                 }
 
                 List<ContainerPort> containerPorts = new ArrayList<>();
@@ -198,7 +216,7 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
 
             PodSpec podSpec = new PodSpecBuilder()
                     .withContainers(kubContainerList)
-                    .withVolumes(config.getSecrets())
+                    .withVolumes(volumes)
                     .build();
 
             PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
@@ -452,7 +470,7 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
         //create a instance of kubernetes client to invoke service call
         AutoAdaptableKubernetesClient kubernetesClient = KubernetesProvisioningUtils.getFabric8KubernetesClient();
 
-        List<VolumeMount> volumeMounts = new ArrayList<>();
+        List<VolumeMountInfo> volumeMounts = new ArrayList<>();
 
         for (RuntimeProperty runtimeProperty : runtimeProperties) {
             switch (runtimeProperty.getPropertyType()) {
@@ -499,7 +517,12 @@ public class KubernetesRuntimeProvisioningService implements RuntimeProvisioning
                         .withReadOnly(true)
                         .build();
 
-                volumeMounts.add(volumeMount);
+                VolumeMountInfo volumeMountInfo = new VolumeMountInfo();
+                volumeMountInfo.setName(runtimeProperty.getName());
+                volumeMountInfo.setMountPath(KubernetesPovisioningConstants.VOLUME_MOUNT_PATH + runtimeProperty.getName());
+                volumeMountInfo.setReadOnly(true);
+
+                volumeMounts.add(volumeMountInfo);
 
                 break;
             case ENVIRONMENT:

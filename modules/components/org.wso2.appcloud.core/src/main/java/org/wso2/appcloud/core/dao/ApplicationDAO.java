@@ -16,7 +16,6 @@
 
 package org.wso2.appcloud.core.dao;
 
-import com.google.common.base.Strings;
 import org.apache.commons.io.IOUtils;
 import org.wso2.appcloud.common.AppCloudException;
 import org.wso2.appcloud.core.DBUtil;
@@ -26,7 +25,6 @@ import org.wso2.appcloud.core.dto.ApplicationRuntime;
 import org.wso2.appcloud.core.dto.ApplicationType;
 import org.wso2.appcloud.core.dto.Container;
 import org.wso2.appcloud.core.dto.ContainerServiceProxy;
-import org.wso2.appcloud.core.dto.CustomImage;
 import org.wso2.appcloud.core.dto.Deployment;
 import org.wso2.appcloud.core.dto.RuntimeProperty;
 import org.wso2.appcloud.core.dto.Tag;
@@ -169,6 +167,7 @@ public class ApplicationDAO {
             preparedStatement.setString(6, version.getConSpecCpu());
             preparedStatement.setString(7, version.getConSpecMemory());
             preparedStatement.setString(8, version.getExposureLevel());
+            preparedStatement.setString(9, version.getSourceLocation());
 
             preparedStatement.execute();
 
@@ -954,7 +953,7 @@ public class ApplicationDAO {
                 version.setTags(getAllTagsOfVersion(dbConnection, version.getHashId(), tenantId));
                 version.setRuntimeProperties(
                         getAllRuntimePropertiesOfVersion(dbConnection, version.getHashId(), tenantId));
-
+                version.setSourceLocation(resultSet.getString(SQLQueryConstants.SOURCE_LOCATION));
                 versions.add(version);
             }
 
@@ -1875,6 +1874,52 @@ public class ApplicationDAO {
 
         } catch (SQLException e) {
             String msg = "Error while retrieving application version detail for non white listed applications in" +
+                    " tenant : " + tenantId;
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+        return versions.toArray(new Version[versions.size()]);
+    }
+
+    /**
+     * Method for getting tool app versions by running time period.
+     *
+     * @param dbConnection  database connection
+     * @param numberOfHours number of hours the application version has been running
+     * @param tenantId      tenant id
+     * @param toolName      name of the tool
+     * @return array of version objects
+     * @throws AppCloudException
+     */
+    public Version[] getRunningToolAppsByRunningTimePeriod(Connection dbConnection, int numberOfHours, int tenantId,
+            String toolName)
+            throws AppCloudException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        List<Version> versions = new ArrayList<>();
+
+        try {
+
+            preparedStatement = dbConnection.prepareStatement(
+                    SQLQueryConstants.GET_ALL_RUNNING_TOOL_APPS_CREATED_BEFORE_X_HOURS);
+            preparedStatement.setInt(1, numberOfHours);
+            preparedStatement.setString(2, toolName);
+
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                Version version = new Version();
+                version.setHashId(resultSet.getString(SQLQueryConstants.HASH_ID));
+                version.setCreatedTimestamp(resultSet.getTimestamp(SQLQueryConstants.EVENT_TIMESTAMP));
+                version.setTenantId(resultSet.getInt(SQLQueryConstants.TENANT_ID));
+
+                versions.add(version);
+            }
+
+        } catch (SQLException e) {
+            String msg = "Error while retrieving tool apps version detail for " +
                     " tenant : " + tenantId;
             throw new AppCloudException(msg, e);
         } finally {

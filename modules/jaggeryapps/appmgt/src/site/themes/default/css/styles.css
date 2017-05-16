@@ -197,6 +197,11 @@ button[disabled]{
 .cu-btn-gray {
     background-color: #555555;
 }
+
+.cu-btn-green {
+    background-color: #00c065
+}
+
 .wr-edit-button {
     border-radius: 0;
 }
@@ -3444,4 +3449,73 @@ ul.custom-list-group > li .custom-actions > a:hover {
 select option.option_link {
     color: #1c00cc;
     text-decoration: underline;
+}
+
+.dropdown-menu>li>a.option_link {
+    color: #1c00cc;
+    text-decoration: underline;
+}
+
+.list-group-item {
+    border-radius: 0 !important;
+}
+
+.app-type-options {
+    margin-top: 125px;
+}
+
+.app-type-options .list-group {
+    border: none;
+}
+
+
+.app-type-options a.list-group-item {
+    color: #fff;
+    background: #555;
+    border: 2px solid #282828;
+}
+
+.app-type-options a.list-group-item > p {
+    margin-top: 10px;
+}
+
+.app-type-options a.list-group-item .text-muted {
+    color: #989898;
+}
+
+.margin-left-30 {
+    margin-left: 30px;
+}
+
+.margin-left-40 {
+    margin-left: 40px;
+}
+
+.margin-bottom-10 {
+    margin-bottom: 10px;
+}
+
+.margin-bottom-25 {
+    margin-bottom: 25px;
+}
+
+.width-100 {
+    width: 100px;
+}
+
+.option-block {
+    margin-left: 60px;
+    margin-right: 60px;
+}
+
+.margin-bottom-5 {
+    margin-bottom: 5px;
+}
+
+.font-size-20 {
+    font-size: 20px;
+}
+
+.desc-color {
+    color: #dfe1dd;
 }

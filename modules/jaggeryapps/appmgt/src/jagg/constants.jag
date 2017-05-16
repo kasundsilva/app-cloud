@@ -67,6 +67,7 @@ var KUBE_DEPLOY = "Initializing deployment";
 var STOP_CONTAINERS = "Stopping Containers";
 var INGRESS = "Creating ingress";
 var POD_STATUS = "Status";
+var BALLERINA_SOURCE_BUILD = "Building Ballerina source";
 
 var DEFAULT_TEMPLATE = 'DEFAULT_ALL_PERMISSIONS';
 
@@ -137,4 +138,16 @@ var CLOUD_ADMIN_PASSWORD="Cloud.Admin.Password";
 
 var SET_COOKIE_HEADER="Set-Cookie";
 
+var MGT_APP_URL = "MgtAppURL";
+var MGT_APP_ADMIN_USERNAME="MgtAppAdminUsername";
+var MGT_APP_ADMIN_PASSWORD="MgtAppAdminPassword";
+var BALLERINA_COMPOSER_BASE_IMAGE="ballerina-composer_base_image";
+var BALLERINA_COMPOSER_BASE_IMAGE_TAG="ballerina-composer_base_image_tag";
+var BALLERINA_COMPOSER = "ballerina-composer";
+var TOOL_PREFIX = "_tools";
+var FILE_SERVER_URL = "FileServerURL";
+var FILE_SERVER_ADMIN_USERNAME = "FileServerAdminUsername";
+var FILE_SERVER_ADMIN_PASSWORD = "FileServerAdminPassword";
+var TARGET_DIRECTORY = "/target/";
+var START_FROM_SCRATCH = "start-from-scratch";
 %>

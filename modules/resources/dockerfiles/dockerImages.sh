@@ -67,3 +67,6 @@ docker build --no-cache -t docker.wso2.com/wso2-cloud/ballerina:0.8.x-base -f $C
 
 #nodejs base image
 docker build --no-cache -t docker.wso2.com/wso2-cloud/nodejs:7.7.1-base -f $CURRENT_DIR/nodejs/base/7.7.1/Dockerfile.wso2-cloud-nodejs-7.7.1.base $CURRENT_DIR/nodejs/base/7.7.1/
+
+#ballerina-composer base image
+docker build --no-cache -t wso2-appcloud/ballerina-composer:0.8.x-base -f $CURRENT_DIR/ballerina-composer/base/0.8.x/Dockerfile.wso2-cloud-ballerina-composer-0.8.x.base $CURRENT_DIR/ballerina-composer/base/0.8.x/

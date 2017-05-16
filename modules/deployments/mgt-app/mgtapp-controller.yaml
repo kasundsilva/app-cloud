@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: mgt-app
+  name: mgt-app
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    name: mgt-app
+  template:
+    metadata:
+      labels:
+        name: mgt-app
+    spec:
+      containers:
+      - name: mgt-app
+        image: registry.local.wso2.com:5000/wso2_appcloud_mgt_app:v1
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: MGT_APP_ADMIN_USERNAME
+            value: admin
+          - name: MGT_APP_ADMIN_PASSWORD
+            value: admin
+          - name: MGT_APP_SOURCE_LOCATION
+            value: /home/wso2user/org
+          - name: MGT_APP_SAMPLE_LOCATION
+            value: /home/wso2user/sample
+        volumeMounts:
+        - mountPath: /home/wso2user/org
+          name: app-cloud-source
+        - mountPath: /home/wso2user/sample
+          name: app-cloud-sample
+      volumes:
+      - name: app-cloud-source
+        hostPath:
+          path: /mnt/app-cloud/data/org
+      - name: app-cloud-sample
+        hostPath:
+          path: /mnt/app-cloud/data/sample
