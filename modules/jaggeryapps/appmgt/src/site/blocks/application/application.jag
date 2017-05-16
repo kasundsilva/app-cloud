@@ -101,7 +101,9 @@ var log = new Log();
         if (validateAlphaNumeric("applicationName", applicationName)) {return;}
 
         var applicationRevision = request.getParameter("applicationRevision");
-        if (!validationApplicationRevision("applicationRevision", applicationRevision)) {return;}
+        if (runtimeId != 21) {// 21 - Ballerina Composer Runtime ID
+            if (!validationApplicationRevision("applicationRevision", applicationRevision)) {return;}
+        }
 
         var appTypeName = request.getParameter("appTypeName");
         if (validateRequired("appTypeName", appTypeName)) {return;}
