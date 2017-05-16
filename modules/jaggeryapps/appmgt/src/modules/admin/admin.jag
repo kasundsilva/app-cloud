@@ -226,6 +226,20 @@ var stopIdleApplicationsByRunningTimePeriod = function (numberOfHours) {
             log.error(e);
         }
     }
+
+    var toolApplications = ApplicationManager.getRunningToolAppsByRunningTimePeriod(numberOfHours, "ballerina-composer");
+    log.debug('number of tool applications found:' + toolApplications.length);
+    for (var i = 0; i < toolApplications.length; i++) {
+        var toolApplication = toolApplications[i];
+        try {
+            log.info("Stopping tool application with hashId:" + toolApplication.getHashId());
+            stopIdleApplicationByRunningTimePeriod(toolApplication.getHashId(), toolApplication.getTenantId());
+        } catch (e) {
+            log.error("Failed to stop tool application with hashId:" + toolApplication.getHashId() +
+                    " and continue stopping other tool applications.");
+            log.error(e);
+        }
+    }
 };
 
 var stopIdleApplicationByRunningTimePeriod = function (versionHashId, tenantId) {

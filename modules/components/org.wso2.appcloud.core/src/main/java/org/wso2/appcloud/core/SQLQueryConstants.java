@@ -235,6 +235,9 @@ public class SQLQueryConstants {
             "AND timestamp < timestampadd(HOUR, -?, now()) " +
             "AND tenant_id IN (SELECT tenant_id FROM AC_TENANT_SUBSCRIPTION where plan='TRIAL')";
 
+    public static final String GET_ALL_RUNNING_TOOL_APPS_CREATED_BEFORE_X_HOURS =
+            "SELECT * FROM AC_VERSION WHERE status='running' AND timestamp < timestampadd(HOUR, -?, now()) AND name = ?";
+
     public static final String GET_ALL_TRIAL_APP_VERSIONS_CREATED_BEFORE_X_HOURS = "SELECT * from AC_VERSION JOIN AC_TENANT_SUBSCRIPTION" +
             " WHERE AC_VERSION.tenant_id = AC_TENANT_SUBSCRIPTION.tenant_id AND AC_VERSION.status = 'running' AND " +
             "(AC_TENANT_SUBSCRIPTION.plan='TRIAL' AND AC_VERSION.timestamp <  timestampadd(HOUR, -?, now()))";
