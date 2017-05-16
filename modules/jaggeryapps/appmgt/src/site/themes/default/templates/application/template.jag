@@ -301,7 +301,7 @@ jagg.template("application", function (inputs, outputs, jagg) {
                         formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "url" ) {
                         formData.append('appCreationMethod', 'url');
-                        formData.append('artifactUrl', sampleArtifactURL);
+                        formData.append('artifactUrl', $("#artifactUrl").val());
                         formData.append('uploadedFileName', "VERSION_HASH_ID." + APP_TYPE_EXTENSION);
                     } else if (uploadMethod === "github" ) {
                         formData.append('appCreationMethod', 'github');
