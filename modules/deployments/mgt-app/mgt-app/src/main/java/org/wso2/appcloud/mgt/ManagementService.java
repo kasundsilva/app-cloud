@@ -69,7 +69,7 @@ public class ManagementService {
                 String pkgName = "org." + tenantDomain + "." + appType + "." + sourceDir;
                 List<String> newLines = new ArrayList<>();
                 for (String line : Files
-                        .readAllLines(Paths.get(dirPath + "/echoService.bal"), StandardCharsets.UTF_8)) {
+                        .readAllLines(Paths.get(dirPath + "/" + sample +".bal"), StandardCharsets.UTF_8)) {
                     if (line.contains("_pkgName")) {
                         log.info("Adding package to the source file: " + pkgName);
                         newLines.add(line.replace("_pkgName", pkgName));
@@ -77,7 +77,7 @@ public class ManagementService {
                         newLines.add(line);
                     }
                 }
-                Files.write(Paths.get(dirPath + "/echoService.bal"), newLines, StandardCharsets.UTF_8);
+                Files.write(Paths.get(dirPath + "/" + sample + ".bal"), newLines, StandardCharsets.UTF_8);
             }
         } catch (IOException ex) {
             log.error(ex);
