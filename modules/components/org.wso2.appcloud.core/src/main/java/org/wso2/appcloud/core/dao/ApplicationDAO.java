@@ -1884,6 +1884,52 @@ public class ApplicationDAO {
     }
 
     /**
+     * Method for getting tool app versions by running time period.
+     *
+     * @param dbConnection  database connection
+     * @param numberOfHours number of hours the application version has been running
+     * @param tenantId      tenant id
+     * @param toolName      name of the tool
+     * @return array of version objects
+     * @throws AppCloudException
+     */
+    public Version[] getRunningToolAppsByRunningTimePeriod(Connection dbConnection, int numberOfHours, int tenantId,
+            String toolName)
+            throws AppCloudException {
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        List<Version> versions = new ArrayList<>();
+
+        try {
+
+            preparedStatement = dbConnection.prepareStatement(
+                    SQLQueryConstants.GET_ALL_RUNNING_TOOL_APPS_CREATED_BEFORE_X_HOURS);
+            preparedStatement.setInt(1, numberOfHours);
+            preparedStatement.setString(2, toolName);
+
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                Version version = new Version();
+                version.setHashId(resultSet.getString(SQLQueryConstants.HASH_ID));
+                version.setCreatedTimestamp(resultSet.getTimestamp(SQLQueryConstants.EVENT_TIMESTAMP));
+                version.setTenantId(resultSet.getInt(SQLQueryConstants.TENANT_ID));
+
+                versions.add(version);
+            }
+
+        } catch (SQLException e) {
+            String msg = "Error while retrieving tool apps version detail for " +
+                    " tenant : " + tenantId;
+            throw new AppCloudException(msg, e);
+        } finally {
+            DBUtil.closeResultSet(resultSet);
+            DBUtil.closePreparedStatement(preparedStatement);
+        }
+        return versions.toArray(new Version[versions.size()]);
+    }
+
+    /**
      * Method for getting maximum application count for whitelisted tenant per cloud.
      *
      * @param dbConnection database connection

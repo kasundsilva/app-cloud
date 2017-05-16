@@ -45,13 +45,18 @@ function validateDbName(databaseName) {
 }
 
 //Validated the application version provided by user
-function validateApplicationVersion(version){
+function validateApplicationVersion(version) {
     var versionRegex = new RegExp(VERSION_REGEX);
     var validator;
     if (!versionRegex.test(version)) {
         validator = {
             status: false,
             msg: "Invalid characters found for application version. Valid char set [a-z, A-Z, 0-9, -, _, .]"
+        }
+    } else if (version.toLowerCase() == "ballerina-composer".toLowerCase())  {
+        validator = {
+            status: false,
+            msg: "Version cannot be 'ballerina-composer'."
         }
     } else {
         validator = {

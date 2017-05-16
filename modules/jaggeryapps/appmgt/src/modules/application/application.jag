@@ -862,13 +862,7 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
         //Adding runtime properties to k8 container
         var runtimeProperties = deploymentContainer.getRuntimeProperties();
         var envs = getRuntimeProperties(runtimeProperties);
-        if (appTypeName == "ballerina-composer") {
-
-            envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-            envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-            envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-            envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
-        }
+        buildEnvironmentVariable(appTypeName, envs, versionHashId);
         provisioningContainer.setEnvVariables(envs);
 
         var deploymentProxies = deploymentContainer.getServiceProxies();
@@ -893,23 +887,9 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
         }
         provisioningContainer.setServiceProxies(provisioningProxyList);
 
-        if (appTypeName == "ballerina-composer") {
+        // set volume mounts
+        provisioningContainer.setVolumeMounts(buildVolumeMounts(appTypeName, sourceLocation));
 
-            // invoke mgtapp and create source location
-            jagg.module("mgtapp").createSourceLocation("ballerina", sourceLocation, "echoService");
-
-            var volumnMount = new Packages.org.wso2.appcloud.provisioning.runtime.beans.VolumeMountInfo();
-            volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path"));
-            volumnMount.setName("source-location");
-            volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/ballerina/" + sourceLocation);
-            volumnMount.setReadOnly(false);
-
-            var volumnMounts = new java.util.ArrayList();
-            volumnMounts.add(volumnMount);
-
-            // volumn mounts
-            provisioningContainer.setVolumeMounts(volumnMounts);
-        }
         provisioningContainerList.add(provisioningContainer);
     }
     deploymentConfig.setContainers(provisioningContainerList);
@@ -918,6 +898,36 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
 
 };
 
+function buildVolumeMounts(appTypeName, sourceLocation) {
+    var volumnMounts = new java.util.ArrayList();
+    if (appTypeName == "ballerina-composer") {
+
+        // invoke mgtapp and create source location
+        jagg.module("mgtapp").createSourceLocation("ballerina", sourceLocation, modManager.getPropertyValue("ballerina-composer_sample"));
+
+        var volumnMount = new Packages.org.wso2.appcloud.provisioning.runtime.beans.VolumeMountInfo();
+        volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path"));
+        volumnMount.setName("source-location");
+        volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/ballerina/" + sourceLocation);
+        volumnMount.setReadOnly(false);
+
+        volumnMounts.add(volumnMount);
+    }
+
+    return volumnMounts;
+}
+
+function buildEnvironmentVariable(appTypeName, envs, versionHashId) {
+
+    if (appTypeName == "ballerina-composer") {
+
+        envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
+    }
+
+}
 /**
  * Method for getting all the available application types. e.g : war, mss, car
  */
@@ -930,15 +940,7 @@ function getContainers(imageName, tag, versionHashId, appServiceName, runtimePro
     container.setBaseImageVersion(tag);
 
     var envs = getRuntimeProperties(runtimeProperties);
-
-    if (appTypeName == "ballerina-composer") {
-
-        envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-        envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-        envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
-        envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
-    }
-
+    buildEnvironmentVariable(appTypeName, envs, versionHashId);
     container.setEnvVariables(envs);
     var serviceProxyList = new java.util.ArrayList();
     var services = ApplicationManager.getTransportsForRuntime(runtimeId);
@@ -968,23 +970,8 @@ function getContainers(imageName, tag, versionHashId, appServiceName, runtimePro
     }
     container.setServiceProxies(serviceProxyList);
 
-    if (appTypeName == "ballerina-composer") {
-
-        // invoke mgtapp and create source location
-        jagg.module("mgtapp").createSourceLocation("ballerina", sourceLocation, "echoService");
-
-        var volumnMount = new Packages.org.wso2.appcloud.provisioning.runtime.beans.VolumeMountInfo();
-        volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path"));
-        volumnMount.setName("source-location");
-        volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/ballerina/" + sourceLocation);
-        volumnMount.setReadOnly(false);
-
-        var volumnMounts = new java.util.ArrayList();
-        volumnMounts.add(volumnMount);
-
-        // volumn mounts
-        container.setVolumeMounts(volumnMounts);
-    }
+    // volume mounts
+    container.setVolumeMounts(buildVolumeMounts(appTypeName, sourceLocation));
 
     containerList.add(container);
     return containerList;
@@ -1001,6 +988,7 @@ function getRuntimeProperties(runtimeProperties){
             envs.put(runtimeProperty.getPropertyName(), runtimeProperty.getPropertyValue());
         }
     }
+
     return envs;
 }
 
@@ -1759,9 +1747,35 @@ var constructFileUploadPath = function (versionHashId) {
 
 var getRunningApplicationVersionCount = function(){
     try{
-        var tenantId = modManager.getTenantId();
-        var applicationCount = ApplicationManager.getRunningApplicationVersionCount(jagg.getSelectedCloud());
-        return applicationCount;
+        var tenantId = modManager.getTenantId(true);
+        var allTenantRunningApplicationMap = ApplicationManager.getRunningApplicationsOfTenant(tenantId);
+        var runningCount = 0;
+
+        if (allTenantRunningApplicationMap && allTenantRunningApplicationMap.entrySet()) {
+            var iterator = allTenantRunningApplicationMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                var entry = iterator.next();
+                var tenantId = entry.getKey();
+                var applicationList = entry.getValue();
+                for (var i = 0; i < applicationList.size(); i++) {
+                    if (applicationList != null) {
+                        var app = applicationList.get(i);
+                        if (app != null) {
+                            var appType = app.getApplicationType();
+                            if (appType != "ballerina-composer") {
+                                runningCount++;
+                            }
+                        } else {
+                            log.warn("One of the running applications of tenant:" + tenantId + " has a null app.");
+                        }
+                    } else {
+                        log.warn("Number of running application for the tenant:" + tenantId + " is zero.");
+                    }
+                }
+            }
+        }
+
+        return runningCount;
     }catch(e){
         log.error("Error while getting application count from the database");
         log.error(e);
