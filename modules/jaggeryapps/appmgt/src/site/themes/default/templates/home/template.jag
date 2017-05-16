@@ -597,8 +597,8 @@ jagg.template("home", function(inputs, outputs, jagg) {
                 }, function(result) {
                     if (result != null) {
                         toolVersionHashId = result;
-                        newTab = window.open('', '_blank');
-                        newTab.document.write(toolLoadingPage);
+                        //newTab = window.open('', '_blank');
+                        //newTab.document.write(toolLoadingPage);
                         newTab.location.href = 'http://' + toolVersionHashId + '.bcu.' + domainURL + '/';
                         $("#app_creation_progress_modal").modal('hide');
                         window.location.replace("home.jag?applicationKey=<%=applicationKey%>");
