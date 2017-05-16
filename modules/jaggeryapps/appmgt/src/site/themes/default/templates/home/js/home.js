@@ -329,7 +329,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete" +
+                "</span> Delete Version" +
                 "</div>" +
                 "</a>" +
                 "<a id='update' onclick='updateVersionPopUp();'>" +
@@ -337,7 +337,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-refresh fw-stack-1x'></i>" +
-                "</span> Update" +
+                "</span> Deploy Latest Code" +
                 "</div>" +
                 "</a>" +
                 "<a id='edit-code' onclick='openTool();'>" +
@@ -354,7 +354,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete" +
+                "</span> Delete Version" +
                 "</div>" +
                 "</a>");
         }
@@ -382,7 +382,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete" +
+                "</span> Delete Vesion" +
                 "</div>" +
                 "</a>" +
                 "<a id='update' onclick='updateVersionPopUp()'>" +
@@ -390,7 +390,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-refresh fw-stack-1x'></i>" +
-                "</span> Update" +
+                "</span> Deploy Latest Code" +
                 "</div>" +
                 "</a>" +
                 "<a id='edit-code' onclick='openTool();'>" +
@@ -407,7 +407,7 @@ function changeSelectedRevision(newRevision){
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete" +
+                "</span> Delete Version" +
                 "</div>" +
                 "</a>");
         }
@@ -430,7 +430,7 @@ function changeSelectedRevision(newRevision){
             "<span class='fw-stack fw-lg btn-action-ico'>" +
             "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
             "<i class='fw fw-delete fw-stack-1x'></i>" +
-            "</span> Delete" +
+            "</span> Delete Version" +
             "</div>" +
             "</a>");
 
@@ -609,8 +609,8 @@ function updateVersionPopUp() {
     jagg.popMessage({
         type: 'confirm',
         modalStatus: true,
-        title: 'Update ' + cloudSpecificApplicationRepresentation + ' Version',
-        content: 'Are you sure you want to update ' + selectedRevision + ' version of this ' +
+        title: 'Deploy Latest Code of  ' + cloudSpecificApplicationRepresentation + ' Version',
+        content: 'Are you sure you want to deploy the latest code of  ' + selectedRevision + ' version of this ' +
         cloudSpecificApplicationRepresentation.toLowerCase() + ' ?',
         yesCallback: function() {
             buildAndDeploy();
@@ -649,7 +649,7 @@ function getVersionCount(){
 
 function buildAndDeploy(){
 
-    executeAsync(drawProgressWindow("Updating Application..."));
+    executeAsync(drawProgressWindow("Deploying latest code..."));
     jagg.post("../blocks/application/application.jag", {
         action:"buildAndDeploy",
         appType:application.applicationType,
