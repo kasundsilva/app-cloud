@@ -888,7 +888,7 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
         provisioningContainer.setServiceProxies(provisioningProxyList);
 
         // set volume mounts
-        provisioningContainer.setVolumeMounts(buildVolumeMounts(appTypeName, sourceLocation));
+        provisioningContainer.setVolumeMounts(buildVolumeMounts(appTypeName, applicationName));
 
         provisioningContainerList.add(provisioningContainer);
     }
