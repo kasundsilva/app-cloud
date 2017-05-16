@@ -1761,7 +1761,7 @@ var getRunningApplicationVersionCount = function(){
                     if (applicationList != null) {
                         var app = applicationList.get(i);
                         if (app != null) {
-                            var versionName = getDefaultVersion();
+                            var versionName = app.getDefaultVersion();
                             if (versionName != "ballerina-composer") {
                                 runningCount++;
                             }
