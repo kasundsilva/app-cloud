@@ -64,23 +64,23 @@ jagg.template("options", function(inputs, outputs, jagg) {
         <% if (appTypeName == "ballerina") { %>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Create new Ballerina Service on Cloud</h4>
+              <h4 class="margin-bottom-20">Create new Ballerina Service on Cloud</h4>
             </div>
-            <p class="mb-1">This option will let you develop your Ballerina Service on cloud via Ballerina Composer. Initially this will start with Ballerina echo service and later on you can modify the code via Ballerina Composer in Cloud.</p>
-
-            <button type="button" class="btn btn-primary" id="continue-composer" onclick="continueCreateNew();">
-            Continue &nbsp;
-                <i class="fw fw-right"></i>
+            <p class="margin-bottom-20">This option will let you develop your Ballerina Service on cloud via Ballerina Composer. Initially this will start with Ballerina echo service and later on you can modify the code via Ballerina Composer in Cloud.</p>
+            <div class="width-100">
+            <button type="button" class="btn btn-primary btn-block" id="continue-composer" onclick="continueCreateNew();">
+            Create
             </button>
+            </div>
             <small class="text-muted"></small>
           </a>
         <% } %>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Upload and deploy an existing application</h4>
+              <h4 class="margin-bottom-20">Upload and deploy an existing application</h4>
             </div>
 
-                <div class="mb-1 margin-left-30">
+                <div class="margin-bottom-20 margin-left-30">
                     <label class="radio option-group">
                       <input type="radio" name="artifactUploadOptions" id="artifactUploadOptions1" value="local" checked="checked"> Local File System
                     </label>
@@ -93,22 +93,24 @@ jagg.template("options", function(inputs, outputs, jagg) {
                     </label>
             <% } %>
                 </div>
-            <p class="mb-1">This option will let you upload an existing application that you have already developed via local file system or web.</p>
-            <button type="button" class="btn btn-primary" onclick="loadCreateApp('<%=appTypeName%>');">
-            Continue &nbsp;
-                <i class="fw fw-right"></i>
+            <p class="margin-bottom-20">This option will let you upload an existing application that you have already developed via local file system or web.</p>
+            <div class="width-100">
+            <button type="button" class="btn btn-primary btn-block" onclick="loadCreateApp('<%=appTypeName%>');">
+            Continue
             </button>
+            </div>
             <small class="text-muted"></small>
           </a>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="mb-1">Tryout Samples</h4>
+              <h4 class="margin-bottom-20">Tryout Samples</h4>
             </div>
-            <p class="mb-1">This option will create and deploy a sample application to the Cloud. You can use the launch url in application home page to try out the sample.</p>
-            <button type="button" class="btn btn-primary" id="continue-sample" onclick="continueSample();">
-            Continue &nbsp;
-                <i class="fw fw-right"></i>
+            <p class="margin-bottom-20">This option will create and deploy a sample application to the Cloud. You can use the launch url in application home page to try out the sample.</p>
+            <div class="width-100">
+            <button type="button" class="btn btn-primary btn-block" id="continue-sample" onclick="continueSample();">
+            Try
             </button>
+            </div>
             <small class="text-muted"></small>
           </a>
         </div>
