@@ -3487,10 +3487,35 @@ select option.option_link {
     margin-left: 30px;
 }
 
-.margin-bottom-20 {
-    margin-bottom: 15px;
+.margin-left-40 {
+    margin-left: 40px;
+}
+
+.margin-bottom-10 {
+    margin-bottom: 10px;
+}
+
+.margin-bottom-25 {
+    margin-bottom: 25px;
 }
 
 .width-100 {
     width: 100px;
+}
+
+.option-block {
+    margin-left: 60px;
+    margin-right: 60px;
+}
+
+.margin-bottom-5 {
+    margin-bottom: 5px;
+}
+
+.font-size-20 {
+    font-size: 20px;
+}
+
+.desc-color {
+    color: #dfe1dd;
 }
