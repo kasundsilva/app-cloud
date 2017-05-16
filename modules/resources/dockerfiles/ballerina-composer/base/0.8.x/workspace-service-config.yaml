@@ -1,3 +1,4 @@
 apiPath: api-path-url
 launcherPath: launcher-path-url
+debuggerPath: debugger-path-url
 rootDirectories: root-dir-path

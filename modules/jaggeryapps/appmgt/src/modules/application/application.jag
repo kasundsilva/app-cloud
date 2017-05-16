@@ -866,6 +866,7 @@ var buildDeploymentConfigFromDB = function(versionHashId, applicationName, versi
 
             envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
             envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+            envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
             envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
         }
         provisioningContainer.setEnvVariables(envs);
@@ -934,6 +935,7 @@ function getContainers(imageName, tag, versionHashId, appServiceName, runtimePro
 
         envs.put("URL_FOR_PORT_8289", versionHashId + ".bcb." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
         envs.put("URL_FOR_PORT_8290", versionHashId + ".bcw." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
+        envs.put("URL_FOR_PORT_5006", versionHashId + ".bcd." + modManager.getPropertyValue("ApplicationLaunchBaseURL.Public"));
         envs.put("ENV_ROOT_DIR_PATH", modManager.getPropertyValue("ballerina-composer_source_path"));
     }
 
