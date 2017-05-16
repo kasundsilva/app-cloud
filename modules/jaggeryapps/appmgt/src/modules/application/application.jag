@@ -906,7 +906,7 @@ function buildVolumeMounts(appTypeName, sourceLocation) {
         jagg.module("mgtapp").createSourceLocation("ballerina", sourceLocation, modManager.getPropertyValue("ballerina-composer_sample"));
 
         var volumnMount = new Packages.org.wso2.appcloud.provisioning.runtime.beans.VolumeMountInfo();
-        volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path"));
+        volumnMount.setMountPath(modManager.getPropertyValue("ballerina-composer_source_path") + "/source");
         volumnMount.setName("source-location");
         volumnMount.setHostPath(modManager.getPropertyValue("ballerina-composer_host_path") + "/" + modManager.getTenantDomain() + "/ballerina/" + sourceLocation);
         volumnMount.setReadOnly(false);
