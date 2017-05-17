@@ -69,9 +69,9 @@ jagg.template("options", function(inputs, outputs, jagg) {
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start option-block margin-bottom-5">
           <div class="ribbon-wrapper"><div class="ribbon">Beta</div></div>
             <div class="d-flex w-100 justify-content-between">
-              <h4 class="margin-bottom-10 font-size-20">Create on Ballerina Composer</h4>
+              <h4 class="margin-bottom-10 font-size-20">Use Ballerina Composer</h4>
             </div>
-            <p class="margin-bottom-10 desc-color">This option will let you develop your Ballerina Service on cloud via Ballerina Composer. Initially this will start with Ballerina hello service and later on you can modify the code via Ballerina Composer in Cloud.</p>
+            <p class="margin-bottom-10 desc-color">Lets you develop your Ballerina service on the Cloud, via the Ballerina Composer, which is a visual tool that lets you code with diagrams. The Composer starts with a “hello” service that you can modify as you like.</p>
             <div class="width-100">
             <button type="button" class="btn btn-primary btn-block" id="continue-composer" onclick="continueCreateNew();">
             Create
@@ -98,7 +98,7 @@ jagg.template("options", function(inputs, outputs, jagg) {
                     </label>
             <% } %>
                 </div>
-            <p class="margin-bottom-10 desc-color">This option will let you upload an existing application that you have already developed via local file system or web.</p>
+            <p class="margin-bottom-10 desc-color">Lets you upload an application that you have already developed via the local file system or the web.</p>
             <div class="width-100">
             <button type="button" class="btn btn-primary btn-block" onclick="loadCreateApp('<%=appTypeName%>');">
             Continue
@@ -110,7 +110,8 @@ jagg.template("options", function(inputs, outputs, jagg) {
             <div class="d-flex w-100 justify-content-between">
               <h4 class="margin-bottom-10 font-size-20">Tryout Samples</h4>
             </div>
-            <p class="margin-bottom-10 desc-color">This option will create and deploy a sample application to the Cloud. You can use the launch URL in application home page to try out the sample.</p>
+            <p class="margin-bottom-10 desc-color">Deploys a sample application to the Cloud. To try out the sample, use the launch URL on the application’s homepage.
+</p>
             <div class="width-100">
             <button type="button" class="btn btn-primary btn-block" id="continue-sample" onclick="continueSample();">
             Try
