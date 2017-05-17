@@ -610,8 +610,8 @@ function updateVersionPopUp() {
         type: 'confirm',
         modalStatus: true,
         title: 'Deploy Latest Code of  ' + cloudSpecificApplicationRepresentation + ' Version',
-        content: 'Are you sure you want to deploy the latest code of  ' + selectedRevision + ' version of this ' +
-        cloudSpecificApplicationRepresentation.toLowerCase() + ' ?',
+        content: 'Do you want to build and deploy the latest code in ' + cloudSpecificApplicationRepresentation.toLowerCase() + ' version 1.0.0? ' +
+        'If you want to keep the current version as it is, click No and then create a new version to deploy the latest code.?',
         yesCallback: function() {
             buildAndDeploy();
         }
