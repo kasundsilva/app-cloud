@@ -3446,14 +3446,9 @@ ul.custom-list-group > li .custom-actions > a:hover {
     margin-top: -3px;
 }
 
-select option.option_link {
-    color: #1c00cc;
-    text-decoration: underline;
-}
-
-.dropdown-menu>li>a.option_link {
-    color: #1c00cc;
-    text-decoration: underline;
+select option.option_link,.dropdown-menu>li>a.option_link {
+    color: #333;
+    background: #e6e6e6;
 }
 
 .list-group-item {
