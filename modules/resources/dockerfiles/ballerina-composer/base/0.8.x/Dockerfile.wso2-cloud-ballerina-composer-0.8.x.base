@@ -5,7 +5,7 @@ ENV APP_VERSION 0.87-SNAPSHOT
 ENV RUNTIME_DISTRIBUTION_NAME ballerina-tools-$APP_VERSION.zip
 ENV RUNTIME_NAME ballerina-tools-$APP_VERSION
 
-RUN groupadd wso2 && adduser wso2user && usermod -g wso2 wso2user && \
+RUN groupadd wso2 && useradd wso2user && usermod -g wso2 wso2user && \
     mkdir -p "$COMPOSER_HOME" && \
     mkdir -p "/srv/logs"
 
