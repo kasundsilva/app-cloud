@@ -158,6 +158,11 @@ jagg.template("home", function(inputs, outputs, jagg) {
                               <span id="selected-version"><%=selectedRevision%> </span><span class="caret"></span>
                               </button>
                               <ul id="appVersionList" class="dropdown-menu" >
+                                <li>
+                                    <a href="<%=jagg.getAbsoluteUrl('/site/pages/options.jag')%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">
+                                        + Add
+                                    </a>
+                                </li>
                               <%
                                 for (var x = 0; x < versionArray.length; x++) {
                               %>
@@ -165,11 +170,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                               <%
                               }
                               %>
-                                <li>
-                                    <a href="<%=jagg.getAbsoluteUrl('/site/pages/options.jag')%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">
-                                        + Add
-                                    </a>
-                                </li>
                               </ul>
                           </div>
                           <div id="version-url-link" class="version-url" title="<%=selectedApplicationRevision.deploymentURL%>">
