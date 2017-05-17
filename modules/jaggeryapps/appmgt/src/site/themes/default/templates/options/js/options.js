@@ -19,19 +19,20 @@
  */
 
 $(document).ready(function () {
+
 });
 
- function loadCreateApp(appTypeName) {
-     fileFrom = $(".option-group input[type='radio']:checked").val();
-     if (newVersion == 'true') {
-         if (fileFrom == 'local') {
-             window.location.href = "application.jag?option=upload-from-file&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
-         } else if (fileFrom == 'url') {
-             window.location.href = "application.jag?option=upload-from-url&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
-         } else if (fileFrom == 'github') {
-             window.location.href = "application.jag?option=github-repo-url&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
-         }
-     } else {
+function loadCreateApp(appTypeName) {
+    fileFrom = $(".option-group input[type='radio']:checked").val();
+    if (newVersion == 'true') {
+        if (fileFrom == 'local') {
+            window.location.href = "application.jag?option=upload-from-file&" + queryString;
+        } else if (fileFrom == 'url') {
+            window.location.href = "application.jag?option=upload-from-url&" + queryString;
+        } else if (fileFrom == 'github') {
+            window.location.href = "application.jag?option=github-repo-url&" + queryString;
+        }
+    } else {
         if (fileFrom == 'local') {
             window.location.href = 'application.jag?appTypeName=' + appTypeName + '&option=upload-from-file';
         } else if (fileFrom == 'url') {
@@ -39,20 +40,20 @@ $(document).ready(function () {
         } else if (fileFrom == 'github') {
             window.location.href = 'application.jag?appTypeName=' + appTypeName + '&option=github-repo-url';
         }
-     }
- }
+    }
+}
 
- function continueSample() {
-     if (newVersion == 'true') {
-         window.location = "application.jag?option=deploy-sample&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
-     } else {
-         window.location = "application.jag?appTypeName=" + appTypeName + "&option=deploy-sample";
-     }
- }
+function continueSample() {
+    if (newVersion == 'true') {
+        window.location = "application.jag?option=deploy-sample&" + queryString;
+    } else {
+        window.location = "application.jag?appTypeName=" + appTypeName + "&option=deploy-sample";
+    }
+}
 
 function continueCreateNew() {
     if (newVersion == 'true') {
-        window.location = "application.jag?option=start-from-scratch&appTypeName=" + appTypeName + "&applicationName=" + applicationName + "&encodedLabels=" + encodedLabels + "&encodedEnvs=" + encodedEnvs + "&newVersion=true&conSpecCpu=" + conSpecCpu + "&conSpecMemory=" + conSpecMemory + "&versionArray=" + versionArray;
+        window.location = "application.jag?option=start-from-scratch&" + queryString;
     } else {
         window.location = "application.jag?appTypeName=" + appTypeName + "&option=start-from-scratch";
     }
