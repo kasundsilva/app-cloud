@@ -58,3 +58,7 @@ function continueCreateNew() {
         window.location = "application.jag?appTypeName=" + appTypeName + "&option=start-from-scratch";
     }
 }
+
+function goBack() {
+    window.history.back();
+}

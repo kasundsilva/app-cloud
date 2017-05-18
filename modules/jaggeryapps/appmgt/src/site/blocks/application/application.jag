@@ -584,12 +584,13 @@ var log = new Log();
         print(applicationHashId);
 
     } else if (action == "deleteVersion"){
-        var versionKey = request.getParameter("versionKey");
+        var versionName = request.getParameter("versionName");
         var applicationName = request.getParameter("applicationName");
         var mod = jagg.module("application");
         try {
             var defaultVersion = mod.getDefaultVersion(applicationName);
             var defaultVersionHashId = mod.getVersionHashId(applicationName, defaultVersion);
+            var versionHashId = mod.getVersionHashId(applicationName, versionName);
             var applicationHashId = mod.getApplicationHashIdByName(applicationName);
             var versions = mod.getVersionListOfApplication(applicationHashId);
             var versionsString = stringify(versions);
@@ -600,7 +601,7 @@ var log = new Log();
                 response.status = 400;
                 response.content = msg;
             } else {
-                mod.deleteVersion(versionKey, false, true);
+                mod.deleteVersion(versionHashId, false, true);
                 print(true);
             }
         } catch (e) {

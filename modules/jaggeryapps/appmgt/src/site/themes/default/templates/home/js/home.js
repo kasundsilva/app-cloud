@@ -324,14 +324,6 @@ function changeSelectedRevision(newRevision){
         $(".overview-version-btn").empty();
         if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
             $(".overview-version-btn").html(
-                "<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
-                "<div class='btn-create-version'>" +
-                "<span class='fw-stack fw-lg btn-action-ico'>" +
-                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
-                "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete Version" +
-                "</div>" +
-                "</a>" +
                 "<a id='update' onclick='updateVersionPopUp();'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
@@ -346,15 +338,6 @@ function changeSelectedRevision(newRevision){
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-edit fw-stack-1x'></i>" +
                 "</span> Edit Code" +
-                "</div>" +
-                "</a>");
-        } else {
-            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
-                "<div class='btn-create-version'>" +
-                "<span class='fw-stack fw-lg btn-action-ico'>" +
-                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
-                "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete Version" +
                 "</div>" +
                 "</a>");
         }
@@ -377,14 +360,7 @@ function changeSelectedRevision(newRevision){
     } else if(selectedApplicationRevision.status == APPLICATION_STOPPED || selectedApplicationRevision.status == APPLICATION_INACTIVE){
         $(".overview-version-btn").empty();
         if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) {
-            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
-                "<div class='btn-create-version'>" +
-                "<span class='fw-stack fw-lg btn-action-ico'>" +
-                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
-                "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete Vesion" +
-                "</div>" +
-                "</a>" +
+            $(".overview-version-btn").html(
                 "<a id='update' onclick='updateVersionPopUp()'>" +
                 "<div class='btn-create-version'>" +
                 "<span class='fw-stack fw-lg btn-action-ico'>" +
@@ -399,15 +375,6 @@ function changeSelectedRevision(newRevision){
                 "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
                 "<i class='fw fw-edit fw-stack-1x'></i>" +
                 "</span> Edit Code" +
-                "</div>" +
-                "</a>");
-        } else {
-            $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
-                "<div class='btn-create-version'>" +
-                "<span class='fw-stack fw-lg btn-action-ico'>" +
-                "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
-                "<i class='fw fw-delete fw-stack-1x'></i>" +
-                "</span> Delete Version" +
                 "</div>" +
                 "</a>");
         }
@@ -425,14 +392,6 @@ function changeSelectedRevision(newRevision){
     } else {
 
         $(".overview-version-btn").empty();
-        $(".overview-version-btn").html("<a id='delete-version' onclick='deleteApplicationPopUp();'>" +
-            "<div class='btn-create-version'>" +
-            "<span class='fw-stack fw-lg btn-action-ico'>" +
-            "<i class='fw fw-circle-outline fw-stack-2x'></i>" +
-            "<i class='fw fw-delete fw-stack-1x'></i>" +
-            "</span> Delete Version" +
-            "</div>" +
-            "</a>");
 
         $('#launch-default-url-block').empty();
         $('#launch-default-url-block').html('<a id="launch-default-url-a" target="_blank">' + defaultAppLaunchURL + '</a>');
@@ -538,17 +497,17 @@ function getFileExtension(filename) {
 }
 
 // Delete version
-function deleteApplication(){
+function deleteApplication(version){
 
     $('#app_creation_progress_modal').modal({ backdrop: 'static', keyboard: false});
     $("#app_creation_progress_modal").show();
     $("#modal-title").text("Deleting the " + cloudSpecificApplicationRepresentation.toLowerCase() + " version...");
     jagg.post("../blocks/application/application.jag", {
         action:"deleteVersion",
-        versionKey:selectedApplicationRevision.hashId,
+        versionName:version,
         applicationName:applicationName
     },function (result) {
-        jagg.message({content: "The selected version was successfully deleted.", type: 'success', id:'view_log'});
+        jagg.message({content: "Version: " + version + " was successfully deleted.", type: 'success', id:'view_log'});
         var versionCount = getVersionCount();
         if(versionCount == 1){
             setTimeout(redirectAppListing, 2000);
@@ -577,29 +536,29 @@ function deleteAllVersions() {
     });
 }
 
-function deleteApplicationPopUp(){
+function deleteApplicationPopUp(version){
     var versionCount = versionArray.length;
     if(versionCount == 1 ){
-        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'You are about to delete the only available version of your ' + cloudSpecificApplicationRepresentation.toLowerCase() + ', are you sure you want to delete this "' + selectedRevision + '" version ?',
+        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'You are about to delete the only available version of your ' + cloudSpecificApplicationRepresentation.toLowerCase() + ', are you sure you want to delete this "' + version + '" version ?',
             yesCallback:function(){
                 if(isBallerinaComposerAvailable != null) {
-                    deleteAllVersions();
+                    deleteAllVersions(version);
                 } else {
-                    deleteApplication();
+                    deleteApplication(version);
                 }
             }
         });
-    } else if (versionCount > 1 && (selectedRevision == application.defaultVersion)) {
+    } else if (versionCount > 1 && (version == application.defaultVersion)) {
         jagg.message({
             type:'warning', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',
-            content:'This version:' + selectedRevision + ' is set as the default version of the ' + cloudSpecificApplicationRepresentation.toLowerCase() + '. If you '
+            content:'This version:' + version + ' is set as the default version of the ' + cloudSpecificApplicationRepresentation.toLowerCase() + '. If you '
             + 'want to delete this particular version, please select some other version as the default version',
             timeout: 8000
         });
     } else {
-        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'Are you sure you want to delete this version: ' + selectedRevision + ' ?',
+        jagg.popMessage({type:'confirm', modalStatus: true, title:'Delete ' + cloudSpecificApplicationRepresentation + ' Version',content:'Are you sure you want to delete this version: ' + version + ' ?',
             yesCallback:function(){
-                deleteApplication();
+                deleteApplication(version);
             }, noCallback:function(){}
         });
     }

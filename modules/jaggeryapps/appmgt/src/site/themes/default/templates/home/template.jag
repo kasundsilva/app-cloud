@@ -164,23 +164,31 @@ jagg.template("home", function(inputs, outputs, jagg) {
                         <div class="row nomarginflex">
                           <div class="btn-group pull-left version-number">
                               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                              <span id="selected-version"><%=selectedRevision%> </span><span class="caret"></span>
+                                <span id="selected-version"><%=selectedRevision%> </span><span class="caret"></span>
                               </button>
-                              <ul id="appVersionList" class="dropdown-menu" >
-                                <li>
-                                    <a href="<%=jagg.getAbsoluteUrl('/site/pages/options.jag')%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>" class="option_link">
-                                        + Add
-                                    </a>
-                                </li>
-                              <%
-                                for (var x = 0; x < versionArray.length; x++) {
-                              %>
-                                  <li><a href="#"><%=versionArray[x]%></a></li>
-                              <%
-                              }
-                              %>
+                              <ul id="appVersionList" class="dropdown-menu version-dropdown">
+                                  <%
+                                    for (var x = 0; x < versionArray.length; x++) {
+                                  %>
+                                      <li>
+                                        <a><%=versionArray[x]%></a>
+                                        <div class="ctrl-edit-button cu-btn-gr-dark btn-remove" data-toggle="tooltip" title="Delete this version">
+                                            <a href="#" class="btn cu-btn cu-btn-sm cu-btn-icon" onclick="deleteApplicationPopUp('<%=versionArray[x]%>');">
+                                                <i class="fw fw-delete"></i>
+                                            </a>
+                                        </div>
+                                      </li>
+                                  <%
+                                  }
+                                  %>
                               </ul>
                           </div>
+                          <div class="btn-group ctrl-edit-button cu-btn-gr-dark" data-toggle="tooltip" title="Add New Version">
+                                <a class="btn cu-btn cu-btn-md cu-btn-icon" href="<%=jagg.getAbsoluteUrl('/site/pages/options.jag')%>?appTypeName=<%=application.applicationType%>&applicationName=<%=applicationName%>&encodedLabels=<%=encodedLabels%>&encodedEnvs=<%=encodedEnvs%>&newVersion=true&conSpecCpu=<%=conSpecCpu%>&conSpecMemory=<%=conSpecMemory%>&versionArray=<%=encodedVersionArray%>">
+                                    <i class="fw fw-add"></i>
+                                </a>
+                          </div>
+
                           <div id="version-url-link" class="version-url" title="<%=selectedApplicationRevision.deploymentURL%>">
                           <% if(selectedApplicationRevision.status==APPLICATION_RUNNING){ %>
                             <a id="launch-version-url-a" href="<%=selectedApplicationRevision.deploymentURL%>" target="_blank">
@@ -244,15 +252,6 @@ jagg.template("home", function(inputs, outputs, jagg) {
                                %>
                       </div>
                       <div class="col-xs-12 col-md-12 col-lg-5 overview-version-btn">
-
-                          <a id="delete-version" onclick="deleteApplicationPopUp();">
-                              <div class="btn-create-version">
-                                  <span class="fw-stack fw-lg btn-action-ico">
-                                    <i class="fw fw-circle-outline fw-stack-2x"></i>
-                                    <i class="fw fw-delete fw-stack-1x"></i>
-                                  </span> Delete Version
-                              </div>
-                          </a>
 
                          <% if (application.applicationType == "ballerina" && selectedApplicationRevision.sourceLocation != null) { %>
                              <% if (versions[BALLERINA_COMPOSER] != null) { %>

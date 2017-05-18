@@ -175,6 +175,11 @@ button[disabled]{
 .overview-version-btn {
     padding-left: 10px;!important;
 }
+
+.cu-btn-icon {
+    font-size: 14px;
+}
+
 .cu-btn-lg {}
 .cu-btn-sm {
     padding: 3px 11px;
@@ -3513,4 +3518,38 @@ select option.option_link,.dropdown-menu>li>a.option_link {
 
 .desc-color {
     color: #dfe1dd;
+}
+
+.version-dropdown > li:hover,
+.version-dropdown > li:focus {
+    color: #262626;
+    background-color: #f5f5f5;
+}
+
+.version-dropdown > li {
+    position: relative;
+}
+
+.version-dropdown > li > a {
+    margin-right: 36px;
+    cursor: pointer;
+}
+
+.version-dropdown > li > .btn-remove {
+    background-color: #adadad;
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.version-dropdown > li > .btn-remove:hover {
+    background-color: #444;
+}
+
+.version-dropdown > li > .btn-remove > .cu-btn-icon {
+    font-size: 13px;
+}
+
+.version-dropdown > li:hover > .btn-remove {
+    display: inline-block;
 }

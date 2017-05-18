@@ -38,6 +38,17 @@ jagg.template("options", function(inputs, outputs, jagg) {
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('templates/options/js/options.js'))%>"></script>
 <script src="<%=jagg.getAbsoluteUrl(jagg.getThemeFile('js/custom/loader.js'))%>"></script>
 
+
+<% if (newVersion == "true") { %>
+   <div class="action-bar">
+            <a onclick="goBack();" class="btn-action">
+                <span class="fw-stack fw-lg btn-action-ico">
+                    <i class="fw fw-circle-outline fw-stack-2x"></i>
+                    <i class="fw fw-left-arrow fw-stack-1x"></i>
+                </span> Back to App Home
+            </a>
+    </div>
+<% } else { %>
    <div class="action-bar">
        <a href="/appmgt/site/pages/select-apptype.jag" class="btn-action">
                <span class="fw-stack fw-lg btn-action-ico">
@@ -46,6 +57,7 @@ jagg.template("options", function(inputs, outputs, jagg) {
                </span> <span class="hidden-xs">Back to App Type Selection</span>
         </a>
     </div>
+<% } %>
 
     <div class="container-fluid app-type-options padding-bottom-xlg padding-top-xlg">
         <h2 class="margin-bottom-25 margin-left-40">
@@ -53,7 +65,7 @@ jagg.template("options", function(inputs, outputs, jagg) {
         </h2>
 
         <div class="list-group">
-        <% if (appTypeName == "ballerina-hide") { %>
+        <% if (appTypeName == "ballerina") { %>
           <a href="#" class="list-group-item list-group-item-action flex-column align-items-start option-block margin-bottom-5">
           <div class="ribbon-wrapper"><div class="ribbon">Beta</div></div>
             <div class="d-flex w-100 justify-content-between">
