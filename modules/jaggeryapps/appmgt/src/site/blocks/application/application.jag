@@ -727,7 +727,7 @@ var log = new Log();
         var versionKey = request.getParameter("versionKey");
         var runtimeId = request.getParameter("runtimeId");
         var versionName = request.getParameter("versionName");
-        var runtimeProperties = request.getParameter("runtimeProperties");
+        var runtimeProperties = decodeURIComponent(request.getParameter("runtimeProperties"));
         var conSpecCpu = request.getParameter("conSpecCpu");
         var conSpecMemory = request.getParameter("conSpecMemory");
         var sourceLocation = request.getParameter("sourceLocation");
@@ -743,7 +743,8 @@ var log = new Log();
             }
             print(true);
         } catch (e) {
-            var msg = "Error while building application : " + applicationKey;
+            var msg = "Error while building and deploying version : " + versionName + " of application : "
+                    + applicationName + " for tenant : " + modManager.getTenantDomain();
             log.error(msg);
             log.error(e);
             response.status = 500;

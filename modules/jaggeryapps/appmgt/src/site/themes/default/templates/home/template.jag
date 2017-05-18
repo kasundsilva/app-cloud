@@ -62,7 +62,16 @@ jagg.template("home", function(inputs, outputs, jagg) {
     var toolPrefix = TOOL_PREFIX;
     var newTab = null;
     var domainURL = outputs.domainURL;
-    var runtimeProperties = selectedApplicationRevision.runtimeProperties;
+    var runtimePropertiesWithIds = selectedApplicationRevision.runtimeProperties;
+    var runtimeProperties = [];
+    for (var i = 0; i < runtimePropertiesWithIds.length.toString(); i++) {
+        var runtimeProperty = {
+            "key": runtimePropertiesWithIds[i].propertyName,
+            "value": runtimePropertiesWithIds[i].propertyValue
+        };
+        runtimeProperties.push(runtimeProperty);
+    }
+    runtimeProperties = encodeURIComponent(stringify(runtimeProperties), "UTF-8");
     var isBallerinaComposerAvailable = versions[BALLERINA_COMPOSER];
 
 %>
